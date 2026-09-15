@@ -1744,18 +1744,18 @@ export async function getSiteSettingsAsync(): Promise<SiteSettings> {
 
   if (url && key) {
     try {
-      const res = await fetch(`${url}/rest/v1/system_store?id=eq.main&select=data`, {
+      const res = await fetch(`${url}/rest/v1/system_store?id=eq.site_settings&select=data`, {
         headers: { apikey: key, Authorization: `Bearer ${key}` },
         cache: "no-store"
       });
       if (res.ok) {
         const rows = await res.json();
         const cloudData = rows[0]?.data;
-        if (cloudData?.siteSettings) {
+        if (cloudData && typeof cloudData === "object") {
           const defaults = getSiteSettings();
           return {
             ...defaults,
-            ...cloudData.siteSettings
+            ...cloudData
           };
         }
       }

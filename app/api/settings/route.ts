@@ -11,13 +11,15 @@ async function fetchFromSupabaseDirect(): Promise<SiteSettings | null> {
   if (!url || !key) return null;
 
   try {
-    const res = await fetch(`${url}/rest/v1/system_store?id=eq.main&select=data`, {
+    const res = await fetch(`${url}/rest/v1/system_store?id=eq.site_settings&select=data`, {
       headers: { "apikey": key, "Authorization": `Bearer ${key}` },
       cache: "no-store"
     });
-    if (!res.ok) return null;
-    const rows = await res.json();
-    return rows[0]?.data?.siteSettings || null;
+    if (res.ok) {
+      const rows = await res.json();
+      if (rows[0]?.data) return rows[0].data;
+    }
+    return null;
   } catch {
     return null;
   }
