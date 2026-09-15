@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { AppImage } from "@/components/ui/app-image";
 import { siteConfig, teamMembers } from "@/data/site";
 import { Users2, Sparkles, HeartHandshake } from "lucide-react";
-import { getSiteSettings } from "@/lib/server-store";
+import { getSiteSettings, getSiteSettingsAsync } from "@/lib/server-store";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -19,8 +19,8 @@ const impact = [
   "Tăng khả năng tiếp cận thị trường cho sản phẩm vùng cao"
 ];
 
-export default function AboutPage() {
-  const settings = getSiteSettings();
+export default async function AboutPage() {
+  const settings = await getSiteSettingsAsync();
   const aboutHeroImage = settings.aboutHeroImage || siteConfig.aboutHeroImage;
   const members = (settings.aboutTeamMembers && settings.aboutTeamMembers.length > 0)
     ? settings.aboutTeamMembers

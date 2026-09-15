@@ -8,7 +8,7 @@ import { SectionHeading } from "@/components/section-heading";
 import { AppImage } from "@/components/ui/app-image";
 import { heroImage, homestays, imageFor, products, testimonials } from "@/data/site";
 import { getFeaturedPlaces } from "@/lib/places";
-import { getSiteSettings, getBlogPosts } from "@/lib/server-store";
+import { getSiteSettings, getSiteSettingsAsync, getBlogPosts } from "@/lib/server-store";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -40,9 +40,9 @@ const aluoiGallery = [
   }
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
   const featuredPlaces = getFeaturedPlaces(3);
-  const siteSettings = getSiteSettings();
+  const siteSettings = await getSiteSettingsAsync();
   const activeHeroImage = siteSettings.heroImage || heroImage;
   const publishedBlogs = getBlogPosts()
     .filter((p) => p.status === "published")

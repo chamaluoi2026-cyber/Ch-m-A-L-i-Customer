@@ -875,7 +875,7 @@ function pushStoreToSupabaseCloud(data: StoreData) {
 }
 
 
-function loadStore(): StoreData {
+export function loadStore(): StoreData {
   // Tự động kiểm tra cập nhật từ Supabase Cloud nếu hết hạn TTL
   if (Date.now() - lastCloudFetchTime > CLOUD_CACHE_TTL_MS) {
     fetchStoreFromSupabaseCloud().catch(() => {});
@@ -1735,6 +1735,32 @@ export function getSiteSettings(): SiteSettings {
     ...defaults,
     ...(store.siteSettings || {})
   };
+}
+
+export async function getSiteSettingsAsync(): Promise<SiteSettings> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://hcunfovtwbzfatudejfs.supabase.co';
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjdW5mb3Z0d2J6ZmF0dWRlamZzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4OTM5NTM5OSwiZXhwIjoyMTA0OTcxMzk5fQ.7QwyRHqGXa6UwgbUNAhlWdmGZqpuS8Cxall2v8j7lMU';
+
+  if (url && key) {
+    try {
+      const res = await fetch(`${url}/rest/v1/system_store?id=eq.main&select=data`, {
+        headers: { apikey: key, Authorization: `Bearer ${key}` },
+        cache: "no-store"
+      });
+      if (res.ok) {
+        const rows = await res.json();
+        const cloudData = rows[0]?.data;
+        if (cloudData?.siteSettings) {
+          const defaults = getSiteSettings();
+          return {
+            ...defaults,
+            ...cloudData.siteSettings
+          };
+        }
+      }
+    } catch {}
+  }
+  return getSiteSettings();
 }
 
 export function updateSiteSettings(settings: Partial<SiteSettings>): SiteSettings {

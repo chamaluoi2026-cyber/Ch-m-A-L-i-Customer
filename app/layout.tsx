@@ -4,13 +4,13 @@ import { Footer } from "@/components/footer";
 import { CustomerChatbox } from "@/components/customer-chatbox";
 import { Navbar } from "@/components/navbar";
 import { siteUrl } from "@/lib/utils";
-import { getSiteSettings } from "@/lib/server-store";
+import { getSiteSettings, getSiteSettingsAsync } from "@/lib/server-store";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const settings = getSiteSettings();
+  const settings = await getSiteSettingsAsync();
   const faviconUrl = settings.favicon || "/favicon.ico";
 
   return {
@@ -44,8 +44,8 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const settings = getSiteSettings();
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const settings = await getSiteSettingsAsync();
   const activeFavicon = settings.favicon || "/favicon.ico";
   const organizationJsonLd = {
     "@context": "https://schema.org",
