@@ -81,6 +81,14 @@ export function CustomerChatbox() {
     async function fetchSession() {
       if (!sessionId) return;
       try {
+        const res = await fetch(`/api/chat?sessionId=${sessionId}`, { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.session && data.session.messages) {
+            setMessages(data.session.messages);
+            return;
+          }
+        }
         const session = await getChatSessionAction(sessionId);
         if (session && session.messages) {
           setMessages(session.messages);
@@ -127,20 +135,36 @@ export function CustomerChatbox() {
     setIsSending(true);
 
     try {
-      const res = await sendGuestMessageAction({
-        sessionId: sessionId || undefined,
-        guestName: guestName.trim() || "Khách truy cập",
-        guestPhone: guestPhone.trim() || undefined,
-        text: trimmed
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId: sessionId || undefined,
+          guestName: guestName.trim() || "Khách truy cập",
+          guestPhone: guestPhone.trim() || undefined,
+          text: trimmed,
+          role: "guest"
+        })
       });
-
-      if (res.success && res.session) {
-        setSessionId(res.session.id);
+      const data = await res.json();
+      if (data.success && data.session) {
+        setSessionId(data.session.id);
         if (typeof window !== "undefined") {
-          localStorage.setItem(STORAGE_KEY, res.session.id);
+          localStorage.setItem(STORAGE_KEY, data.session.id);
         }
-        if (res.session.messages) {
-          setMessages(res.session.messages);
+        if (data.session.messages) {
+          setMessages(data.session.messages);
+        }
+      } else {
+        const fallbackRes = await sendGuestMessageAction({
+          sessionId: sessionId || undefined,
+          guestName: guestName.trim() || "Khách truy cập",
+          guestPhone: guestPhone.trim() || undefined,
+          text: trimmed
+        });
+        if (fallbackRes.success && fallbackRes.session) {
+          setSessionId(fallbackRes.session.id);
+          if (fallbackRes.session.messages) setMessages(fallbackRes.session.messages);
         }
       }
     } catch (err) {

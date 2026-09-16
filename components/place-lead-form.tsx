@@ -94,41 +94,51 @@ export function PlaceLeadForm({ place }: { place: Place }) {
     setSubmitting(true);
     setError(null);
 
-    const res = await submitLeadAction({
-      placeSlug: place.slug,
-      placeName: place.name,
-      businessName: place.businessName,
-      businessId: place.businessId,
-      customerName,
-      phone,
-      email: email.trim() || undefined,
-      zalo: zalo.trim() || phone,
-      expectedDate,
-      preferredTime,
-      guests,
-      serviceOrTour: serviceOrTour.trim() || undefined,
-      budget: budget.trim() || undefined,
-      need: need.trim() || "Cần tư vấn chi tiết dịch vụ tại điểm đến",
-      consent,
-      source: trackingInfo.source,
-      landingPage: trackingInfo.landingPage,
-      utmSource: trackingInfo.utmSource,
-      utmMedium: trackingInfo.utmMedium,
-      utmCampaign: trackingInfo.utmCampaign
-    });
-
-    setSubmitting(false);
-
-    if (res.success && res.leadId && res.voucherCode) {
-      setResult({
-        leadId: res.leadId,
-        voucherCode: res.voucherCode,
-        discountOffer: res.discountOffer || place.voucherOffer,
-        expiresAt: res.expiresAt || "30 ngày",
-        placeName: res.placeName || place.name
+    try {
+      const response = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          placeSlug: place.slug,
+          placeName: place.name,
+          businessName: place.businessName,
+          businessId: place.businessId,
+          customerName,
+          phone,
+          email: email.trim() || undefined,
+          zalo: zalo.trim() || phone,
+          expectedDate,
+          preferredTime,
+          guests,
+          serviceOrTour: serviceOrTour.trim() || undefined,
+          budget: budget.trim() || undefined,
+          need: need.trim() || "Cần tư vấn chi tiết dịch vụ tại điểm đến",
+          consent,
+          source: trackingInfo.source,
+          landingPage: trackingInfo.landingPage,
+          utmSource: trackingInfo.utmSource,
+          utmMedium: trackingInfo.utmMedium,
+          utmCampaign: trackingInfo.utmCampaign
+        })
       });
-    } else {
-      setError(res.error || "Không thể gửi thông tin. Vui lòng thử lại.");
+
+      const res = await response.json();
+      setSubmitting(false);
+
+      if (res.success && res.leadId && res.voucherCode) {
+        setResult({
+          leadId: res.leadId,
+          voucherCode: res.voucherCode,
+          discountOffer: res.discountOffer || place.voucherOffer,
+          expiresAt: res.expiresAt || "30 ngày",
+          placeName: res.placeName || place.name
+        });
+      } else {
+        setError(res.error || "Không thể gửi thông tin. Vui lòng thử lại.");
+      }
+    } catch (err) {
+      setSubmitting(false);
+      setError("Lỗi kết nối máy chủ. Vui lòng thử lại sau.");
     }
   }
 
