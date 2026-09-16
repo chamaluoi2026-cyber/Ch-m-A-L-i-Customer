@@ -1,12 +1,31 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { CheckCircle2, Loader2, Home, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-export function SelfGuidedRequestForm() {
+export interface SelfGuidedRequestFormProps {
+  homestayName?: string;
+  homestayId?: string;
+  checkin?: string;
+  checkout?: string;
+  guests?: number;
+  estimatedPrice?: number;
+  experienceNames?: string[];
+}
+
+export function SelfGuidedRequestForm({
+  homestayName,
+  homestayId,
+  checkin,
+  checkout,
+  guests,
+  estimatedPrice,
+  experienceNames
+}: SelfGuidedRequestFormProps = {}) {
   const [done, setDone] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
@@ -18,13 +37,33 @@ export function SelfGuidedRequestForm() {
     setError(null);
 
     const formData = new FormData(event.currentTarget);
+    const itemTitle = homestayName
+      ? `Homestay ${homestayName} (Tự túc)`
+      : "Du lịch tự túc / Homestay A Lưới";
+    const dateRange = checkin
+      ? checkout
+        ? `${checkin} đến ${checkout}`
+        : checkin
+      : undefined;
+
     const payload = {
       type: "homestay",
-      customerName: formData.get("name") as string,
-      phone: formData.get("phone") as string,
-      email: formData.get("email") as string,
-      note: formData.get("note") as string,
-      itemTitle: "Du lịch tự túc / Homestay A Lưới"
+      customerName: String(formData.get("name") || "").trim(),
+      phone: String(formData.get("phone") || "").trim(),
+      email: String(formData.get("email") || "").trim(),
+      note: String(formData.get("note") || "").trim(),
+      itemTitle,
+      businessName: homestayName ? `Homestay ${homestayName}` : "Đối tác du lịch A Lưới",
+      itemId: homestayId,
+      experienceDate: dateRange,
+      numberOfPeople: guests || 1,
+      quantity: guests || 1,
+      unitPrice: estimatedPrice || 0,
+      subtotal: estimatedPrice || 0,
+      finalAmount: estimatedPrice || 0,
+      paymentStatus: "unpaid",
+      paymentMethod: "cod",
+      bookingStatus: "pending"
     };
 
     try {
@@ -49,7 +88,7 @@ export function SelfGuidedRequestForm() {
         setError(data.error || "Không thể gửi yêu cầu.");
       }
     } catch {
-      setError("Lỗi kết nối khi gửi yêu cầu.");
+      setError("Lỗi kết nối khi gửi yêu cầu. Vui lòng kiểm tra lại mạng.");
     } finally {
       setSubmitting(false);
     }
@@ -89,16 +128,51 @@ export function SelfGuidedRequestForm() {
           )}
         </Button>
       </form>
+
       {done ? (
-        <section role="dialog" aria-modal="true" className="fixed inset-0 z-[80] grid place-items-center bg-ink/55 px-5 backdrop-blur-sm">
-          <article className="max-w-md rounded-3xl bg-white p-8 text-center shadow-soft">
-            <CheckCircle2 className="mx-auto size-14 text-clay" aria-hidden="true" />
-            <h2 className="mt-4 text-2xl font-bold text-ink">Đã gửi yêu cầu tự túc thành công</h2>
+        <section role="dialog" aria-modal="true" className="fixed inset-0 z-[80] grid place-items-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in">
+          <article className="max-w-md w-full rounded-3xl bg-white p-6 md:p-8 text-center shadow-2xl border border-black/5">
+            <div className="size-16 rounded-full bg-emerald-50 text-emerald-600 grid place-items-center mx-auto shadow-inner">
+              <CheckCircle2 className="size-9" />
+            </div>
+            <h2 className="mt-4 text-2xl font-black text-ink">Gửi yêu cầu thành công!</h2>
             {bookingId && (
-              <p className="mt-2 text-sm font-bold text-forest">Mã đơn đặt: {bookingId}</p>
+              <div className="mt-3 inline-block rounded-full bg-forest/10 px-4 py-1.5 font-mono text-sm font-black text-forest">
+                Mã đơn: {bookingId}
+              </div>
             )}
-            <p className="mt-3 text-sm leading-7 text-ink/65">Homestay hoặc người phụ trách dịch vụ địa phương sẽ liên hệ lại trong vòng 24 giờ.</p>
-            <Button className="mt-6 bg-clay hover:bg-brown" onClick={() => setDone(false)}>Đóng</Button>
+
+            <div className="mt-4 rounded-2xl bg-stone-50 border border-black/5 p-4 text-left text-xs space-y-1.5 text-stone-700">
+              <p><span className="font-semibold text-ink">Dịch vụ:</span> {homestayName ? `Homestay ${homestayName}` : "Du lịch tự túc"}</p>
+              {checkin && <p><span className="font-semibold text-ink">Thời gian:</span> {checkin} {checkout ? `đến ${checkout}` : ""}</p>}
+              {guests ? <p><span className="font-semibold text-ink">Số khách:</span> {guests} người</p> : null}
+              {estimatedPrice && estimatedPrice > 0 ? (
+                <p><span className="font-semibold text-ink">Dự kiến chi phí:</span> <span className="font-bold text-forest">{estimatedPrice.toLocaleString("vi-VN")} đ</span></p>
+              ) : null}
+            </div>
+
+            <p className="mt-4 text-xs leading-relaxed text-ink/65">
+              Hệ thống đã chuyển thông tin đến homestay và quản trị viên. Chúng tôi sẽ liên hệ lại với bạn trong vòng 24 giờ để xác nhận lịch trình.
+            </p>
+
+            <div className="mt-6 flex flex-col sm:flex-row items-center gap-3">
+              <Link
+                href="/account"
+                className="w-full inline-flex items-center justify-center gap-1.5 rounded-2xl bg-forest px-4 py-3 text-xs font-bold text-white shadow-md hover:bg-forest/90 transition"
+              >
+                <User className="size-4" /> Xem trong Tài khoản
+              </Link>
+              <Button
+                variant="outline"
+                className="w-full inline-flex items-center justify-center gap-1.5 rounded-2xl border-stone-200 text-stone-700 hover:bg-stone-50 text-xs font-bold py-3"
+                onClick={() => {
+                  setDone(false);
+                  window.location.href = "/";
+                }}
+              >
+                <Home className="size-4" /> Về trang chủ
+              </Button>
+            </div>
           </article>
         </section>
       ) : null}

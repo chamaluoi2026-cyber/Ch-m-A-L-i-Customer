@@ -78,7 +78,15 @@ export default async function SelfGuidedConfirmPage({
             Yêu cầu sẽ được gửi đến homestay hoặc người phụ trách dịch vụ địa phương. Không có công ty lữ hành trong luồng này.
           </p>
           <div className="mt-7">
-            <SelfGuidedRequestForm />
+            <SelfGuidedRequestForm
+              homestayName={homestay.name}
+              homestayId={homestay.id}
+              checkin={query.checkin}
+              checkout={query.checkout}
+              guests={guests}
+              estimatedPrice={estimatedPrice}
+              experienceNames={selectedExperiences.map((e) => e.name)}
+            />
           </div>
         </section>
       </section>
