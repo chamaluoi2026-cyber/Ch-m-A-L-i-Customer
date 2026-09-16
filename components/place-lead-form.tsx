@@ -126,6 +126,14 @@ export function PlaceLeadForm({ place }: { place: Place }) {
       setSubmitting(false);
 
       if (res.success && res.leadId && res.voucherCode) {
+        try {
+          const list = JSON.parse(localStorage.getItem("cal_my_vouchers") || "[]");
+          if (!list.includes(res.voucherCode)) {
+            list.unshift(res.voucherCode);
+            localStorage.setItem("cal_my_vouchers", JSON.stringify(list));
+          }
+        } catch {}
+
         setResult({
           leadId: res.leadId,
           voucherCode: res.voucherCode,

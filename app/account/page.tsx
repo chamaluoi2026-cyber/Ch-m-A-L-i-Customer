@@ -57,22 +57,45 @@ export default function AccountPage() {
           });
         });
       } else {
-        fetchAllBookingsAction().then((bks) => {
-          setBookings(bks);
-          bks.forEach((b) => {
-            if (b.id) {
-              fetchReviewByBookingIdAction(b.id).then((rev) => {
-                setBookingReviews((prev) => ({ ...prev, [b.id!]: rev }));
-              });
-            }
-          });
-        });
+        // Khách vãng lai: Chỉ tải đơn từ lịch sử thiết bị (localStorage) để bảo mật thông tin du khách
+        try {
+          const localBookingIds = JSON.parse(localStorage.getItem("cal_my_bookings") || "[]");
+          if (Array.isArray(localBookingIds) && localBookingIds.length > 0) {
+            fetch("/api/bookings")
+              .then((res) => res.json())
+              .then((data) => {
+                const all = data.bookings || data;
+                if (Array.isArray(all)) {
+                  setBookings(all.filter((b: any) => localBookingIds.includes(b.id)));
+                }
+              })
+              .catch(() => setBookings([]));
+          } else {
+            setBookings([]);
+          }
+        } catch {
+          setBookings([]);
+        }
       }
     });
 
-    fetchAllLeadsAction().then((data) => {
-      setLeads(data);
-    });
+    // Chỉ hiển thị leads/vouchers mà chính trình duyệt này đã tạo
+    try {
+      const localVoucherCodes = JSON.parse(localStorage.getItem("cal_my_vouchers") || "[]");
+      if (Array.isArray(localVoucherCodes) && localVoucherCodes.length > 0) {
+        fetch("/api/leads")
+          .then((res) => res.json())
+          .then((resData) => {
+            const list = resData.data || [];
+            setLeads(list.filter((l: any) => localVoucherCodes.includes(l.voucherCode) || localVoucherCodes.includes(l.leadId)));
+          })
+          .catch(() => setLeads([]));
+      } else {
+        setLeads([]);
+      }
+    } catch {
+      setLeads([]);
+    }
   }, []);
 
   const fullName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Du khách Chạm A Lưới";

@@ -37,6 +37,14 @@ export function TourRequestForm({ successHref, tourTitle }: { successHref: strin
       });
       const data = await res.json();
       if (data.success && data.booking) {
+        try {
+          const list = JSON.parse(localStorage.getItem("cal_my_bookings") || "[]");
+          if (!list.includes(data.booking.id)) {
+            list.unshift(data.booking.id);
+            localStorage.setItem("cal_my_bookings", JSON.stringify(list));
+          }
+        } catch {}
+
         const querySep = successHref.includes("?") ? "&" : "?";
         router.push(`${successHref}${querySep}bookingId=${data.booking.id}`);
       } else {
