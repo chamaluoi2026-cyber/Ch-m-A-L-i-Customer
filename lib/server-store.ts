@@ -113,6 +113,20 @@ export type SiteSettings = {
   aboutPartnersTitle?: string;
   aboutPartnersText?: string;
 
+  // Cấu hình Tài khoản Ngân hàng nhận tiền VietQR
+  bankId?: string;
+  bankName?: string;
+  bankAccountNumber?: string;
+  bankAccountName?: string;
+  qrTemplate?: string;
+
+  // Cấu hình Thông báo tức thì (Telegram)
+  telegramEnabled?: boolean;
+  telegramBotToken?: string;
+  telegramChatId?: string;
+  notificationEmail?: string;
+  emailNotificationEnabled?: boolean;
+
   updatedAt?: string;
 };
 
