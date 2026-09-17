@@ -27,6 +27,7 @@ import { placeCategories } from "@/data/places";
 import { getPlaceBySlug, getPlaceStaticParams, getRelatedPlaces } from "@/lib/places";
 import { fetchPlaceReviewsAction } from "@/app/actions/reviews";
 import { siteUrl } from "@/lib/utils";
+import { generatePlaceJsonLd, toAbsoluteImageUrl } from "@/lib/seo/schema-generator";
 
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
@@ -50,14 +51,34 @@ export async function generateMetadata({
     notFound();
   }
 
+  const ogImageUrl = toAbsoluteImageUrl(place.ogImage || place.coverImage || place.image);
+
   return {
     title: place.seoTitle || `${place.name} | Du lịch cộng đồng A Lưới`,
     description: place.seoDescription || place.summary,
+    alternates: {
+      canonical: `${siteUrl}/places/${place.slug}`
+    },
     openGraph: {
       title: place.seoTitle || `${place.name} - Chạm A Lưới`,
       description: place.seoDescription || place.summary,
       url: `${siteUrl}/places/${place.slug}`,
-      images: [{ url: place.ogImage || place.coverImage || place.image }]
+      siteName: "Chạm A Lưới",
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: place.name
+        }
+      ],
+      type: "website"
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: place.seoTitle || `${place.name} - Chạm A Lưới`,
+      description: place.seoDescription || place.summary,
+      images: [ogImageUrl]
     }
   };
 }
@@ -91,24 +112,25 @@ export default async function PlaceDetailPage({
   const isActive = place.status === "active";
   const approvedReviews = await fetchPlaceReviewsAction(place.slug, true);
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    name: place.name,
-    image: place.image,
-    address: place.address,
-    telephone: place.phone,
-    priceRange: place.priceLabel,
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: place.rating,
-      reviewCount: place.reviewCount
-    }
-  };
+  const { mainSchema, breadcrumbSchema, faqSchema } = generatePlaceJsonLd(place, approvedReviews);
 
   return (
     <main className="pt-24 bg-beige/30 min-h-screen">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      {/* Schema.org Rich Snippet Structured Data for Google Search */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(mainSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      {faqSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+      )}
 
       {/* Floating Draft Preview Bar */}
       {isPreview && (

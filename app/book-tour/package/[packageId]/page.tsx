@@ -7,12 +7,50 @@ import { Button } from "@/components/ui/button";
 import { tourIncludes } from "@/data/booking";
 import { experienceIcons } from "@/data/site";
 import { getPackageById, getPackageStaticParams, getTourEnhancement } from "@/lib/travel-data";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, siteUrl } from "@/lib/utils";
+import { generateTourPackageJsonLd, toAbsoluteImageUrl } from "@/lib/seo/schema-generator";
 
 const steps = ["Chọn gói", "Xem lịch trình", "Chọn lữ hành", "Gửi yêu cầu", "Xác nhận"];
 
 export function generateStaticParams() {
   return getPackageStaticParams();
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ packageId: string }> }) {
+  const { packageId } = await params;
+  const selected = getPackageById(packageId);
+  if (!selected) return {};
+
+  const ogImageUrl = toAbsoluteImageUrl(selected.image);
+
+  return {
+    title: `${selected.name} (${selected.duration}) | Tour Du Lịch Chạm A Lưới`,
+    description: selected.longDescription || selected.description,
+    alternates: {
+      canonical: `${siteUrl}/book-tour/package/${selected.id}`
+    },
+    openGraph: {
+      title: `${selected.name} - Chạm A Lưới`,
+      description: selected.longDescription || selected.description,
+      url: `${siteUrl}/book-tour/package/${selected.id}`,
+      siteName: "Chạm A Lưới",
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: selected.name
+        }
+      ],
+      type: "website"
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${selected.name} - Chạm A Lưới`,
+      description: selected.longDescription || selected.description,
+      images: [ogImageUrl]
+    }
+  };
 }
 
 export default async function PackageTourDetailPage({ params }: { params: Promise<{ packageId: string }> }) {
@@ -21,8 +59,15 @@ export default async function PackageTourDetailPage({ params }: { params: Promis
   const extra = getTourEnhancement(packageId);
   if (!selected || !extra) notFound();
 
+  const tourJsonLd = generateTourPackageJsonLd(selected, extra);
+
   return (
     <main className="pt-24">
+      {/* Schema.org TouristTrip & Product Rich Snippet cho Google Search */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(tourJsonLd) }}
+      />
       <TripFlowStepper steps={steps} current={2} tone="green" />
       <section className="section-shell pb-24">
         <article className="overflow-hidden rounded-3xl bg-white shadow-card">

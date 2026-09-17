@@ -5,12 +5,25 @@ import { SectionHeading } from "@/components/section-heading";
 import { placeCategories } from "@/data/places";
 import { getCategoryById, getPlacesByCategory } from "@/lib/places";
 
+import { siteUrl } from "@/lib/utils";
+import { toAbsoluteImageUrl } from "@/lib/seo/schema-generator";
+
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export const metadata = {
-  title: "Địa điểm tại A Lưới | Nền tảng kết nối du lịch cộng đồng",
-  description: "Khám phá địa điểm ăn uống, lưu trú, vui chơi, thác suối, lửa trại, trải nghiệm, văn hóa và dịch vụ tại A Lưới."
+  title: "Điểm Đến & Homestay A Lưới | Thác A Nôr, Suối Pâr Le, Du Lịch Bản Địa",
+  description: "Khám phá danh sách homestay ven suối, Thác A Nôr, Suối Pâr Le, ẩm thực Pa Cô và các điểm du lịch sinh thái cộng đồng tiêu biểu tại A Lưới, Thừa Thiên Huế.",
+  alternates: {
+    canonical: `${siteUrl}/places`
+  },
+  openGraph: {
+    title: "Điểm Đến & Homestay A Lưới - Chạm A Lưới",
+    description: "Khám phá danh sách homestay ven suối, Thác A Nôr, Suối Pâr Le, ẩm thực Pa Cô và các điểm du lịch sinh thái cộng đồng.",
+    url: `${siteUrl}/places`,
+    siteName: "Chạm A Lưới",
+    images: [{ url: `${siteUrl}/images/home-hero.jpg`, width: 1200, height: 630 }]
+  }
 };
 
 export default async function PlacesPage({
@@ -23,8 +36,28 @@ export default async function PlacesPage({
   const activeCategory = getCategoryById(activeCategoryId) || placeCategories[0];
   const filteredPlaces = getPlacesByCategory(activeCategoryId);
 
+  const itemListJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Danh sách Điểm Đến & Homestay Du Lịch Cộng Đồng A Lưới",
+    description: "Khám phá Thác A Nôr, Suối Pâr Le, Homestay bản địa và các điểm du lịch sinh thái tại A Lưới, Thừa Thiên Huế",
+    numberOfItems: filteredPlaces.length,
+    itemListElement: filteredPlaces.map((p, idx) => ({
+      "@type": "ListItem",
+      position: idx + 1,
+      name: p.name,
+      url: `${siteUrl}/places/${p.slug}`,
+      image: toAbsoluteImageUrl(p.image)
+    }))
+  };
+
   return (
     <main className="pt-24">
+      {/* Schema.org ItemList Carousel Rich Snippet */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+      />
       <section className="relative overflow-hidden bg-forest py-20 text-white">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(184,111,60,0.35),transparent_34%),linear-gradient(135deg,#0F5C4A,#16211E)]" />
         <div className="section-shell relative z-10">
