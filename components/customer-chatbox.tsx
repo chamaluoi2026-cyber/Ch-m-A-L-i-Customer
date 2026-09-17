@@ -9,6 +9,7 @@ import {
   MessageCircle,
   Phone,
   Send,
+  Sparkles,
   User,
   X
 } from "lucide-react";
@@ -16,6 +17,7 @@ import {
   getChatSessionAction,
   sendGuestMessageAction
 } from "@/app/actions/chat";
+import { extractVietnamesePhone } from "@/lib/ai/indigenous-chat-bot";
 
 type Message = {
   id: string;
@@ -32,9 +34,16 @@ const CHAT_OPEN_KEY = "cham_aluoi_chat_open_state";
 const DEFAULT_WELCOME_MSG: Message = {
   id: "welcome-1",
   role: "staff",
-  text: "Xin chào quý khách! Em là nhân viên hỗ trợ du lịch Chạm A Lưới. Quý khách cần tư vấn điểm đến, homestay hay nhận mã ưu đãi giảm giá cứ nhắn em nhé!",
+  text: "Xin chào quý khách! 🌿 Em là Trợ lý AI Bản Địa của Chạm A Lưới. Quý khách cần hỏi giá phòng homestay, đặc sản gà nướng cơm lam hay lịch trình tour 2N1Đ cứ nhắn em hỗ trợ tức thì nhé ạ!",
   createdAt: new Date().toISOString()
 };
+
+const QUICK_PROMPTS = [
+  { label: "🏡 Giá phòng homestay?", prompt: "Giá phòng homestay bao nhiêu một đêm và có những loại phòng nào ạ?" },
+  { label: "🍗 Đặc sản có gì ngon?", prompt: "Đặc sản A Lưới có món gì ngon và menu ăn uống ra sao ạ?" },
+  { label: "🌿 Lịch trình Tour 2N1Đ?", prompt: "Tư vấn cho mình lịch trình Tour trải nghiệm 2N1Đ trọn gói với ạ" },
+  { label: "🎁 Nhận Voucher giảm 10%", prompt: "Cho mình xin mã Voucher ưu đãi giảm giá 10% với nhé!" }
+];
 
 function getOrCreateSessionId(): string {
   if (typeof window === "undefined") return "";
@@ -58,6 +67,7 @@ export function CustomerChatbox() {
   const [showInfoInputs, setShowInfoInputs] = useState(false);
   const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [isAiTyping, setIsAiTyping] = useState(false);
   const [messages, setMessages] = useState<Message[]>([DEFAULT_WELCOME_MSG]);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -115,6 +125,9 @@ export function CustomerChatbox() {
         const data = await res.json();
         if (data.session && Array.isArray(data.session.messages) && data.session.messages.length > 0) {
           setMessages(data.session.messages);
+          if (data.session.guestPhone && !guestPhone) {
+            setGuestPhone(data.session.guestPhone);
+          }
           try {
             localStorage.setItem(MESSAGES_CACHE_KEY, JSON.stringify(data.session.messages));
           } catch {
@@ -128,6 +141,9 @@ export function CustomerChatbox() {
       const session = await getChatSessionAction(targetSessionId);
       if (session && Array.isArray(session.messages) && session.messages.length > 0) {
         setMessages(session.messages);
+        if (session.guestPhone && !guestPhone) {
+          setGuestPhone(session.guestPhone);
+        }
         try {
           localStorage.setItem(MESSAGES_CACHE_KEY, JSON.stringify(session.messages));
         } catch {
@@ -144,16 +160,14 @@ export function CustomerChatbox() {
     if (open) {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages, open]);
+  }, [messages, open, isAiTyping]);
 
   // Polling định kỳ lấy phản hồi của Admin khi đang mở hộp chat
   useEffect(() => {
     if (!open || !sessionId) return;
 
-    // Fetch ngay khi người dùng mở hộp chat
     syncMessagesFromDatabase(sessionId);
 
-    // Lắng nghe phản hồi từ Admin mỗi 3.5 giây
     const timer = setInterval(() => {
       syncMessagesFromDatabase(sessionId);
     }, 3500);
@@ -169,17 +183,29 @@ export function CustomerChatbox() {
     }
   };
 
-  // Gửi tin nhắn mới
-  const handleSendMessage = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const trimmed = message.trim();
+  // Gửi tin nhắn và nhận phản hồi AI tự động
+  const handleSendText = async (rawText: string) => {
+    const trimmed = rawText.trim();
     if (!trimmed || isSending) return;
 
     const currentSessionId = sessionId || getOrCreateSessionId();
     if (!sessionId) setSessionId(currentSessionId);
 
-    // Lưu thông tin khách hàng nếu có nhập
-    if (guestName || guestPhone) {
+    // Tự động phát hiện Số Điện Thoại trong tin nhắn
+    const phoneFound = extractVietnamesePhone(trimmed);
+    let effectivePhone = guestPhone;
+    if (phoneFound) {
+      effectivePhone = phoneFound;
+      setGuestPhone(phoneFound);
+      try {
+        localStorage.setItem(
+          GUEST_INFO_KEY,
+          JSON.stringify({ name: guestName, phone: phoneFound })
+        );
+      } catch {
+        // ignore
+      }
+    } else if (guestName || guestPhone) {
       try {
         localStorage.setItem(
           GUEST_INFO_KEY,
@@ -197,11 +223,12 @@ export function CustomerChatbox() {
       createdAt: new Date().toISOString()
     };
 
-    // Optimistic UI: Hiển thị ngay lập tức trên màn hình
+    // Optimistic UI: Hiển thị ngay lập tức tin nhắn của khách
     const updatedMessages = [...messages, tempGuestMsg];
     setMessages(updatedMessages);
     setMessage("");
     setIsSending(true);
+    setIsAiTyping(true);
 
     try {
       localStorage.setItem(MESSAGES_CACHE_KEY, JSON.stringify(updatedMessages));
@@ -210,69 +237,82 @@ export function CustomerChatbox() {
     }
 
     try {
-      // Lưu vào Database PostgreSQL qua API /api/chat
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sessionId: currentSessionId,
           guestName: guestName.trim() || "Khách truy cập",
-          guestPhone: guestPhone.trim() || undefined,
+          guestPhone: effectivePhone.trim() || undefined,
           text: trimmed,
           role: "guest"
         })
       });
 
       const data = await res.json();
-      if (data.success && data.session) {
-        if (Array.isArray(data.session.messages)) {
+      if (data.success && data.session && Array.isArray(data.session.messages)) {
+        // Hiệu ứng delay tự nhiên để hiển thị AI đang soạn tin
+        setTimeout(() => {
           setMessages(data.session.messages);
+          setIsAiTyping(false);
           try {
             localStorage.setItem(MESSAGES_CACHE_KEY, JSON.stringify(data.session.messages));
           } catch {
             // ignore
           }
-        }
-      } else {
-        // Fallback Server Action
-        const fallbackRes = await sendGuestMessageAction({
-          sessionId: currentSessionId,
-          guestName: guestName.trim() || "Khách truy cập",
-          guestPhone: guestPhone.trim() || undefined,
-          text: trimmed
-        });
-        if (fallbackRes.success && fallbackRes.session?.messages) {
-          setMessages(fallbackRes.session.messages);
-          try {
-            localStorage.setItem(MESSAGES_CACHE_KEY, JSON.stringify(fallbackRes.session.messages));
-          } catch {
-            // ignore
-          }
+        }, 600);
+        return;
+      }
+
+      // Fallback Server Action
+      const fallbackRes = await sendGuestMessageAction({
+        sessionId: currentSessionId,
+        guestName: guestName.trim() || "Khách truy cập",
+        guestPhone: effectivePhone.trim() || undefined,
+        text: trimmed
+      });
+      if (fallbackRes.success && fallbackRes.session?.messages) {
+        setMessages(fallbackRes.session.messages);
+        try {
+          localStorage.setItem(MESSAGES_CACHE_KEY, JSON.stringify(fallbackRes.session.messages));
+        } catch {
+          // ignore
         }
       }
     } catch (err) {
       console.error("Không thể lưu tin nhắn vào Database:", err);
     } finally {
       setIsSending(false);
+      setIsAiTyping(false);
     }
+  };
+
+  const handleSubmitForm = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    handleSendText(message);
   };
 
   return (
     <aside className="fixed bottom-5 right-5 z-[60]" aria-label="Chat hỗ trợ khách hàng">
       {open ? (
-        <section className="mb-4 flex h-[520px] w-[min(380px,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl border border-forest/15 bg-white shadow-2xl transition-all">
+        <section className="mb-4 flex h-[540px] w-[min(400px,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl border border-forest/15 bg-white shadow-2xl transition-all animate-in fade-in zoom-in-95 duration-200">
           {/* Header */}
-          <header className="flex items-center justify-between bg-forest px-5 py-4 text-white">
-            <div className="flex items-center gap-3">
+          <header className="flex items-center justify-between bg-[#0F382E] px-4 py-3.5 text-white shadow-md">
+            <div className="flex items-center gap-2.5">
               <div className="relative grid size-10 place-items-center rounded-full bg-white/20">
                 <Headphones className="size-5" aria-hidden="true" />
-                <span className="absolute bottom-0 right-0 size-2.5 rounded-full bg-emerald-400 ring-2 ring-forest" />
+                <span className="absolute bottom-0 right-0 size-2.5 rounded-full bg-emerald-400 ring-2 ring-[#0F382E]" />
               </div>
               <div>
-                <strong className="block text-sm font-bold">Tư vấn Chạm A Lưới</strong>
+                <strong className="block text-sm font-bold flex items-center gap-1.5">
+                  Tư vấn Chạm A Lưới
+                  <span className="rounded-full bg-emerald-500/30 text-emerald-200 px-2 py-0.5 text-[9px] font-extrabold tracking-wider border border-emerald-400/30 flex items-center gap-0.5">
+                    <Sparkles className="size-2.5" /> AI 24/7
+                  </span>
+                </strong>
                 <p className="flex items-center gap-1.5 text-[11px] text-white/80">
                   <span className="size-1.5 rounded-full bg-emerald-300 animate-pulse" />
-                  Đang trực tuyến • Sẵn sàng hỗ trợ
+                  Trợ lý AI Bản Địa • Trả lời tức thì trong 3s
                 </p>
               </div>
             </div>
@@ -286,23 +326,30 @@ export function CustomerChatbox() {
             </button>
           </header>
 
-          {/* Guest info toggle (optional name/phone) */}
-          <div className="border-b border-black/5 bg-beige/40 px-4 py-2">
+          {/* Guest info banner (hiển thị SĐT hoặc toggle nhập) */}
+          <div className="border-b border-black/5 bg-emerald-50/70 px-4 py-2">
             <button
               type="button"
               onClick={() => setShowInfoInputs(!showInfoInputs)}
-              className="flex w-full items-center justify-between text-[11px] font-semibold text-ink/70 hover:text-forest"
+              className="flex w-full items-center justify-between text-[11px] font-semibold text-emerald-950 hover:text-forest"
             >
-              <span>
-                {guestPhone
-                  ? `SĐT liên hệ: ${guestPhone} ${guestName ? `(${guestName})` : ""}`
-                  : "💡 Để lại Tên & SĐT để được gọi lại tư vấn chi tiết"}
+              <span className="flex items-center gap-1.5 truncate">
+                {guestPhone ? (
+                  <>
+                    <span className="size-2 rounded-full bg-emerald-600" />
+                    <span>SĐT nhận ưu đãi: <strong className="font-mono text-emerald-800">{guestPhone}</strong></span>
+                  </>
+                ) : (
+                  <>
+                    <span>🎁 Để lại SĐT/Zalo nhận ảnh thực tế & Voucher 10%</span>
+                  </>
+                )}
               </span>
-              {showInfoInputs ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
+              {showInfoInputs ? <ChevronUp className="size-3.5 shrink-0" /> : <ChevronDown className="size-3.5 shrink-0" />}
             </button>
 
             {showInfoInputs && (
-              <div className="mt-2 grid grid-cols-2 gap-2 pb-1">
+              <div className="mt-2 grid grid-cols-2 gap-2 pb-1 animate-in fade-in">
                 <div className="relative">
                   <User className="absolute left-2.5 top-2.5 size-3.5 text-ink/40" />
                   <input
@@ -328,7 +375,7 @@ export function CustomerChatbox() {
           </div>
 
           {/* Messages list */}
-          <div className="flex-1 space-y-3 overflow-y-auto bg-[#F7F8F7] p-4">
+          <div className="flex-1 space-y-3 overflow-y-auto bg-[#F7F8F7] p-4 text-xs">
             {messages.map((item, index) => {
               const isGuest = item.role === "guest";
               const timeStr = item.createdAt
@@ -346,57 +393,84 @@ export function CustomerChatbox() {
                   <div
                     className={
                       isGuest
-                        ? "max-w-[85%] rounded-2xl rounded-tr-sm bg-forest px-4 py-2.5 text-xs leading-5 text-white shadow-sm"
-                        : "max-w-[85%] rounded-2xl rounded-tl-sm bg-white border border-black/5 px-4 py-2.5 text-xs leading-5 text-ink shadow-sm"
+                        ? "max-w-[85%] rounded-2xl rounded-tr-xs bg-forest px-4 py-2.5 text-xs leading-5 text-white shadow-sm whitespace-pre-line"
+                        : "max-w-[88%] rounded-2xl rounded-tl-xs bg-white border border-black/5 px-4 py-3 text-xs leading-relaxed text-ink shadow-sm whitespace-pre-line"
                     }
                   >
                     {item.text}
                   </div>
                   {timeStr && (
-                    <span className="mt-1 text-[10px] text-ink/40 px-1">
-                      {isGuest ? "Bạn • " : "Nhân viên • "}
-                      {timeStr}
+                    <span className="mt-1 text-[10px] text-ink/40 px-1 flex items-center gap-1">
+                      {isGuest ? (
+                        "Bạn • " + timeStr
+                      ) : (
+                        <>
+                          <Sparkles className="size-2.5 text-emerald-600" />
+                          <span>Trợ lý AI Bản Địa • {timeStr}</span>
+                        </>
+                      )}
                     </span>
                   )}
                 </div>
               );
             })}
+
+            {/* AI Typing Indicator */}
+            {isAiTyping && (
+              <div className="flex flex-col items-start animate-in fade-in">
+                <div className="rounded-2xl rounded-tl-xs bg-white border border-emerald-500/20 px-3.5 py-2.5 text-xs text-forest shadow-xs flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    <span className="size-1.5 rounded-full bg-forest animate-bounce [animation-delay:-0.3s]" />
+                    <span className="size-1.5 rounded-full bg-forest animate-bounce [animation-delay:-0.15s]" />
+                    <span className="size-1.5 rounded-full bg-forest animate-bounce" />
+                  </div>
+                  <span className="text-[11px] font-medium text-ink/70">
+                    Trợ lý Chạm A Lưới đang soạn câu trả lời...
+                  </span>
+                </div>
+              </div>
+            )}
+
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Quick prompt suggestions */}
-          <div className="flex gap-1.5 overflow-x-auto bg-white px-3 py-2 border-t border-black/5 no-scrollbar">
-            {[
-              "Tư vấn tour 2N1Đ",
-              "Giá phòng homestay?",
-              "Đặc sản có gì ngon?",
-              "Lấy mã giảm giá"
-            ].map((tag) => (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => setMessage(tag)}
-                className="shrink-0 rounded-full bg-beige/80 px-2.5 py-1 text-[11px] font-medium text-ink/80 hover:bg-forest hover:text-white transition"
-              >
-                {tag}
-              </button>
-            ))}
+          {/* 4 Phím tắt 1 chạm hỏi nhanh (1-Click Quick Prompts) */}
+          <div className="bg-white px-3 py-2 border-t border-black/5">
+            <div className="flex items-center justify-between pb-1.5">
+              <span className="text-[10px] font-bold text-ink/50 uppercase tracking-wider flex items-center gap-1">
+                <Sparkles className="size-3 text-amber-500" /> Câu hỏi nhanh 1 chạm:
+              </span>
+              <span className="text-[10px] text-forest font-semibold">Tự động trả lời &lt; 3s</span>
+            </div>
+            <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+              {QUICK_PROMPTS.map((q) => (
+                <button
+                  key={q.label}
+                  type="button"
+                  disabled={isSending}
+                  onClick={() => handleSendText(q.prompt)}
+                  className="shrink-0 rounded-full bg-forest/5 border border-forest/20 px-3 py-1 text-[11px] font-bold text-forest hover:bg-forest hover:text-white transition active:scale-95 disabled:opacity-50 shadow-xs flex items-center gap-1"
+                >
+                  <span>{q.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Input Form */}
-          <form onSubmit={handleSendMessage} className="flex items-center gap-2 border-t border-black/10 bg-white p-3">
+          <form onSubmit={handleSubmitForm} className="flex items-center gap-2 border-t border-black/10 bg-white p-3">
             <input
               type="text"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Nhập tin nhắn hoặc câu hỏi..."
+              placeholder="Hỏi giá phòng, đặc sản hoặc gửi SĐT/Zalo..."
               className="min-w-0 flex-1 rounded-full bg-beige/60 px-4 py-2.5 text-xs text-ink placeholder:text-ink/50 focus:outline-none focus:ring-2 focus:ring-forest/30"
             />
             <button
               type="submit"
               disabled={isSending || !message.trim()}
               aria-label="Gửi tin nhắn"
-              className="grid size-10 place-items-center rounded-full bg-forest text-white hover:bg-ink transition disabled:opacity-50 shrink-0"
+              className="grid size-10 place-items-center rounded-full bg-forest text-white hover:bg-ink transition disabled:opacity-50 shrink-0 shadow-sm"
             >
               {isSending ? (
                 <Loader2 className="size-4 animate-spin" aria-hidden="true" />
@@ -412,14 +486,17 @@ export function CustomerChatbox() {
       <button
         type="button"
         onClick={() => handleToggleOpen(!open)}
-        className="group relative ml-auto flex items-center gap-3 rounded-full bg-forest px-5 py-3.5 font-bold text-white shadow-soft transition hover:-translate-y-0.5 hover:bg-ink hover:shadow-xl"
+        className="group relative ml-auto flex items-center gap-3 rounded-full bg-forest px-5 py-3.5 font-bold text-white shadow-soft transition hover:-translate-y-0.5 hover:bg-ink hover:shadow-xl active:scale-95"
         aria-label="Mở chat hỗ trợ khách hàng"
       >
         <span className="relative">
           <MessageCircle className="size-5 transition group-hover:scale-110" aria-hidden="true" />
           <span className="absolute -top-1 -right-1 size-2.5 rounded-full bg-emerald-400 ring-2 ring-forest" />
         </span>
-        <span className="text-sm">Tư vấn trực tuyến</span>
+        <span className="text-sm flex items-center gap-1.5">
+          <span>Tư vấn trực tuyến</span>
+          <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[10px] font-extrabold uppercase">AI</span>
+        </span>
       </button>
     </aside>
   );
