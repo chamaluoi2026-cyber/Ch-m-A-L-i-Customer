@@ -26,34 +26,55 @@ type Message = {
 
 const STORAGE_KEY = "cham_aluoi_chat_session_id";
 const GUEST_INFO_KEY = "cham_aluoi_guest_info";
+const MESSAGES_CACHE_KEY = "cham_aluoi_chat_messages_cache";
+const CHAT_OPEN_KEY = "cham_aluoi_chat_open_state";
+
+const DEFAULT_WELCOME_MSG: Message = {
+  id: "welcome-1",
+  role: "staff",
+  text: "Xin chào quý khách! Em là nhân viên hỗ trợ du lịch Chạm A Lưới. Quý khách cần tư vấn điểm đến, homestay hay nhận mã ưu đãi giảm giá cứ nhắn em nhé!",
+  createdAt: new Date().toISOString()
+};
+
+function getOrCreateSessionId(): string {
+  if (typeof window === "undefined") return "";
+  let id = localStorage.getItem(STORAGE_KEY);
+  if (!id) {
+    id = `chat-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`;
+    try {
+      localStorage.setItem(STORAGE_KEY, id);
+    } catch {
+      // ignore
+    }
+  }
+  return id;
+}
 
 export function CustomerChatbox() {
   const [open, setOpen] = useState(false);
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string>("");
   const [guestName, setGuestName] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
   const [showInfoInputs, setShowInfoInputs] = useState(false);
   const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
-
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "welcome-1",
-      role: "staff",
-      text: "Xin chào quý khách! Em là nhân viên hỗ trợ du lịch Chạm A Lưới. Quý khách cần tư vấn điểm đến, homestay hay nhận mã ưu đãi giảm giá cứ nhắn em nhé!",
-      createdAt: new Date().toISOString()
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([DEFAULT_WELCOME_MSG]);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  // Khởi tạo sessionId và thông tin khách từ localStorage
+  // 1. Khởi tạo: Nạp sessionId, thông tin khách và lịch sử tin nhắn từ LocalStorage ngay khi tải trang
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const savedId = localStorage.getItem(STORAGE_KEY);
-      if (savedId) {
-        setSessionId(savedId);
+      const activeSessionId = getOrCreateSessionId();
+      setSessionId(activeSessionId);
+
+      // Đọc trạng thái mở chatbox khi chuyển trang
+      const savedOpenState = sessionStorage.getItem(CHAT_OPEN_KEY);
+      if (savedOpenState === "true") {
+        setOpen(true);
       }
+
+      // Nạp thông tin khách đã nhập trước đó
       try {
         const savedInfo = localStorage.getItem(GUEST_INFO_KEY);
         if (savedInfo) {
@@ -64,54 +85,100 @@ export function CustomerChatbox() {
       } catch {
         // ignore
       }
+
+      // Nạp tin nhắn đã lưu trước từ LocalStorage để hiển thị tức thì (Zero-latency)
+      try {
+        const cached = localStorage.getItem(MESSAGES_CACHE_KEY);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setMessages(parsed);
+          }
+        }
+      } catch {
+        // ignore
+      }
+
+      // Đồng bộ ngay với Database Supabase PostgreSQL ở chế độ nền
+      if (activeSessionId) {
+        syncMessagesFromDatabase(activeSessionId);
+      }
     }
   }, []);
 
-  // Tự động cuộn xuống cuối khi có tin nhắn mới
+  // Hàm đồng bộ tin nhắn từ Database PostgreSQL (Supabase)
+  async function syncMessagesFromDatabase(targetSessionId: string) {
+    if (!targetSessionId) return;
+    try {
+      const res = await fetch(`/api/chat?sessionId=${targetSessionId}`, { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.session && Array.isArray(data.session.messages) && data.session.messages.length > 0) {
+          setMessages(data.session.messages);
+          try {
+            localStorage.setItem(MESSAGES_CACHE_KEY, JSON.stringify(data.session.messages));
+          } catch {
+            // ignore
+          }
+          return;
+        }
+      }
+
+      // Fallback Server Action nếu API route bận
+      const session = await getChatSessionAction(targetSessionId);
+      if (session && Array.isArray(session.messages) && session.messages.length > 0) {
+        setMessages(session.messages);
+        try {
+          localStorage.setItem(MESSAGES_CACHE_KEY, JSON.stringify(session.messages));
+        } catch {
+          // ignore
+        }
+      }
+    } catch (err) {
+      console.error("[CHAT_SYNC_ERR]", err);
+    }
+  }
+
+  // Tự động cuộn xuống tin nhắn mới nhất
   useEffect(() => {
     if (open) {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, open]);
 
-  // Polling lấy tin nhắn từ Admin khi chatbox đang mở
+  // Polling định kỳ lấy phản hồi của Admin khi đang mở hộp chat
   useEffect(() => {
     if (!open || !sessionId) return;
 
-    async function fetchSession() {
-      if (!sessionId) return;
-      try {
-        const res = await fetch(`/api/chat?sessionId=${sessionId}`, { cache: "no-store" });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.session && data.session.messages) {
-            setMessages(data.session.messages);
-            return;
-          }
-        }
-        const session = await getChatSessionAction(sessionId);
-        if (session && session.messages) {
-          setMessages(session.messages);
-        }
-      } catch (err) {
-        console.error("Lỗi cập nhật tin nhắn:", err);
-      }
-    }
+    // Fetch ngay khi người dùng mở hộp chat
+    syncMessagesFromDatabase(sessionId);
 
-    // Fetch ngay khi mở
-    fetchSession();
+    // Lắng nghe phản hồi từ Admin mỗi 3.5 giây
+    const timer = setInterval(() => {
+      syncMessagesFromDatabase(sessionId);
+    }, 3500);
 
-    // Polling mỗi 3 giây
-    const timer = setInterval(fetchSession, 3000);
     return () => clearInterval(timer);
   }, [open, sessionId]);
 
+  // Lưu trạng thái mở/đóng vào SessionStorage khi người dùng click
+  const handleToggleOpen = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(CHAT_OPEN_KEY, String(newOpen));
+    }
+  };
+
+  // Gửi tin nhắn mới
   const handleSendMessage = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const trimmed = message.trim();
     if (!trimmed || isSending) return;
 
-    // Lưu thông tin khách
+    const currentSessionId = sessionId || getOrCreateSessionId();
+    if (!sessionId) setSessionId(currentSessionId);
+
+    // Lưu thông tin khách hàng nếu có nhập
     if (guestName || guestPhone) {
       try {
         localStorage.setItem(
@@ -130,45 +197,61 @@ export function CustomerChatbox() {
       createdAt: new Date().toISOString()
     };
 
-    setMessages((prev) => [...prev, tempGuestMsg]);
+    // Optimistic UI: Hiển thị ngay lập tức trên màn hình
+    const updatedMessages = [...messages, tempGuestMsg];
+    setMessages(updatedMessages);
     setMessage("");
     setIsSending(true);
 
     try {
+      localStorage.setItem(MESSAGES_CACHE_KEY, JSON.stringify(updatedMessages));
+    } catch {
+      // ignore
+    }
+
+    try {
+      // Lưu vào Database PostgreSQL qua API /api/chat
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          sessionId: sessionId || undefined,
+          sessionId: currentSessionId,
           guestName: guestName.trim() || "Khách truy cập",
           guestPhone: guestPhone.trim() || undefined,
           text: trimmed,
           role: "guest"
         })
       });
+
       const data = await res.json();
       if (data.success && data.session) {
-        setSessionId(data.session.id);
-        if (typeof window !== "undefined") {
-          localStorage.setItem(STORAGE_KEY, data.session.id);
-        }
-        if (data.session.messages) {
+        if (Array.isArray(data.session.messages)) {
           setMessages(data.session.messages);
+          try {
+            localStorage.setItem(MESSAGES_CACHE_KEY, JSON.stringify(data.session.messages));
+          } catch {
+            // ignore
+          }
         }
       } else {
+        // Fallback Server Action
         const fallbackRes = await sendGuestMessageAction({
-          sessionId: sessionId || undefined,
+          sessionId: currentSessionId,
           guestName: guestName.trim() || "Khách truy cập",
           guestPhone: guestPhone.trim() || undefined,
           text: trimmed
         });
-        if (fallbackRes.success && fallbackRes.session) {
-          setSessionId(fallbackRes.session.id);
-          if (fallbackRes.session.messages) setMessages(fallbackRes.session.messages);
+        if (fallbackRes.success && fallbackRes.session?.messages) {
+          setMessages(fallbackRes.session.messages);
+          try {
+            localStorage.setItem(MESSAGES_CACHE_KEY, JSON.stringify(fallbackRes.session.messages));
+          } catch {
+            // ignore
+          }
         }
       }
     } catch (err) {
-      console.error("Không thể gửi tin nhắn:", err);
+      console.error("Không thể lưu tin nhắn vào Database:", err);
     } finally {
       setIsSending(false);
     }
@@ -196,7 +279,7 @@ export function CustomerChatbox() {
             <button
               type="button"
               aria-label="Đóng chat"
-              onClick={() => setOpen(false)}
+              onClick={() => handleToggleOpen(false)}
               className="rounded-full p-2 text-white/80 hover:bg-white/15 hover:text-white transition"
             >
               <X className="size-5" aria-hidden="true" />
@@ -328,7 +411,7 @@ export function CustomerChatbox() {
       {/* Floating Trigger Button */}
       <button
         type="button"
-        onClick={() => setOpen((prev) => !prev)}
+        onClick={() => handleToggleOpen(!open)}
         className="group relative ml-auto flex items-center gap-3 rounded-full bg-forest px-5 py-3.5 font-bold text-white shadow-soft transition hover:-translate-y-0.5 hover:bg-ink hover:shadow-xl"
         aria-label="Mở chat hỗ trợ khách hàng"
       >
