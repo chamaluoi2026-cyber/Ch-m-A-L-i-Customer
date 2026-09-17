@@ -28,7 +28,7 @@ async function fetchFromSupabaseDirect(): Promise<SiteSettings | null> {
 export async function GET() {
   const cloudSettings = await fetchFromSupabaseDirect();
   const currentSettings = cloudSettings || getSiteSettings();
-  return NextResponse.json({ success: true, settings: currentSettings });
+  return NextResponse.json({ success: true, settings: currentSettings, data: currentSettings });
 }
 
 export async function POST(req: NextRequest) {
