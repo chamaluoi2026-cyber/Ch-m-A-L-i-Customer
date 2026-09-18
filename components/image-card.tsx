@@ -1,9 +1,12 @@
+﻿"use client";
+
 import { AppImage } from "@/components/ui/app-image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
+import { useLanguage } from "@/components/i18n-provider";
 
 export function ImageCard({
   href,
@@ -13,7 +16,7 @@ export function ImageCard({
   subtitle,
   meta,
   price,
-  cta = "Xem chi tiết"
+  cta
 }: {
   href: string;
   image: string;
@@ -24,6 +27,10 @@ export function ImageCard({
   price?: number;
   cta?: string;
 }) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+  const resolvedCta = cta || (isEn ? "View Details" : "Xem chi tiết");
+
   return (
     <Card className="overflow-hidden">
       <Link href={href} className="group block">
@@ -44,7 +51,10 @@ export function ImageCard({
         <footer className="mt-5 flex items-center justify-between gap-3">
           {price ? <p className="text-sm font-bold text-forest">{formatCurrency(price)}</p> : <span aria-hidden="true" />}
           <Button asChild variant="outline" size="default">
-            <Link href={href}>{cta}<ArrowRight className="size-4" aria-hidden="true" /></Link>
+            <Link href={href}>
+              {resolvedCta}
+              <ArrowRight className="size-4 ml-1.5" aria-hidden="true" />
+            </Link>
           </Button>
         </footer>
       </section>

@@ -23,6 +23,12 @@ import { imageFor } from "@/data/site";
 import { useLanguage } from "@/components/i18n-provider";
 import type { Place } from "@/data/places";
 import type { PlaceRecord } from "@/lib/server-store";
+import {
+  homestayTranslations,
+  productTranslations,
+  blogTranslations,
+  testimonialTranslations
+} from "@/lib/i18n/catalog-translations";
 
 interface HomeClientViewProps {
   activeHeroImage: string;
@@ -59,11 +65,11 @@ const aluoiGallery = [
     className: ""
   },
   {
-    title: "Bản làng Pa Cô, Tà Ôi",
-    enTitle: "Pa Co & Ta Oi Villages",
-    caption: "Nơi văn hóa Pa Cô, Tà Ôi được kể bằng đời sống.",
-    enCaption: "Where living indigenous heritage thrives through looms and daily rhythm.",
-    image: imageFor("photo-1482192505345-5655af888cc4"),
+    title: "Văn hóa bản địa",
+    enTitle: "Indigenous Living Heritage",
+    caption: "Chạm vào đời sống, nghề thủ công và sự đón tiếp ấm áp.",
+    enCaption: "Immersion into tribal crafts, stilt architecture, and sincere smiles.",
+    image: imageFor("photo-1452860606245-08befc0ff44b"),
     className: "md:col-span-2"
   }
 ];
@@ -76,54 +82,84 @@ export function HomeClientView({
   publishedBlogs,
   testimonials
 }: HomeClientViewProps) {
-  const { language, t } = useLanguage();
+  const { t, language } = useLanguage();
   const isEn = language === "en";
 
   return (
-    <main>
-      {/* 1. HERO SECTION */}
-      <section className="relative flex min-h-screen items-center overflow-hidden">
-        <AppImage
-          src={activeHeroImage}
-          alt={isEn ? "A Luoi mountain scenery at sunrise" : "Cảnh núi rừng A Lưới lúc bình minh"}
-          fill
-          priority
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-ink/70 via-ink/28 to-ink/65" />
-        <article className="section-shell relative z-10 pt-20 text-white">
-          <p className="text-sm font-bold uppercase tracking-[0.28em] text-white/75">
-            {t.home.heroTag}
-          </p>
-          <h1 className="mt-5 max-w-4xl text-5xl font-extrabold tracking-tight md:text-7xl">
-            {t.home.heroTitle}
-          </h1>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-white/82">
-            {t.home.heroDesc}
-          </p>
-          <nav className="mt-9 flex flex-wrap gap-4" aria-label={isEn ? "Primary Actions" : "Hành động chính"}>
-            <Button asChild size="lg">
-              <Link href="/places">
-                {t.home.heroExploreBtn}
-                <ArrowRight className="size-5" />
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="secondary">
-              <Link href="/book-tour">{t.home.heroBookTourBtn}</Link>
-            </Button>
-          </nav>
-        </article>
-        <a
-          href="#featured"
-          aria-label={isEn ? "Scroll to featured destinations" : "Cuộn xuống địa điểm nổi bật"}
-          className="absolute bottom-8 left-1/2 z-10 -translate-x-1/2 rounded-full border border-white/35 p-3 text-white"
-        >
-          <ArrowDown className="size-5 animate-bounce" aria-hidden="true" />
-        </a>
+    <main className="space-y-0">
+      {/* 1. HERO BANNER */}
+      <section className="relative min-h-[92vh] flex items-center justify-center overflow-hidden bg-forest pt-20 text-white">
+        <figure className="absolute inset-0">
+          <AppImage
+            src={activeHeroImage}
+            alt="Phong cảnh núi rừng A Lưới"
+            fill
+            priority
+            className="object-cover object-center brightness-[0.72] contrast-[1.05]"
+          />
+          <figcaption className="sr-only">Hình ảnh đại diện phong cảnh thiên nhiên A Lưới</figcaption>
+          <div className="absolute inset-0 bg-gradient-to-t from-forest-dark via-forest/40 to-black/30" />
+          <div className="absolute inset-0 bg-radial-vignette opacity-60" />
+        </figure>
+
+        <header className="relative z-10 mx-auto max-w-5xl px-4 py-24 text-center sm:px-6 lg:px-8">
+          <MotionReveal>
+            <p className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.22em] text-white backdrop-blur-md">
+              <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+              {t.home.heroTag}
+            </p>
+          </MotionReveal>
+
+          <MotionReveal delay={0.1}>
+            <h1 className="mt-6 text-4xl font-extrabold tracking-tight sm:text-6xl lg:text-7xl leading-[1.15]">
+              {isEn ? (
+                <>
+                  Highland Adventure &amp; <br />
+                  <span className="text-emerald-300">Nature Retreat</span>
+                </>
+              ) : (
+                <>
+                  Chạm A Lưới <br />
+                  <span className="text-emerald-300">Du lịch cộng đồng</span>
+                </>
+              )}
+            </h1>
+          </MotionReveal>
+
+          <MotionReveal delay={0.2}>
+            <p className="mx-auto mt-6 max-w-2xl text-lg font-normal leading-relaxed text-white/90 sm:text-xl">
+              {t.home.heroDesc}
+            </p>
+          </MotionReveal>
+
+          <MotionReveal delay={0.3}>
+            <nav className="mt-10 flex flex-wrap items-center justify-center gap-4" aria-label="Điều hướng chính Hero">
+              <Button asChild size="lg" className="rounded-full px-8 text-base shadow-lg shadow-forest/20">
+                <Link href="/places">
+                  {t.home.heroExploreBtn}
+                  <ArrowRight className="size-5" />
+                </Link>
+              </Button>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="rounded-full border-white/30 bg-white/10 px-8 text-base text-white backdrop-blur hover:bg-white/20 hover:text-white"
+              >
+                <Link href="/book-tour">{t.home.heroBookTourBtn}</Link>
+              </Button>
+            </nav>
+          </MotionReveal>
+        </header>
+
+        <aside className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/70 text-xs font-medium tracking-widest uppercase">
+          <span>{isEn ? "Scroll to Explore" : "Cuộn để khám phá"}</span>
+          <ArrowDown className="size-4 animate-bounce" />
+        </aside>
       </section>
 
-      {/* 2. FEATURED DESTINATIONS & 3 STEPS */}
-      <section id="featured" className="section-shell py-24">
+      {/* 2. CHOOSE DESTINATION & CLAIM VOUCHER */}
+      <section className="section-shell py-24">
         <MotionReveal>
           <SectionHeading
             eyebrow={t.home.featuredEyebrow}
@@ -131,7 +167,8 @@ export function HomeClientView({
             description={t.home.featuredDesc}
           />
         </MotionReveal>
-        <div className="grid gap-5 md:grid-cols-3">
+
+        <div className="grid gap-6 md:grid-cols-3">
           <article className="rounded-2xl bg-white p-6 shadow-card">
             <p className="flex size-12 items-center justify-center rounded-full bg-forest text-white">
               <Building2 className="size-6" />
@@ -261,18 +298,27 @@ export function HomeClientView({
             title={t.home.homestayTitle}
           />
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {homestays.map((item) => (
-              <ImageCard
-                key={item.id}
-                href="/book-tour"
-                image={item.image}
-                alt={`Homestay ${item.name}`}
-                title={item.name}
-                subtitle={`${item.village} · ${item.capacity}`}
-                meta={`${item.rating} ${isEn ? "rating" : "điểm đánh giá"}`}
-                price={item.price}
-              />
-            ))}
+            {homestays.map((item) => {
+              const hsTrans = homestayTranslations[item.id];
+              const title = isEn && hsTrans ? hsTrans.name : item.name;
+              const village = isEn && hsTrans ? hsTrans.village : item.village;
+              const capacity = isEn && hsTrans ? hsTrans.capacity : item.capacity;
+              const meta = `${item.rating} ${isEn ? "rating" : "điểm đánh giá"}`;
+
+              return (
+                <ImageCard
+                  key={item.id}
+                  href="/book-tour"
+                  image={item.image}
+                  alt={`Homestay ${title}`}
+                  title={title}
+                  subtitle={`${village} · ${capacity}`}
+                  meta={meta}
+                  price={item.price}
+                  cta={isEn ? "View Details" : "Xem chi tiết"}
+                />
+              );
+            })}
           </div>
         </div>
       </section>
@@ -284,19 +330,26 @@ export function HomeClientView({
           title={t.home.specialtiesTitle}
         />
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {products.map((item) => (
-            <ImageCard
-              key={item.slug}
-              href={`/products/${item.slug}#dat-hang`}
-              image={item.image}
-              alt={item.name}
-              title={item.name}
-              subtitle={item.description}
-              meta={item.category}
-              price={item.price}
-              cta={isEn ? "Order Now" : "Đặt hàng"}
-            />
-          ))}
+          {products.map((item) => {
+            const prodTrans = productTranslations[item.slug];
+            const title = isEn && prodTrans ? prodTrans.name : item.name;
+            const subtitle = isEn && prodTrans ? prodTrans.description : item.description;
+            const meta = isEn && prodTrans ? prodTrans.category : item.category;
+
+            return (
+              <ImageCard
+                key={item.slug}
+                href={`/products/${item.slug}#dat-hang`}
+                image={item.image}
+                alt={title}
+                title={title}
+                subtitle={subtitle}
+                meta={meta}
+                price={item.price}
+                cta={isEn ? "Order Now" : "Đặt hàng"}
+              />
+            );
+          })}
         </div>
       </section>
 
@@ -308,20 +361,27 @@ export function HomeClientView({
             title={t.home.blogTitle}
           />
           <div className="grid gap-6 md:grid-cols-3">
-            {publishedBlogs.map((post) => (
-              <article key={post.slug} className="rounded-2xl bg-white/10 p-5 backdrop-blur transition hover:-translate-y-1">
-                <figure className="relative aspect-[4/3] overflow-hidden rounded-xl">
-                  <AppImage src={post.image} alt={post.title} fill className="object-cover" />
-                </figure>
-                <p className="mt-5 text-xs font-bold uppercase tracking-[0.18em] text-white/60">{post.category}</p>
-                <h3 className="mt-2 text-xl font-bold">{post.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-white/70">{post.excerpt}</p>
-                <Link href={`/blog/${post.slug}`} className="mt-5 inline-flex items-center gap-2 text-sm font-bold hover:underline">
-                  {t.home.readArticle}
-                  <ArrowRight className="size-4" />
-                </Link>
-              </article>
-            ))}
+            {publishedBlogs.map((post) => {
+              const bTrans = blogTranslations[post.slug];
+              const title = isEn && bTrans ? bTrans.title : post.title;
+              const category = isEn && bTrans ? bTrans.category : post.category;
+              const excerpt = isEn && bTrans ? bTrans.excerpt : post.excerpt;
+
+              return (
+                <article key={post.slug} className="rounded-2xl bg-white/10 p-5 backdrop-blur transition hover:-translate-y-1">
+                  <figure className="relative aspect-[4/3] overflow-hidden rounded-xl">
+                    <AppImage src={post.image} alt={title} fill className="object-cover" />
+                  </figure>
+                  <p className="mt-5 text-xs font-bold uppercase tracking-[0.18em] text-white/60">{category}</p>
+                  <h3 className="mt-2 text-xl font-bold">{title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-white/70">{excerpt}</p>
+                  <Link href={`/blog/${post.slug}`} className="mt-5 inline-flex items-center gap-2 text-sm font-bold hover:underline">
+                    {t.home.readArticle}
+                    <ArrowRight className="size-4" />
+                  </Link>
+                </article>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -333,21 +393,28 @@ export function HomeClientView({
           title={t.home.testimonialsTitle}
         />
         <div className="grid gap-6 md:grid-cols-3">
-          {testimonials.map((item) => (
-            <article key={item.name} className="rounded-2xl bg-white p-6 shadow-card">
-              <p className="flex gap-1 text-clay" aria-label="5 stars">
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <Star key={index} className="size-4 fill-current" />
-                ))}
-              </p>
-              <blockquote className="mt-5 text-lg font-medium leading-8 text-ink">
-                “{item.quote}”
-              </blockquote>
-              <footer className="mt-5 text-sm text-ink/60">
-                <strong className="text-ink">{item.name}</strong> · {item.role}
-              </footer>
-            </article>
-          ))}
+          {testimonials.map((item, index) => {
+            const enTestimonial = testimonialTranslations[index];
+            const quote = isEn && enTestimonial ? enTestimonial.quote : item.quote;
+            const name = isEn && enTestimonial ? enTestimonial.name : item.name;
+            const role = isEn && enTestimonial ? enTestimonial.role : item.role;
+
+            return (
+              <article key={item.name} className="rounded-2xl bg-white p-6 shadow-card">
+                <p className="flex gap-1 text-clay" aria-label="5 stars">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star key={i} className="size-4 fill-current" />
+                  ))}
+                </p>
+                <blockquote className="mt-5 text-lg font-medium leading-8 text-ink">
+                  “{quote}”
+                </blockquote>
+                <footer className="mt-5 text-sm text-ink/60">
+                  <strong className="text-ink">{name}</strong> · {role}
+                </footer>
+              </article>
+            );
+          })}
         </div>
       </section>
     </main>

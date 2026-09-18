@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { AppImage } from "@/components/ui/app-image";
 import Link from "next/link";
@@ -8,6 +8,7 @@ import type { PlaceRecord } from "@/lib/server-store";
 import { placeCategories } from "@/data/places";
 import { useLanguage } from "@/components/i18n-provider";
 import { categoryTranslations } from "@/lib/i18n/translations";
+import { placeTranslations } from "@/lib/i18n/catalog-translations";
 
 export function PlaceCard({ place }: { place: Place | PlaceRecord }) {
   const { language } = useLanguage();
@@ -19,6 +20,25 @@ export function PlaceCard({ place }: { place: Place | PlaceRecord }) {
     ? catTrans?.en || place.category
     : catTrans?.vi || category?.label || "Địa điểm";
 
+  const pTrans = placeTranslations[place.slug];
+
+  const displayName = isEn && pTrans?.name ? pTrans.name : place.name;
+  const displaySummary = isEn && pTrans?.summary ? pTrans.summary : place.summary;
+  const displayAddress = isEn && pTrans?.address ? pTrans.address : place.address;
+  const displayVoucher = isEn && pTrans?.voucherOffer ? pTrans.voucherOffer : place.voucherOffer;
+
+  const displayPrice = isEn
+    ? pTrans?.priceLabel ||
+      place.priceLabel
+        .replace(/Dịch vụ từ/gi, "Services from")
+        .replace(/Từ/gi, "From")
+        .replace(/Vé & dịch vụ từ/gi, "Entry & services from")
+        .replace(/Gói trọn gói từ/gi, "All-inclusive from")
+        .replace(/đ\/người/gi, "₫/guest")
+        .replace(/đ\/đêm/gi, "₫/night")
+        .replace(/khách/gi, "guests")
+    : place.priceLabel;
+
   const isActive = place.status === "active";
 
   return (
@@ -27,7 +47,7 @@ export function PlaceCard({ place }: { place: Place | PlaceRecord }) {
         <figure className="relative aspect-[4/3] overflow-hidden bg-forest/5">
           <AppImage
             src={place.image}
-            alt={place.name}
+            alt={displayName}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             className="object-cover transition duration-700 group-hover:scale-105"
@@ -53,21 +73,21 @@ export function PlaceCard({ place }: { place: Place | PlaceRecord }) {
               <Star className="size-4 fill-current" aria-hidden="true" />
               {place.rating} ({place.reviewCount})
             </p>
-            <p className="text-sm font-extrabold text-forest">{place.priceLabel}</p>
+            <p className="text-sm font-extrabold text-forest">{displayPrice}</p>
           </div>
           <h2 className="mt-3 text-xl font-extrabold text-ink line-clamp-1 group-hover:text-forest transition">
-            {place.name}
+            {displayName}
           </h2>
           <p className="mt-2 flex items-center gap-1.5 text-xs text-ink/60 line-clamp-1">
             <MapPin className="size-3.5 shrink-0 text-forest" aria-hidden="true" />
-            {place.address}
+            {displayAddress}
           </p>
-          <p className="mt-3 line-clamp-2 text-sm leading-6 text-ink/70">{place.summary}</p>
+          <p className="mt-3 line-clamp-2 text-sm leading-6 text-ink/70">{displaySummary}</p>
         </section>
       </Link>
       <div className="px-5 pb-5 pt-0">
         <div className="rounded-xl bg-forest/5 p-2.5 text-xs font-medium text-forest flex items-center justify-between">
-          <span className="line-clamp-1">🎁 {place.voucherOffer}</span>
+          <span className="line-clamp-1">🎁 {displayVoucher}</span>
         </div>
         <Link
           href={`/places/${place.slug}`}
