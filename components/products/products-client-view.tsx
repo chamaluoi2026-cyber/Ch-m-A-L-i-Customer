@@ -64,9 +64,9 @@ export function ProductsClientView({ products }: ProductsClientViewProps) {
         <section className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {products.map((product) => {
             const prodTrans = productTranslations[product.slug];
-            const title = isEn && prodTrans ? prodTrans.name : product.name;
-            const subtitle = isEn && prodTrans ? prodTrans.description : product.description;
-            const meta = isEn && prodTrans ? prodTrans.category : product.category;
+            const title = isEn ? (product.enName || prodTrans?.name || product.name) : product.name;
+            const subtitle = isEn ? (product.enDescription || prodTrans?.description || product.description) : product.description;
+            const meta = isEn ? (product.enCategory || prodTrans?.category || product.category) : product.category;
 
             return (
               <ImageCard

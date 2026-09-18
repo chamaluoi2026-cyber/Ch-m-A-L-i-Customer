@@ -25,10 +25,10 @@ export function ProductDetailClientView({
   const tPage = isEn ? productPageTranslations.en : productPageTranslations.vi;
 
   const prodTrans = productTranslations[product.slug];
-  const title = isEn && prodTrans ? prodTrans.name : product.name;
-  const description = isEn && prodTrans ? prodTrans.description : product.description;
-  const category = isEn && prodTrans ? prodTrans.category : product.category;
-  const specs = isEn && prodTrans ? prodTrans.specs : product.specs;
+  const title = isEn ? (product.enName || prodTrans?.name || product.name) : product.name;
+  const description = isEn ? (product.enDescription || prodTrans?.description || product.description) : product.description;
+  const category = isEn ? (product.enCategory || prodTrans?.category || product.category) : product.category;
+  const specs = isEn ? (product.enSpecs || prodTrans?.specs || product.specs) : product.specs;
 
   return (
     <main className="pt-24">
@@ -145,9 +145,9 @@ export function ProductDetailClientView({
         <div className="mt-7 grid gap-6 md:grid-cols-3">
           {related.map((item) => {
             const rTrans = productTranslations[item.slug];
-            const rTitle = isEn && rTrans ? rTrans.name : item.name;
-            const rDesc = isEn && rTrans ? rTrans.description : item.description;
-            const rCat = isEn && rTrans ? rTrans.category : item.category;
+            const rTitle = isEn ? (item.enName || rTrans?.name || item.name) : item.name;
+            const rDesc = isEn ? (item.enDescription || rTrans?.description || item.description) : item.description;
+            const rCat = isEn ? (item.enCategory || rTrans?.category || item.category) : item.category;
 
             return (
               <ImageCard
