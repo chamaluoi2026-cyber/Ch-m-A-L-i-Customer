@@ -161,6 +161,10 @@ export type BlogPostRecord = {
   seoDescription?: string;
   blocks: BlogContentBlock[];
   content?: string;
+  enTitle?: string;
+  enExcerpt?: string;
+  enCategory?: string;
+  enContent?: string;
   createdAt: string;
   updatedAt: string;
   isDeleted?: boolean;

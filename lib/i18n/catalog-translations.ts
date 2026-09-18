@@ -24,6 +24,10 @@ export interface BlogI18n {
   title: string;
   category: string;
   excerpt: string;
+  content?: string;
+  author?: string;
+  readingTime?: string;
+  tags?: string[];
 }
 
 export interface TestimonialI18n {
@@ -217,17 +221,67 @@ export const blogTranslations: Record<string, BlogI18n> = {
   "first-time-guide-to-a-luoi": {
     title: "First-Timer's Guide to Exploring A Luoi",
     category: "Travel Guide",
-    excerpt: "How to plan a gentle, respectful journey through waterfalls, ethnic hamlets, and misty passes."
+    author: "Cham Editorial Team",
+    readingTime: "6 min read",
+    excerpt: "How to plan a gentle, respectful journey through waterfalls, ethnic hamlets, and misty passes.",
+    content: `A Luoi reveals its deepest beauty to those who embrace slow travel. Begin with community-curated itineraries, lace up comfortable hiking shoes, and leave plenty of room for hearty local meals, soulful conversations by the hearth, and indigenous craft workshops.
+
+Community-based tourism shines brightest when travelers arrive with patience and curiosity. In A Luoi, the most enduring memories stem from simple moments: sharing a warm ethnic meal, holding handcrafted Zeng brocade, walking forest trails, and sharing smiles with highland elders.`,
+    tags: ["TravelGuide", "FirstTimeALuoi", "CommunityTourism", "SlowTravel"]
   },
   "zeng-weaving-ta-oi-artisans": {
     title: "Zeng Weaving & Stories Behind Every Pattern",
-    category: "Culture",
-    excerpt: "Traditional Zeng preserves ancestral memories, ethnic identity, and the dedication of Ta Oi women."
+    category: "Living Heritage",
+    author: "Mai Nguyen",
+    readingTime: "5 min read",
+    excerpt: "Traditional Zeng preserves ancestral memories, ethnic identity, and the dedication of Ta Oi women.",
+    content: `Every geometric motif is far more than mere decoration. It is a profound visual language woven from mountain life, family folklore, and the pride of preserving sacred traditions across generations.
+
+Master weavers spent years refining the technique of threading intricate lead beads into the cotton warp without a conventional loom. Each finished piece tells an ancestral story of the forest, the sun, and the resilient bond between people and their mountainous homeland.`,
+    tags: ["ZengWeaving", "TaOiCulture", "NationalHeritage", "Handicraft"]
   },
   "local-cuisine-in-the-highlands": {
     title: "What to Eat in the A Luoi Highlands",
-    category: "Cuisine",
-    excerpt: "Woodsmoke grilled specialties, wild forest vegetables, sticky rice, and heartfelt mountain hospitality."
+    category: "Highland Cuisine",
+    author: "Linh Tran",
+    readingTime: "4 min read",
+    excerpt: "Woodsmoke-grilled specialties, wild forest vegetables, sticky rice, and heartfelt mountain hospitality.",
+    content: `Dining in A Luoi is both generous and steeped in ethnic soul. You will encounter tender wild greens, skewered mountain meats roasted over hot embers, fragrant bamboo sticky rice, herbal infusions, and timeless stories exchanged around the communal table.
+
+Be sure to taste native hill chicken seasoned with wild mountain pepper, fresh stream fish wrapped in forest leaves, and sweet A Quat three-horned cakes enjoyed with freshly brewed mountain tea.`,
+    tags: ["HighlandCuisine", "LocalFood", "EthnicFlavors", "ALuoiSpecialties"]
+  }
+};
+
+/**
+ * Translations for the /blog page
+ */
+export const blogPageTranslations = {
+  vi: {
+    eyebrow: "Kinh nghiệm & Khám phá",
+    title: "Cẩm nang du lịch A Lưới",
+    description: "Kinh nghiệm phượt đèo, văn hóa bản địa Pa Cô - Tà Ôi, ẩm thực vùng cao và cẩm nang bỏ túi hữu ích nhất.",
+    categories: ["Tất cả", "Cẩm nang", "Văn hóa", "Ẩm thực", "Trải nghiệm", "Tin tức"],
+    readGuide: "Đọc cẩm nang",
+    authorPrefix: "Bởi",
+    relatedTitle: "Bài viết liên quan",
+    topicTitle: "Chủ đề",
+    aiTranslatedBadge: "Dịch song ngữ AI (Gemini 2.5 Flash)",
+    switchOriginal: "Xem bản gốc (Tiếng Việt)",
+    switchTranslated: "Xem bản dịch tiếng Anh"
+  },
+  en: {
+    eyebrow: "Tips & Exploration",
+    title: "A Luoi Travel Guides & Heritage",
+    description: "Mountain pass touring tips, Pa Co & Ta Oi living heritage, highland cuisine, and essential pocket guides.",
+    categories: ["All", "Travel Guide", "Culture", "Cuisine", "Experiences", "News"],
+    readGuide: "Read Guide",
+    authorPrefix: "By",
+    relatedTitle: "Related Articles",
+    topicTitle: "Topics",
+    aiTranslatedBadge: "AI Bilingual Translation (Gemini 2.5 Flash)",
+    switchOriginal: "Read in Original Vietnamese",
+    switchTranslated: "Read in English (AI Translated)"
   }
 };
 
