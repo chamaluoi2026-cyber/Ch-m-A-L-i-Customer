@@ -196,13 +196,18 @@ export function WeatherNavBadge({ variant = "navbar", className = "" }: WeatherN
         </button>
       )}
 
-      {/* Dropdown popup dự báo thời tiết chi tiết */}
+      {/* Dropdown popup dự báo thời tiết chi tiết - iOS Style Spring Bloom */}
       {isOpen && (
-        <div className="absolute right-0 mt-2.5 w-[330px] sm:w-[360px] rounded-3xl bg-white shadow-2xl border border-sky-100 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-150">
+        <div className="absolute right-0 mt-2.5 w-[330px] sm:w-[360px] rounded-[28px] ios-glass ios-spring overflow-hidden z-50 ring-1 ring-black/5 dark:ring-white/10 shadow-[0_25px_60px_rgba(0,0,0,0.22)]">
+          {/* iOS Grabber */}
+          <div className="pt-2 pb-1 flex justify-center bg-gradient-to-r from-transparent via-black/5 to-transparent">
+            <div className="h-1 w-8 rounded-full bg-gray-400/40" />
+          </div>
+
           {/* Header */}
           <div className={`p-4 bg-gradient-to-r ${theme.cardHeaderGradient} text-white flex items-center justify-between`}>
             <div className="flex items-center gap-2.5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+              <div className="flex h-10 w-10 items-center justify-center rounded-[16px] bg-white/20 backdrop-blur-sm shadow-inner">
                 <AnimatedWeatherIcon weatherCode={today.weatherCode} size={28} showGlow={false} />
               </div>
               <div>

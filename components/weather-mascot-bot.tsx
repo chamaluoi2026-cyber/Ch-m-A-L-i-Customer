@@ -446,17 +446,22 @@ export function WeatherMascotBot() {
       className="fixed bottom-6 left-6 sm:bottom-7 sm:left-7 z-40 print:hidden select-none transition-all duration-300"
       aria-label={isEn ? "A Luoi Weather Bot" : "Bé Mây - Bot thời tiết A Lưới"}
     >
-      {/* 1. BOT SPEECH BUBBLE (Lively Interactive Cloud Bubble) */}
+      {/* 1. iOS NOTIFICATION-STYLE SPEECH BUBBLE */}
       {(showSpeechBubble || isHovered) && !isExpanded && (
-        <div className="absolute bottom-20 left-0 w-[270px] sm:w-[310px] animate-in fade-in slide-in-from-bottom-2 duration-200">
-          <div className="relative rounded-2xl border border-white/80 bg-white/95 dark:bg-slate-900/95 p-3 shadow-[0_12px_32px_rgba(0,0,0,0.16)] backdrop-blur-xl ring-1 ring-black/5">
-            {/* Header of speech bubble */}
-            <div className="flex items-center justify-between pb-1 mb-1 border-b border-gray-100 dark:border-slate-800">
-              <div className="flex items-center gap-1.5">
-                <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
-                <span className="text-[10px] font-black uppercase tracking-wider text-forest dark:text-emerald-400">
-                  {isEn ? "Bé Mây · Weather Bot" : "Bé Mây · Bot Thời Tiết A Lưới"}
-                </span>
+        <div className="absolute bottom-20 left-0 w-[280px] sm:w-[320px] ios-speech">
+          <div className="relative rounded-[24px] ios-glass p-3.5 ring-1 ring-black/5 dark:ring-white/10 shadow-[0_16px_36px_rgba(0,0,0,0.16)]">
+            {/* iOS Notification Header */}
+            <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-black/5 dark:border-white/10">
+              <div className="flex items-center gap-2">
+                <div className="flex h-5 w-5 items-center justify-center rounded-lg bg-gradient-to-tr from-sky-400 to-indigo-500 shadow-2xs">
+                  <span className="text-[11px] leading-none">☁️</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-black tracking-tight text-gray-900 dark:text-white">
+                    {isEn ? "Bé Mây" : "Bé Mây A Lưới"}
+                  </span>
+                  <span className="text-[9px] text-gray-400 font-medium">· {isEn ? "now" : "bây giờ"}</span>
+                </div>
               </div>
               <button
                 type="button"
@@ -464,79 +469,89 @@ export function WeatherMascotBot() {
                   e.stopPropagation();
                   setShowSpeechBubble(false);
                 }}
-                className="rounded-full p-0.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-                aria-label="Đóng lời nhắc"
+                className="ios-haptic-tap rounded-full p-1 text-gray-400 hover:text-gray-700 hover:bg-black/5 dark:hover:bg-white/10"
+                aria-label="Đóng thông báo"
               >
                 <X className="h-3 w-3" />
               </button>
             </div>
 
-            {/* Bubble Message Content */}
-            <p className="text-xs font-semibold text-gray-800 dark:text-gray-100 leading-relaxed">
+            {/* Notification Body Text */}
+            <p className="text-xs font-semibold text-gray-800 dark:text-gray-100 leading-snug">
               {botGreeting()}
             </p>
 
-            {/* Call-to-action hint */}
-            <div className="mt-2 flex items-center justify-between pt-1 text-[10px] text-sky-600 font-bold">
-              <span className="cursor-pointer hover:underline" onClick={() => setIsExpanded(true)}>
-                {isEn ? "Click bot for 5-day forecast →" : "Chạm vào em xem dự báo 5 ngày →"}
-              </span>
-              <span className="text-gray-400 font-normal">700m</span>
+            {/* iOS Action Button Pill */}
+            <div className="mt-2.5 flex items-center justify-between pt-1">
+              <button
+                type="button"
+                onClick={() => setIsExpanded(true)}
+                className="ios-haptic-tap flex items-center gap-1 rounded-full bg-forest/10 hover:bg-forest/15 px-3 py-1 text-[10px] font-bold text-forest transition"
+              >
+                <span>{isEn ? "View 5-Day Forecast" : "Chạm xem dự báo 5 ngày"}</span>
+                <span className="text-xs">↗</span>
+              </button>
+              <span className="text-[10px] font-bold text-gray-400">700m</span>
             </div>
 
-            {/* Pointer Triangle Arrow pointing to the Bot */}
-            <div className="absolute -bottom-2 left-8 h-3 w-3 rotate-45 border-b border-r border-white/80 bg-white dark:bg-slate-900 shadow-xs" />
+            {/* iOS Bubble Pointer */}
+            <div className="absolute -bottom-2 left-8 h-3.5 w-3.5 rotate-45 border-b border-r border-black/5 bg-white/95 dark:bg-slate-900/95" />
           </div>
         </div>
       )}
 
-      {/* 2. THE FLOATING CLOUD BOT (BUTTON TRIGGER) */}
+      {/* 2. THE FLOATING CLOUD BOT WITH iOS HAPTIC TAP */}
       {!isExpanded && (
         <div
-          className="group relative flex items-center gap-2 cursor-pointer"
+          className="group relative flex items-center gap-2 cursor-pointer ios-haptic-tap"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           onClick={() => setIsExpanded(true)}
         >
-          {/* Weather Reactive Ambient Aura Ring */}
+          {/* Weather Reactive Ambient Glow Aura */}
           <div
-            className={`absolute -inset-1.5 rounded-full blur-md opacity-70 group-hover:opacity-100 transition-opacity duration-500 animate-pulse`}
+            className="absolute -inset-2 rounded-full blur-lg opacity-70 group-hover:opacity-100 transition-opacity duration-500 animate-pulse"
             style={{ backgroundColor: theme.glowColor }}
           />
 
-          {/* Bot Avatar Base */}
+          {/* iOS Continuous Squircle Container */}
           <div
-            className={`relative flex items-center justify-center rounded-3xl backdrop-blur-xl bg-white/95 dark:bg-slate-900/95 p-1 shadow-[0_10px_30px_rgba(0,0,0,0.18)] ring-2 ${theme.borderGlow} group-hover:scale-105 active:scale-95 transition-all duration-300`}
+            className={`relative flex items-center justify-center rounded-[28px] ios-glass p-1.5 ring-1 ${theme.borderGlow} shadow-[0_12px_32px_rgba(0,0,0,0.18)]`}
           >
             {/* The SVG Cloud Mascot */}
             <CloudBotMascot weatherCode={currentCode} isHappy={isHovered} />
 
-            {/* Pill Temperature Badge attached to Bot */}
+            {/* iOS Dynamic Island Style Temperature Pill */}
             {!loading && today && (
-              <div className="absolute -bottom-1 -right-1 flex items-center gap-1 rounded-full bg-forest px-2 py-0.5 text-[10px] font-black text-white shadow-md ring-1 ring-white">
+              <div className="absolute -bottom-1 -right-1 flex items-center gap-1 rounded-full bg-forest px-2 py-0.5 text-[10px] font-black text-white shadow-md ring-1.5 ring-white">
                 <span>{today.tempMax}°C</span>
               </div>
             )}
           </div>
 
-          {/* Quick Label next to Bot */}
-          <div className="hidden sm:flex flex-col rounded-xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-2.5 py-1 shadow-sm ring-1 ring-black/5 text-left pointer-events-none group-hover:ring-forest/30 transition-all">
-            <span className="text-[10px] font-extrabold uppercase text-forest">Bé Mây A Lưới</span>
-            <span className="text-[10px] font-bold text-gray-600 dark:text-gray-300">
+          {/* Quick Label pill beside Bot */}
+          <div className="hidden sm:flex flex-col rounded-[20px] ios-glass px-3 py-1.5 shadow-sm text-left pointer-events-none group-hover:ring-1 group-hover:ring-forest/30 transition-all">
+            <span className="text-[10px] font-black uppercase tracking-tight text-forest">Bé Mây A Lưới</span>
+            <span className="text-[10px] font-bold text-gray-700 dark:text-gray-200">
               {today ? `${today.label} · ${today.tempMax}°C` : "Thời tiết 700m"}
             </span>
           </div>
         </div>
       )}
 
-      {/* 3. EXPANDED FULL 5-DAY WEATHER FLYOUT CARD */}
+      {/* 3. EXPANDED iOS SHEET MODAL (Spring Bloom from Bot Origin) */}
       {isExpanded && (
-        <div className="w-[340px] sm:w-[380px] overflow-hidden rounded-3xl border border-white/40 bg-white/95 dark:bg-slate-900/95 shadow-[0_24px_70px_rgba(15,23,42,0.25)] backdrop-blur-2xl ring-1 ring-black/5 animate-in fade-in zoom-in-95 duration-200">
-          {/* Header with Weather Bot Mascot & Dynamic Gradient */}
-          <div className={`relative overflow-hidden bg-gradient-to-br ${theme.cardHeaderGradient} p-4 text-white shadow-md`}>
+        <div className="w-[340px] sm:w-[380px] overflow-hidden rounded-[32px] ios-glass ios-spring ring-1 ring-black/5 dark:ring-white/10 shadow-[0_25px_70px_rgba(0,0,0,0.3)]">
+          {/* iOS Sheet Grabber Bar */}
+          <div className="pt-2.5 pb-1 flex justify-center bg-gradient-to-r from-transparent via-black/5 to-transparent">
+            <div className="h-1.5 w-10 rounded-full bg-gray-400/40" />
+          </div>
+
+          {/* Card Header with Mascot & Dynamic Weather Gradient */}
+          <div className={`relative overflow-hidden bg-gradient-to-br ${theme.cardHeaderGradient} px-5 py-4 text-white shadow-md`}>
             <div className="relative z-10 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-13 w-13 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md ring-1 ring-white/30 shadow-inner">
+                <div className="flex h-12 w-12 items-center justify-center rounded-[20px] bg-white/20 backdrop-blur-md ring-1 ring-white/30 shadow-inner">
                   <CloudBotMascot weatherCode={currentCode} isHappy={true} />
                 </div>
                 <div>
@@ -552,11 +567,11 @@ export function WeatherMascotBot() {
                 </div>
               </div>
 
-              {/* Close button */}
+              {/* iOS Circular Close Button */}
               <button
                 type="button"
                 onClick={() => setIsExpanded(false)}
-                className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white transition-colors"
+                className="ios-haptic-tap flex h-7 w-7 items-center justify-center rounded-full bg-black/20 hover:bg-black/30 text-white transition-colors"
                 aria-label="Đóng"
               >
                 <X className="h-4 w-4" />
@@ -565,7 +580,7 @@ export function WeatherMascotBot() {
 
             {/* Today status banner */}
             {!loading && today && (
-              <div className="mt-3 flex items-center justify-between rounded-xl bg-black/20 px-3.5 py-2 backdrop-blur-sm">
+              <div className="mt-3 flex items-center justify-between rounded-2xl bg-black/20 px-3.5 py-2 backdrop-blur-md ring-1 ring-white/10">
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-2xl font-black">{today.tempMax}°</span>
                   <span className="text-xs text-white/80">/ {today.tempMin}°C</span>
@@ -583,8 +598,8 @@ export function WeatherMascotBot() {
             )}
           </div>
 
-          {/* Body Content */}
-          <div className="p-4 space-y-3">
+          {/* Card Body */}
+          <div className="p-4 space-y-3.5">
             {/* 5-Day Forecast Grid */}
             <div>
               <p className="text-[11px] font-extrabold uppercase tracking-wider text-gray-400 mb-2">
@@ -594,10 +609,10 @@ export function WeatherMascotBot() {
                 {forecasts.map((f, i) => (
                   <div
                     key={i}
-                    className={`flex flex-col items-center rounded-2xl p-2 text-center transition-all ${
+                    className={`ios-haptic-tap flex flex-col items-center rounded-2xl p-2 text-center transition-all ${
                       i === 0
-                        ? "bg-forest/5 ring-1.5 ring-forest/30 shadow-xs"
-                        : "hover:bg-gray-50 dark:hover:bg-slate-800/50"
+                        ? "bg-forest/10 ring-1.5 ring-forest/30 shadow-xs"
+                        : "bg-black/[0.02] dark:bg-white/[0.02] hover:bg-black/[0.05]"
                     }`}
                   >
                     <p className={`text-[10px] font-black uppercase ${i === 0 ? "text-forest" : "text-gray-400"}`}>
@@ -626,10 +641,10 @@ export function WeatherMascotBot() {
               <div
                 className={`rounded-2xl p-3 text-xs leading-relaxed border ${
                   currentCode === 95
-                    ? "bg-amber-50 dark:bg-amber-950/40 text-amber-950 dark:text-amber-200 border-amber-200"
+                    ? "bg-amber-500/10 text-amber-950 dark:text-amber-200 border-amber-300/40"
                     : today.isCloudHuntingGood
-                    ? "bg-purple-50 dark:bg-purple-950/40 text-purple-950 dark:text-purple-200 border-purple-200"
-                    : "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-200 border-emerald-200"
+                    ? "bg-purple-500/10 text-purple-950 dark:text-purple-200 border-purple-300/40"
+                    : "bg-emerald-500/10 text-emerald-950 dark:text-emerald-200 border-emerald-300/40"
                 }`}
               >
                 <div className="flex items-start gap-2">
@@ -653,7 +668,7 @@ export function WeatherMascotBot() {
             )}
 
             {/* Pass 49 Warning Banner */}
-            <div className="rounded-2xl bg-gray-50 dark:bg-slate-800/60 p-3 text-[11px] text-gray-600 dark:text-gray-300 space-y-1">
+            <div className="rounded-2xl bg-black/[0.03] dark:bg-white/[0.04] p-3 text-[11px] text-gray-600 dark:text-gray-300 space-y-1">
               <div className="flex items-center gap-1.5 font-bold text-gray-800 dark:text-gray-100">
                 <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
                 <span>{isEn ? "Pass 49 & Highland Weather Advisory:" : "Lưu ý vượt đèo QL49 & Đêm vùng cao:"}</span>
@@ -665,7 +680,7 @@ export function WeatherMascotBot() {
               </p>
             </div>
 
-            {/* Footer */}
+            {/* iOS Footer */}
             <div className="flex items-center justify-between text-[9px] text-gray-400 pt-1">
               <span>Trạm Open-Meteo · 16.22°N, 107.31°E</span>
               <button
@@ -674,7 +689,7 @@ export function WeatherMascotBot() {
                   setIsExpanded(false);
                   setShowSpeechBubble(true);
                 }}
-                className="text-forest hover:underline font-bold"
+                className="ios-haptic-tap text-forest hover:underline font-bold"
               >
                 {isEn ? "Chat with bot" : "Nhắn Bé Mây"}
               </button>
