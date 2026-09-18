@@ -1,17 +1,18 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import "@/styles/globals.css";
 import { Footer } from "@/components/footer";
 import { CustomerChatbox } from "@/components/customer-chatbox";
 import { WeatherMascotBot } from "@/components/weather-mascot-bot";
 import { Navbar } from "@/components/navbar";
 import { siteUrl } from "@/lib/utils";
-import { getSiteSettings } from "@/lib/server-store";
+import { getSiteSettingsAsync } from "@/lib/server-store";
 import { I18nProvider } from "@/components/i18n-provider";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const settings = getSiteSettings();
+  const settings = await getSiteSettingsAsync();
   const faviconUrl = settings.favicon || "/favicon.ico";
 
   return {
@@ -45,8 +46,8 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const settings = getSiteSettings();
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const settings = await getSiteSettingsAsync();
   const activeFavicon = settings.favicon || "/favicon.ico";
   const organizationJsonLd = {
     "@context": "https://schema.org",
@@ -72,11 +73,18 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className="font-sans antialiased">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
         <I18nProvider>
-          <Navbar initialLogo={settings.logo} initialMobileLogo={settings.logoMobile} />
+          <Navbar
+            initialLogo={settings.logo}
+            initialMobileLogo={settings.logoMobile}
+            logoScale={settings.logoScale}
+            logoWidth={settings.logoWidth}
+            logoHeight={settings.logoHeight}
+            settings={settings}
+          />
           {children}
           <CustomerChatbox />
           <WeatherMascotBot />
-          <Footer logo={settings.logoDark || settings.logo} />
+          <Footer logo={settings.logoDark || settings.logo} settings={settings} />
         </I18nProvider>
       </body>
     </html>

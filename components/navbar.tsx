@@ -12,20 +12,41 @@ import { WeatherNavBadge } from "@/components/weather-nav-badge";
 import { useLanguage } from "@/components/i18n-provider";
 import { navItems, siteConfig } from "@/data/site";
 import { cn } from "@/lib/utils";
+import type { SiteSettings } from "@/lib/server-store";
 
 interface NavbarProps {
   initialLogo?: string;
   initialMobileLogo?: string;
+  logoScale?: number;
+  logoWidth?: number;
+  logoHeight?: number;
+  settings?: SiteSettings;
 }
 
-export function Navbar({ initialLogo, initialMobileLogo }: NavbarProps = {}) {
+export function Navbar({
+  initialLogo,
+  initialMobileLogo,
+  logoScale,
+  logoWidth,
+  logoHeight,
+  settings
+}: NavbarProps = {}) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const { language, t } = useLanguage();
 
   const isEn = language === "en";
-  const activeLogo = initialLogo || siteConfig.logo;
-  const activeMobileLogo = initialMobileLogo || activeLogo;
+  const activeLogo = settings?.logo || initialLogo || siteConfig.logo;
+  const activeMobileLogo = settings?.logoMobile || initialMobileLogo || activeLogo;
+
+  // Hỗ trợ kích thước và tỷ lệ co giãn từ Admin (logoScale: 50% - 200%)
+  const scale = ((settings?.logoScale ?? logoScale) || 100) / 100;
+  const rawW = (settings?.logoWidth ?? logoWidth) || 208;
+  const rawH = (settings?.logoHeight ?? logoHeight) || 44;
+
+  // Giới hạn chiều cao tối đa không vượt quá thanh bar (80px), đảm bảo logo không bị méo hay vỡ khung
+  const displayH = Math.min(Math.max(Math.round(rawH * scale), 32), 62);
+  const displayW = Math.min(Math.max(Math.round(rawW * scale), 80), 320);
 
   function isActive(href: string) {
     if (href === "/") return pathname === "/";
@@ -37,22 +58,36 @@ export function Navbar({ initialLogo, initialMobileLogo }: NavbarProps = {}) {
       <nav className="mx-auto flex h-20 w-full max-w-[1600px] items-center justify-between px-6 sm:px-8 lg:px-12 gap-4" aria-label="Điều hướng chính">
         {/* Logo */}
         <Link href="/" className="focus-ring flex shrink-0 items-center gap-2 transition hover:opacity-90">
-          <div className={cn("relative h-11 w-44 sm:w-52", activeMobileLogo !== activeLogo ? "hidden sm:block" : "block")}>
+          <div
+            className={cn("relative transition-all duration-200", activeMobileLogo !== activeLogo ? "hidden sm:block" : "block")}
+            style={{
+              height: `${displayH}px`,
+              width: `${displayW}px`
+            }}
+          >
             <AppImage
               src={activeLogo}
               alt="Logo Chạm A Lưới"
               fill
               className="object-contain object-left"
+              fallbackSrc="/images/logo.svg"
               priority
             />
           </div>
           {activeMobileLogo !== activeLogo && (
-            <div className="relative h-10 w-32 sm:hidden">
+            <div
+              className="relative transition-all duration-200 sm:hidden"
+              style={{
+                height: `${Math.min(displayH, 44)}px`,
+                width: `${Math.min(displayW, 160)}px`
+              }}
+            >
               <AppImage
                 src={activeMobileLogo}
                 alt="Logo Chạm A Lưới"
                 fill
                 className="object-contain object-left"
+                fallbackSrc="/images/logo.svg"
                 priority
               />
             </div>

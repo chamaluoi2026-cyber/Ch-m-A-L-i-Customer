@@ -38,16 +38,27 @@ export function Footer({ logo, settings }: FooterProps = {}) {
     return fallback;
   };
 
+  const rawW = settings?.logoWidth || 160;
+  const rawH = settings?.logoHeight || 44;
+  const scale = ((settings?.logoScale || 100) / 100);
+  const displayH = Math.min(Math.max(Math.round(rawH * scale), 36), 72);
+  const displayW = Math.min(Math.max(Math.round(rawW * scale), 100), 340);
+
   return (
     <footer className="bg-ink text-white">
       <section className="section-shell grid gap-10 py-14 md:grid-cols-[1.4fr_0.8fr_1fr]">
         <article>
-          <div className="relative h-12 w-48 mb-3">
+          <div
+            className="relative mb-3 flex items-center"
+            style={{ height: `${displayH}px`, width: `${displayW}px`, maxWidth: "100%" }}
+          >
             <AppImage
               src={activeLogo}
               alt="Logo Chạm A Lưới"
               fill
+              fallbackSrc="/images/logo-white.svg"
               className="object-contain object-left"
+              priority
             />
           </div>
           <p className="max-w-md text-xs leading-6 text-white/70">
