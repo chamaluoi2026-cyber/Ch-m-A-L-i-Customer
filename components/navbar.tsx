@@ -41,12 +41,12 @@ export function Navbar({
 
   // Hỗ trợ kích thước và tỷ lệ co giãn từ Admin (logoScale: 50% - 200%)
   const scale = ((settings?.logoScale ?? logoScale) || 100) / 100;
-  const rawW = (settings?.logoWidth ?? logoWidth) || 208;
-  const rawH = (settings?.logoHeight ?? logoHeight) || 44;
+  const rawW = Math.max((settings?.logoWidth ?? logoWidth) || 220, 220);
+  const rawH = (settings?.logoHeight ?? logoHeight) || 56;
 
-  // Giới hạn chiều cao tối đa không vượt quá thanh bar (80px), đảm bảo logo không bị méo hay vỡ khung
-  const displayH = Math.min(Math.max(Math.round(rawH * scale), 32), 62);
-  const displayW = Math.min(Math.max(Math.round(rawW * scale), 80), 320);
+  // Cho phép logo tận dụng chiều cao header 80px (tối đa 72px)
+  const displayH = Math.min(Math.max(rawH, 36), 72);
+  const displayW = Math.min(Math.max(Math.round(rawW * Math.max(scale, 1)), 180), 380);
 
   function isActive(href: string) {
     if (href === "/") return pathname === "/";
@@ -59,10 +59,12 @@ export function Navbar({
         {/* Logo */}
         <Link href="/" className="focus-ring flex shrink-0 items-center gap-2 transition hover:opacity-90">
           <div
-            className={cn("relative transition-all duration-200", activeMobileLogo !== activeLogo ? "hidden sm:block" : "block")}
+            className={cn("relative transition-all duration-200 flex items-center shrink-0", activeMobileLogo !== activeLogo ? "hidden sm:flex" : "flex")}
             style={{
               height: `${displayH}px`,
-              width: `${displayW}px`
+              width: `${displayW}px`,
+              transform: scale !== 1 ? `scale(${scale})` : undefined,
+              transformOrigin: "left center"
             }}
           >
             <AppImage
@@ -76,10 +78,12 @@ export function Navbar({
           </div>
           {activeMobileLogo !== activeLogo && (
             <div
-              className="relative transition-all duration-200 sm:hidden"
+              className="relative transition-all duration-200 sm:hidden flex items-center shrink-0"
               style={{
-                height: `${Math.min(displayH, 44)}px`,
-                width: `${Math.min(displayW, 160)}px`
+                height: `${Math.min(displayH, 48)}px`,
+                width: `${Math.min(displayW, 180)}px`,
+                transform: scale !== 1 ? `scale(${Math.min(scale, 1.25)})` : undefined,
+                transformOrigin: "left center"
               }}
             >
               <AppImage
