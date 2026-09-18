@@ -1,6 +1,38 @@
 export type TripDuration = "1-day" | "2-days" | "3-days";
 export type TransportType = "motorbike" | "car";
 export type TravelCompanion = "solo" | "couple" | "family" | "friends";
+export type DepartureTime = "06:30" | "07:30" | "08:30" | "13:30";
+
+export const DEPARTURE_TIME_OPTIONS = [
+  {
+    id: "06:30",
+    label: "06:30 - Sáng sớm săn mây",
+    enLabel: "06:30 - Early Bird",
+    desc: "Săn mây đèo A Co & trọn vẹn cả ngày",
+    enDesc: "Sunrise clouds & full day"
+  },
+  {
+    id: "07:30",
+    label: "07:30 - Sáng thong thả (Khuyên dùng)",
+    enLabel: "07:30 - Standard (Recommended)",
+    desc: "Đủ thời gian ăn sáng ở Huế trước khi lên đèo",
+    enDesc: "Breakfast in Hue then depart"
+  },
+  {
+    id: "08:30",
+    label: "08:30 - Sáng thong dong",
+    enLabel: "08:30 - Relaxed Morning",
+    desc: "Nghỉ ngơi thoải mái, không cần dậy sớm",
+    enDesc: "Sleep in and start comfortably"
+  },
+  {
+    id: "13:30",
+    label: "13:30 - Buổi chiều",
+    enLabel: "13:30 - Afternoon Departure",
+    desc: "Sau bữa trưa ở Huế, lên nhận phòng & ngắm hoàng hôn",
+    enDesc: "Depart after lunch in Hue"
+  }
+];
 
 export interface ExperienceChoice {
   id: string;
@@ -144,6 +176,9 @@ export interface ItineraryStop {
   energyLevel: "easy" | "moderate" | "challenging";
   googleMapsQuery: string;
   isTravelLeg?: boolean;
+  stopType?: "travel" | "visit" | "checkin" | "checkout" | "rest" | "meal" | "breakfast" | "coffee";
+  mustTry?: string[];
+  enMustTry?: string[];
 }
 
 export interface ItineraryDay {
@@ -155,11 +190,30 @@ export interface ItineraryDay {
   stops: ItineraryStop[];
 }
 
+export interface WeatherAdvisory {
+  seasonName: string;
+  enSeasonName: string;
+  conditionSummary: string;
+  enConditionSummary: string;
+  tempRange: string;
+  rainRisk: "low" | "medium" | "high";
+  cloudHuntingRating: "excellent" | "fair" | "low";
+  aiAlerts: string[];
+  enAiAlerts?: string[];
+  adaptiveActions: string[];
+  enAdaptiveActions?: string[];
+}
+
 export interface ItineraryPlan {
+  isGeminiPowered?: boolean;
+  geminiIntro?: string;
+  enGeminiIntro?: string;
+  weatherAdvisory?: WeatherAdvisory;
   id: string;
   title: string;
   enTitle: string;
   duration: TripDuration;
+  departureTime?: DepartureTime;
   transport: TransportType;
   companion: TravelCompanion;
   totalDistanceKm: number;
@@ -186,10 +240,18 @@ export function generateHighlandItinerary(params: {
   duration: TripDuration;
   transport: TransportType;
   companion: TravelCompanion;
+  departureTime?: DepartureTime;
   likes: string[];
   dislikes: string[];
+  isRainy?: boolean;
+  weatherForecast?: { condition: string; tempMax: number; tempMin: number; rainChance: number };
 }): ItineraryPlan {
-  const { duration, transport, companion, likes, dislikes } = params;
+  const { duration, transport, companion, likes, dislikes, departureTime = "07:30", isRainy = false, weatherForecast } = params;
+
+  const currentMonth = new Date().getMonth() + 1; // 1 - 12
+  const isWetSeason = currentMonth >= 9 && currentMonth <= 11;
+  const isColdMistSeason = currentMonth === 12 || currentMonth <= 2;
+  const isDrySummerSeason = currentMonth >= 3 && currentMonth <= 8;
 
   const avoidsHiking = dislikes.includes("avoid-hiking");
   const avoidsDeepCurves = dislikes.includes("avoid-curves");
@@ -197,12 +259,14 @@ export function generateHighlandItinerary(params: {
   const avoidsCrowds = dislikes.includes("avoid-crowds");
   const avoidsInsects = dislikes.includes("avoid-insects");
 
-  const likesHotspring = likes.includes("hotspring");
-  const likesZeng = likes.includes("zeng");
+  // Nếu trời mưa ẩm: Tự động ưu tiên Khoáng Nóng và Dệt Zèng trong nhà
+  const likesHotspring = likes.includes("hotspring") || isRainy || isColdMistSeason;
+  const likesZeng = likes.includes("zeng") || isRainy;
   const likesHistory = likes.includes("history");
-  const likesClouds = likes.includes("clouds");
-  const likesCampfire = likes.includes("campfire");
-  const likesWaterfalls = likes.includes("waterfalls") || likes.length === 0;
+  const likesClouds = likes.includes("clouds") || isColdMistSeason;
+  const likesCampfire = likes.includes("campfire") && !isRainy;
+  // Nếu mưa to thì hạn chế lội thác sâu trơn trượt
+  const likesWaterfalls = (likes.includes("waterfalls") || likes.length === 0) && !isRainy;
   const likesCuisine = likes.includes("cuisine");
 
   // Thời gian di chuyển từ Huế lên A Lưới (70km đèo QL49)
@@ -255,7 +319,20 @@ export function generateHighlandItinerary(params: {
         : "Đoạn đèo quanh co nhẹ nhàng, nếu có người say xe nên chuẩn bị kẹo gừng hoặc ngồi hàng ghế đầu cạnh tài xế.",
     enWisdomTip: "Fill up fuel tank before entering the mountain pass. Shift to low gears on descents and turn on headlights through misty curves.",
     energyLevel: "easy",
-    googleMapsQuery: "Đèo A Co Quốc Lộ 49 A Lưới Thừa Thiên Huế"
+    googleMapsQuery: "Đèo A Co Quốc Lộ 49 A Lưới Thừa Thiên Huế",
+    stopType: "travel",
+    mustTry: [
+      "🛢️ Đổ đầy bình xăng tại ngã ba Bình Điền trước khi vào đèo",
+      "📸 Dừng ở Cột Km 32 trên đèo để chụp ảnh mây vắt ngang núi",
+      "🍌 Ghé mua chuối rừng hoặc mía tươi từ người dân ven đường",
+      "🌡️ Nhiệt độ giảm dần khi lên cao — mang thêm áo mỏng sẵn trong ba lô"
+    ],
+    enMustTry: [
+      "🛢️ Fill tank at Binh Dien junction — no gas stations for 30km",
+      "📸 Stop at Km 32 marker on the pass for cloud-draped mountain shots",
+      "🍌 Buy fresh bananas or sugar cane from roadside villagers",
+      "🌡️ Temperature drops as you climb — pack a light layer"
+    ]
   });
 
   // STOP 1.2: ĐIỂM DỪNG CHÂN ĐẦU TIÊN (Phân hóa mạnh theo Likes & Companion)
@@ -343,7 +420,22 @@ export function generateHighlandItinerary(params: {
     wisdomTip: "Thịt gà bản A Lưới thả đồi tự nhiên thịt rất săn chắc, ăn cùng lá é và tiêu rừng tạo hương vị đặc trưng khó quên.",
     enWisdomTip: "Hill chicken is lean and savory; paired with wild mountain pepper it creates an unforgettable culinary memory.",
     energyLevel: "easy",
-    googleMapsQuery: "Quán cơm bản Pa Cô A Lưới"
+    googleMapsQuery: "Quán cơm bản Pa Cô A Lưới",
+    stopType: "meal",
+    mustTry: [
+      "🍗 Gà kiến A Lưới (thả đồi, thịt săn chắc) — nướng than hoa hoặc luộc nước gừng",
+      "🎋 Cơm lam ống tre nướng thơm — ăn kèm muối mè rang và lá é rừng",
+      "🐟 Cá suối nướng muối tiêu rừng — nguyên con, da giòn vàng",
+      "🌿 Canh rau dớn rừng hoặc canh thân chuối rừng — thanh mát, lạ miệng",
+      "🍶 Nếm thử rượu Đoác — chỉ một ly để cảm nhận hương vị núi rừng Pa Cô"
+    ],
+    enMustTry: [
+      "🍗 A Luoi 'ant chicken' free-range — grilled over charcoal or steamed with ginger",
+      "🎋 Bamboo-tube sticky rice (cơm lam) — paired with sesame salt and forest basil",
+      "🐟 River fish grilled whole with wild mountain pepper and sea salt",
+      "🌿 Wild fiddlehead fern soup — refreshing highland broth",
+      "🍶 Taste Doac palm wine — just a glass to experience Pa Co highland spirit"
+    ]
   });
 
   // STOP 1.4: CHIỀU NGÀY 1 (Phân hóa mạnh)
@@ -433,30 +525,88 @@ export function generateHighlandItinerary(params: {
     // Tour 2 ngày hoặc 3 ngày: Tối lửa trại hoặc Homestay
     day1Stops.push({
       id: "dem-nghi-homestay-day1",
-      timeSlot: "18:30 - 21:30",
+      timeSlot: "14:00 - 16:00",
+      name:
+        companion === "couple"
+          ? "✅ Check-In Bungalow Gỗ Bên Suối \u0026 Thả Hồn Nghỉ Ngơi"
+          : "✅ Check-In Nhà Sàn Homestay \u0026 Nhận Phòng Vùng Cao",
+      enName: companion === "couple" ? "✅ Riverside Log Bungalow Check-In \u0026 Afternoon Rest" : "✅ Stilt House Homestay Check-In",
+      slug: "lua-trai-va-van-nghe-dia-phuong",
+      category: "Lưu trú",
+      image: "https://images.unsplash.com/photo-1510312305653-8ed496efae75?auto=format&fit=crop&w=1200&q=80",
+      duration: "2.0h",
+      distanceFromPrev: "2km - 4km",
+      summary: "Nhận phòng homestay từ 14:00 theo giờ chuẩn (check-out trước 12:00 hôm sau). Thả ba lô xuống, tắm gội sảng khoái bằng nước suối mát lạnh, nghỉ ngơi lấy sức giữa tiếng gió rừng và suối reo. Homestay Hương Danh (A Roàng) và Anôr House (Hồng Kim) được đánh giá cao nhất với không gian nhà sàn truyền thống Pa Cô.",
+      enSummary: "Standard check-in from 14:00 (check-out before 12:00 next day). Drop your bags, freshen up with cool mountain spring water, and rest in the timber stilt house as highland breezes drift in through bamboo walls.",
+      wisdomTip: "Đặt trước lửa trại và cồng chiêng ngay khi nhận phòng — chủ nhà cần chuẩn bị củi và liên hệ nghệ nhân. Nếu đến sớm trước 14:00, chủ nhà thường giữ đồ và để khách dạo thăm bản làng trước.",
+      enWisdomTip: "Book the campfire and gong performance right at check-in — hosts need time to gather firewood and contact tribal musicians. Arriving early? Leave bags with host and explore the village first.",
+      energyLevel: "easy",
+      googleMapsQuery: "Homestay A Nôr A Lưới",
+      stopType: "checkin",
+      mustTry: [
+        "🏠 Thăm quan kiến trúc nhà sàn truyền thống Pa Cô / Tà Ôi",
+        "🌊 Tắm suối ngay sau nhà sàn (nước trong, mát 20°C)",
+        "☕ Uống trà vằng rừng nóng hổi do chủ nhà pha mời",
+        likesCampfire ? "🔥 Xác nhận đặt lửa trại + cồng chiêng tối nay với chủ nhà" : "🌟 Ngắm sao đêm trên cao nguyên — cực kỳ rõ và đẹp (không ô nhiễm ánh sáng)",
+        "📵 Tắt wifi, detox điện thoại, thưởng thức tiếng thiên nhiên thật sự"
+      ],
+      enMustTry: [
+        "🏠 Tour the traditional Pa Co / Ta Oi stilt house architecture",
+        "🌊 Swim in the clear 20°C stream right behind the homestay",
+        "☕ Enjoy hot Vang forest herbal tea brewed by the host",
+        likesCampfire ? "🔥 Confirm campfire + sacred gong booking with host for tonight" : "🌟 Stargaze on the highland — zero light pollution makes it magical",
+        "📵 Unplug from wifi and soak in authentic natural soundscapes"
+      ]
+    });
+
+    // STOP 1.6: TỐI NGÀY 1 - LỬA TRẠI / BỮA TỐI BẢN ĐỊA
+    day1Stops.push({
+      id: "toi-lua-trai-day1",
+      timeSlot: "18:00 - 21:30",
       name:
         likesCampfire
-          ? "Đêm Hội Lửa Trại & Cồng Chiêng Nhà Sàn A Nôr"
+          ? "🔥 Đêm Hội Lửa Trại \u0026 Cồng Chiêng Nhà Sàn A Nôr"
           : companion === "couple"
-          ? "Tiệc Nướng BBQ & Nghỉ Dưỡng Bungalow Gỗ Bên Suối"
-          : "Mâm Cơm Tối Bản Địa & Nghỉ Đêm Nhà Sàn Sinh Thái",
-      enName: likesCampfire ? "Sacred Gongs & Campfire Night Under The Stars" : "Peaceful Creek-Side Stilt House Haven",
+          ? "🌙 Tiệc Nướng BBQ Lãng Mạn \u0026 Hoàng Hôn Bên Suối"
+          : "🍽️ Mâm Cơm Tối Bản Địa \u0026 Giao Lưu Văn Nghệ Pa Cô",
+      enName: likesCampfire ? "🔥 Sacred Gongs \u0026 Campfire Night Under The Stars" : "🌙 Romantic BBQ Dinner \u0026 Creekside Sunset",
       slug: "lua-trai-va-van-nghe-dia-phuong",
-      category: "Lửa trại",
+      category: likesCampfire ? "Lửa trại" : "Ăn uống",
       image: "https://images.unsplash.com/photo-1510312305653-8ed496efae75?auto=format&fit=crop&w=1200&q=80",
-      duration: "3.0h",
-      distanceFromPrev: "2km - 4km",
+      duration: "3.5h",
+      distanceFromPrev: "Ngay tại homestay",
       summary:
         likesCampfire
-          ? "Quây quần bên ánh lửa bập bùng, hòa nhịp cùng điệu cồng chiêng, xem điệu múa Ra Zooc và thưởng thức khoai sắn lùi thơm nức."
-          : "Tận hưởng không gian tĩnh mịch nghe tiếng suối róc rách, sương đêm buông se lạnh 18°C bên mái nhà sàn gỗ thơm mùi thông nứa.",
+          ? "Ngọn lửa bập bùng giữa sân nhà sàn, tiếng cồng chiêng vang vọng núi rừng. Múa Ra Zooc truyền thống, nướng khoai sắn, nếm rượu Đoác và kể chuyện cùng già làng đến khuya."
+          : companion === "couple"
+          ? "Bữa tối thân mật bên ánh nến và tiếng suối, đồ nướng BBQ thơm ngon, ly rượu vang đỏ và bầu trời đầy sao ở độ cao 650m."
+          : "Mâm cơm tối đủ đầy đặc sản vùng cao, giao lưu văn nghệ hát Then và múa dân tộc Tà Ôi cùng bà con.",
       enSummary: likesCampfire
-        ? "Gather around crackling flames, hear resonant brass gongs, dance traditional Ra Zooc steps, and roast sweet potatoes."
-        : "Immerse in crisp 18°C evening air with creek lullabies and the rustic comfort of scented timber stilt houses.",
-      wisdomTip: "Đêm vùng cao nhiệt độ hạ xuống 17-19°C, nhớ mang theo áo khoác ấm khi sinh hoạt ngoài trời.",
-      enWisdomTip: "Nighttime temperature dips to 17-19°C. Pack a warm fleece or hoodie.",
+        ? "Flames dance in the courtyard, sacred brass gongs resonate through mountain air. Traditional Ra Zooc dance, roasted sweet potato, and stories from village elders into the night."
+        : "Intimate creekside dinner with highland BBQ, a glass of wine, and a sky dazzling with stars at 650m altitude.",
+      wisdomTip: likesCampfire
+        ? "Mặc quần dài và áo dài tay khi ngồi bên lửa trại — muỗi rừng hoạt động mạnh sau 18:00. Mang theo thuốc xịt côn trùng."
+        : "Nhiệt độ về đêm 17-18°C — mang áo khoác ra ngoài và thưởng thức trà vằng nóng ấm bụng.",
+      enWisdomTip: likesCampfire
+        ? "Wear long sleeves and pants for the campfire — forest insects are active after sunset. Apply insect repellent beforehand."
+        : "Night temperatures drop to 17-18°C — bring a fleece and enjoy hot Vang herbal tea.",
       energyLevel: "easy",
-      googleMapsQuery: "Homestay A Nôr A Lưới"
+      googleMapsQuery: "Homestay A Nôr A Lưới",
+      stopType: likesCampfire ? "visit" : "meal",
+      mustTry: [
+        likesCampfire ? "🔥 Nhảy theo điệu Ra Zooc cùng bà con — không cần biết múa!" : "🌃 Chụp ảnh long exposure bầu trời đêm đầy sao",
+        "🥔 Nướng khoai sắn, bắp nương ngay trên than hồng lửa trại",
+        "🥁 Nghe cồng chiêng — âm thanh linh thiêng được bảo tồn hàng trăm năm",
+        "🍶 Nhâm nhi rượu Đoác lên men tự nhiên từ cây chà là rừng",
+        "⭐ Ngắm sao trên cao nguyên — không khí trong sạch, nhìn cả Milky Way"
+      ],
+      enMustTry: [
+        likesCampfire ? "🔥 Join the Ra Zooc dance circle — no experience needed!" : "🌃 Try long-exposure night photography of the star-filled sky",
+        "🥔 Roast sweet potatoes and corn cobs directly on the campfire embers",
+        "🥁 Listen to sacred gong ceremony — centuries-old tribal musical heritage",
+        "🍶 Sip naturally-fermented Doac palm wine from bamboo cups",
+        "⭐ Stargaze from the highland — clear air reveals the full Milky Way"
+      ]
     });
   }
 
@@ -481,46 +631,115 @@ export function generateHighlandItinerary(params: {
   if (duration !== "1-day") {
     const day2Stops: ItineraryStop[] = [];
 
-    // STOP 2.1: SÁNG SỚM (06:00 - 08:30)
-    if (likesClouds || companion === "couple") {
-      // ƯU TIÊN SĂN MÂY ĐỒI THÔNG
-      day2Stops.push({
-        id: "san-may-doi-thong-day2",
-        timeSlot: "06:00 - 08:15",
-        name: "Săn Biển Mây Đồi Thông A Lưới & Cà Phê Ban Mai",
-        enName: "Sunrise Cloud Hunting & Morning Coffee at Pine Hill",
-        slug: "cau-treo-pi-lung-va-check-in",
-        category: "Tham quan",
-        image: "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1200&q=80",
-        duration: "2.25h",
-        distanceFromPrev: "4km từ homestay",
-        summary: "Đón bình minh rạng rỡ xuyên qua rừng thông sương mờ. Biển mây bồng bềnh phủ trắng thung lũng tạo khung cảnh lãng mạn như Đà Lạt của xứ Huế.",
-        enSummary: "Catch morning sunbeams piercing pine canopies with sea-of-clouds carpeting the valley floor.",
-        wisdomTip: "Mây đẹp nhất từ 06:15 - 07:15 sáng. Mang theo áo ấm và máy ảnh để ghi lại những khoảnh khắc tuyệt mỹ.",
-        enWisdomTip: "Prime cloud formations occur between 06:15 and 07:15 AM before direct sunlight clears the mist.",
-        energyLevel: "easy",
-        googleMapsQuery: "Đồi Thông A Lưới Thừa Thiên Huế"
-      });
-    } else {
-      // DẠO BẢN LÀNG & THƯỞNG THỨC BỮA SÁNG VÙNG CAO
-      day2Stops.push({
-        id: "don-binh-minh-ban-lang-day2",
-        timeSlot: "06:30 - 08:15",
-        name: "Bình Minh Bản Làng, Đi Dạo Cầu Treo & Ăn Sáng Bánh A Quát",
-        enName: "Village Dawn Walk, Suspension Bridge & Highland Breakfast",
-        slug: "cau-treo-pi-lung-va-check-in",
-        category: "Tham quan",
-        image: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200&q=80",
-        duration: "1.75h",
-        distanceFromPrev: "3km",
-        summary: "Thức giấc giữa tiếng chim hót và suối reo. Thưởng thức bữa sáng nóng hổi với bánh A Quát (bánh sừng trâu) dẻo bùi và ly cà phê thơm lừng giữa mây ngàn.",
-        enSummary: "Wake up to bird songs and flowing water; enjoy warm traditional A Quat horns cake and freshly brewed highland coffee.",
-        wisdomTip: "Bánh A Quát nếp nương nhân đậu có vị thơm ngọt tự nhiên, là món ăn truyền thống không thể thiếu của bà con.",
-        enWisdomTip: "A Quat glutinous rice cake is naturally wholesome and a staple heritage breakfast for indigenous families.",
-        energyLevel: "easy",
-        googleMapsQuery: "Làng A Nôr Hồng Kim A Lưới"
-      });
-    }
+    // STOP 2.1: SÁNG SỚM - SĂN MÂY ĐỒI THÔNG (06:00 - 07:15)
+    day2Stops.push({
+      id: "san-may-doi-thong-day2",
+      timeSlot: "06:00 - 07:30",
+      name: likesClouds || companion === "couple"
+        ? "☁️ Săn Biển Mây Đồi Thông A Lưới — Bình Minh Vùng Cao"
+        : "🌅 Bình Minh Bản Làng \u0026 Dạo Qua Cầu Treo Pi Lung",
+      enName: likesClouds || companion === "couple"
+        ? "☁️ Pine Hill Cloud Hunting — Highland Sunrise"
+        : "🌅 Village Sunrise Walk \u0026 Pi Lung Suspension Bridge",
+      slug: "cau-treo-pi-lung-va-check-in",
+      category: "Tham quan",
+      image: "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1200&q=80",
+      duration: "1.5h",
+      distanceFromPrev: "4km từ homestay",
+      summary: likesClouds || companion === "couple"
+        ? "Đồi Thông A Lưới nằm ngay trung tâm thị trấn — được ví như 'Đà Lạt thu nhỏ'. Biển mây bồng bềnh phủ trắng thung lũng lúc 06:15-07:15, ánh nắng đầu ngày xuyên qua từng hàng thông thẳng tắp. Khung cảnh đẹp nhất vào mùa se lạnh (tháng 10 - tháng 3)."
+        : "Thức giấc cùng tiếng chim hót ven suối. Dạo bộ nhẹ nhàng qua Cầu Treo Pi Lung bắc qua sông Đakrông, ngắm sương sớm tan dần trên những nương rẫy của bà con Pa Cô.",
+      enSummary: likesClouds || companion === "couple"
+        ? "A Luoi Pine Hill — the 'mini Da Lat' of Hue highlands. Sea of clouds rolls over the valley between 06:15-07:15 AM, with golden rays piercing the pine canopy. Most dramatic in the cool season (Oct-Mar)."
+        : "Wake to birdsong by the stream. Stroll across Pi Lung Suspension Bridge over the Dakrong River as morning mist lifts from Pa Co rice terraces.",
+      wisdomTip: likesClouds || companion === "couple"
+        ? "Mây đẹp nhất từ 06:15 - 07:15 — sau đó nắng lên và mây tan. Mang áo khoác vì nhiệt độ sáng sớm chỉ 16-18°C. Đồi Thông cách trung tâm thị trấn chỉ 1km, đi bộ được từ homestay gần đó."
+        : "Dừng giữa cầu treo để chụp ảnh ngược sáng bình minh — khung cảnh rất điện ảnh và lãng mạn.",
+      enWisdomTip: likesClouds || companion === "couple"
+        ? "Prime cloud window is 06:15-07:15 before sunshine burns mist away. Bring a jacket — early mornings are 16-18°C. Pine Hill is just 1km from town center, walkable from nearby homestays."
+        : "Stand at the bridge's midpoint for silhouette sunrise shots — incredibly cinematic.",
+      energyLevel: "easy",
+      googleMapsQuery: "Đồi Thông A Lưới Thừa Thiên Huế",
+      stopType: "visit",
+      mustTry: [
+        "📸 Chụp ảnh biển mây từ 06:15 - 07:00 (cửa sổ vàng trước khi mây tan)",
+        "🌲 Đi bộ giữa hàng thông trên đồi — không khí tinh khiết, thanh lọc phổi",
+        "🤸 Tập khí công hoặc yoga buổi sáng giữa thiên nhiên (nhiều du khách làm vậy!)",
+        "☕ Chuẩn bị túi cà phê pha sẵn để uống nóng ngay trên đồi nhìn ra thung lũng"
+      ],
+      enMustTry: [
+        "📸 Photograph the cloud sea between 06:15-07:00 before sunshine dissolves it",
+        "🌲 Walk between the pine rows — ultra-pure air and meditative calm",
+        "🤸 Morning yoga or tai chi among the trees (many guests do this!)",
+        "☕ Bring a thermos of pre-brewed coffee to sip while gazing at the valley"
+      ]
+    });
+
+    // STOP 2.2: BỮA SÁNG CHÍNH THỨC (07:30 - 08:30) — Chợ A Lưới / Quán bản địa
+    day2Stops.push({
+      id: "bua-sang-cho-a-luoi-day2",
+      timeSlot: "07:30 - 08:45",
+      name: "🍚 Bữa Sáng Chính Tại Chợ A Lưới — Đặc Sản Vùng Cao Buổi Sớm",
+      enName: "🍚 Authentic Highland Breakfast at A Luoi Market",
+      slug: "quan-com-ban-pa-co",
+      category: "Ăn uống",
+      image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=1200&q=80",
+      duration: "1.25h",
+      distanceFromPrev: "3km - trung tâm thị trấn",
+      summary: "Chợ A Lưới sáng sớm là nơi tụ họp của bà con người Pa Cô, Cơ Tu, Tà Ôi. Từ 06:00 đến 08:00, các gian hàng bày đầy đặc sản tươi nguyên: bánh A Quát (sừng trâu) nóng hổi, cháo gà kiến, xôi nếp than tím, rau rừng tươi và cơm lam sáng. Đây là trải nghiệm ẩm thực xác thực nhất của vùng cao A Lưới, không có tour du lịch nào có thể tái hiện.",
+      enSummary: "The early morning A Luoi market gathers Pa Co, Co Tu, and Ta Oi people. From 06:00-08:00, stalls overflow with fresh highland specialties: hot A Quat buffalo-horn rice cakes, ant-chicken porridge, purple sticky rice, and bamboo rice. The most authentic highland food experience money can't replicate.",
+      wisdomTip: "Nên đến trước 07:30 để chọn bánh A Quát còn nóng — bán hết rất nhanh. Thanh toán bằng tiền mặt, mệnh giá nhỏ. Giá cực rẻ: bánh A Quát khoảng 5.000-10.000đ/cái.",
+      enWisdomTip: "Arrive before 07:30 for hot A Quat cakes — they sell out quickly. Bring small cash bills. Prices are very affordable: A Quat cakes cost just 5,000-10,000 VND each.",
+      energyLevel: "easy",
+      googleMapsQuery: "Chợ A Lưới thị trấn A Lưới Thừa Thiên Huế",
+      stopType: "breakfast",
+      mustTry: [
+        "🫓 Bánh A Quát (sừng trâu) — lá chuối gói nếp nương nhân đậu đen, nướng than nóng hổi",
+        "🍗 Cháo gà kiến A Lưới — nấu loãng đặc biệt với lá é và tiêu rừng, ăn sáng ấm bụng",
+        "🍚 Xôi nếp than tím — màu đẹp, dẻo thơm, ăn kèm dừa nạo hoặc mè đen",
+        "🥣 Cơm lam sáng sớm — ống nứa nướng từ đêm hôm trước, hương vị đặc trưng",
+        "🛒 Mua thêm mật ong rừng tươi từ người dân bán ven đường — không tem nhãn nhưng chính gốc"
+      ],
+      enMustTry: [
+        "🫓 A Quat buffalo-horn cakes — banana leaf-wrapped glutinous rice with black bean filling",
+        "🍗 Ant-chicken rice porridge — simmered with wild forest basil and mountain pepper",
+        "🍚 Purple sticky rice (xôi nếp than) — vivid color, soft, served with grated coconut",
+        "🥣 Early morning bamboo rice (cơm lam) — bamboo roasted overnight, uniquely fragrant",
+        "🛒 Buy fresh wild honey from roadside villagers — no label, but authentically local"
+      ]
+    });
+
+    // STOP 2.3: CÀ PHÊ SÁNG VÙNG CAO (08:45 - 09:30)
+    day2Stops.push({
+      id: "ca-phe-sang-day2",
+      timeSlot: "08:45 - 09:30",
+      name: "☕ Cà Phê Arabica A Lưới — Hương Vị Núi Rừng Trường Sơn",
+      enName: "☕ A Luoi Arabica Coffee — Taste of the Truong Son Mountains",
+      slug: "dac-san-thit-bo-gac-bep-va-ruou-can",
+      category: "Cà phê",
+      image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=80",
+      duration: "0.75h",
+      distanceFromPrev: "Trung tâm thị trấn",
+      summary: "A Lưới là vùng trồng cà phê Arabica đặc sản của Thừa Thiên Huế (3.5 ha canh tác). Các quán cà phê trong thị trấn như Trần Coffee (204 Hồ Chí Minh), Đường Hầm Cafe (Abiah) hoặc Cafe Du Lịch phục vụ cà phê rang xay nguyên chất địa phương — đậm đà, ít chua, hương thơm cao nguyên. Không gian mộc mạc, view nhìn ra dãy núi Trường Sơn.",
+      enSummary: "A Luoi grows premium Arabica on 3.5 hectares — rare for Thua Thien Hue province. Town coffee shops like Tran Coffee or Duong Ham Cafe serve freshly-roasted local beans — bold, low-acid, with a distinct highland aroma. Simple rustic setting with Truong Son mountain views.",
+      wisdomTip: "Thử cà phê phin A Lưới — không đường không sữa để cảm nhận trọn vẹn hương thơm đặc trưng. Hoặc hỏi chủ quán về tour trải nghiệm nông trại cà phê nếu quan tâm.",
+      enWisdomTip: "Try the local drip coffee (cà phê phin) black — no sugar or milk — to experience the full highland aroma. Ask the owner about coffee farm tours if you're interested.",
+      energyLevel: "easy",
+      googleMapsQuery: "Trần Coffee A Lưới Thừa Thiên Huế",
+      stopType: "coffee",
+      mustTry: [
+        "☕ Cà phê phin đen A Lưới — uống chậm, không đường, cảm nhận hậu vị ngọt tự nhiên",
+        "🥛 Bạc xỉu vùng cao — cà phê Arabica pha sữa đặc, hương thơm nhẹ nhàng",
+        "🫐 Hỏi mua cà phê hạt rang tươi về nhà — quà tặng ý nghĩa, giá rất tốt",
+        "🗺️ Hỏi chủ quán về đường đến các điểm tắm suối — họ biết rõ nhất!"
+      ],
+      enMustTry: [
+        "☕ Black drip-filter A Luoi coffee — sip slowly and savor the naturally sweet aftertaste",
+        "🥛 Local bac xiu (coffee with condensed milk) — gentle and aromatic",
+        "🫐 Buy freshly-roasted whole beans to take home — meaningful souvenir at great value",
+        "🗺️ Ask the owner for insider directions to the best swimming spots"
+      ]
+    });
 
     // STOP 2.2: GIỮA SÁNG (08:30 - 11:30)
     if (likesHotspring && !avoidsDeepCurves && !day1Stops.some(s => s.id.includes("khoang-nong"))) {
@@ -598,7 +817,8 @@ export function generateHighlandItinerary(params: {
       wisdomTip: "Nên hỏi mua mật ong của Hợp tác xã bản địa có mã vạch truy xuất để yên tâm về chất lượng chuẩn 100%.",
       enWisdomTip: "Look for certified cooperative labels with traceability QR codes for genuine wild forest honey.",
       energyLevel: "easy",
-      googleMapsQuery: "Chợ A Lưới Thừa Thiên Huế"
+      googleMapsQuery: "Chợ A Lưới Thừa Thiên Huế",
+      stopType: "meal"
     });
 
     // NẾU LÀ TOUR 2 NGÀY: STOP 2.4 LÀ CHẶNG VỀ HUẾ
@@ -620,7 +840,8 @@ export function generateHighlandItinerary(params: {
         wisdomTip: "Đoạn đèo xuống dốc cần giữ khoảng cách xe tối thiểu 30m, xe máy tuyệt đối không bóp phanh liên tục để tránh cháy má phanh.",
         enWisdomTip: "Keep safe vehicle distance on pass descent; motorcyclists should use engine braking rather than riding brakes.",
         energyLevel: "easy",
-        googleMapsQuery: "Thành phố Huế"
+        googleMapsQuery: "Thành phố Huế",
+        stopType: "checkout"
       });
     }
 
@@ -762,6 +983,92 @@ export function generateHighlandItinerary(params: {
     dynamicEnTitle = `Active Adventure: Waterfalls, Campfire & Mountain Pass Ride (${duration})`;
   }
 
+  // Xây dựng Báo cáo Khí hậu & Cố vấn Thời tiết Mùa A Lưới
+  const seasonName = isWetSeason
+    ? "Mùa Mưa & Sương Mù Đèo Trường Sơn (Tháng 9–11)"
+    : isColdMistSeason
+    ? "Mùa Đông Cao Nguyên & Biển Mây Bồng Bềnh (Tháng 12–2)"
+    : "Mùa Khô Nắng Ấm & Suối Ngọc Bích (Tháng 3–8)";
+
+  const enSeasonName = isWetSeason
+    ? "Truong Son Mist & Highland Rain Season (Sep–Nov)"
+    : isColdMistSeason
+    ? "Highland Winter & Sea-of-Clouds Season (Dec–Feb)"
+    : "Golden Sunshine & Crystal Streams Season (Mar–Aug)";
+
+  const conditionSummary = isRainy
+    ? "Khí hậu vùng cao hiện tại có độ ẩm cao, có mưa rào hoặc sương mù dày trên đèo QL49."
+    : isColdMistSeason
+    ? "Trời se lạnh, ban đêm 16-18°C, sương sớm bao phủ thung lũng tạo biển mây tuyệt đẹp."
+    : "Tiết trời khô ráo, nắng ấm 24-28°C, dòng suối trong vắt và mát lạnh lý tưởng.";
+
+  const enConditionSummary = isRainy
+    ? "High moisture conditions with drizzle or dense pass mist along Highway 49."
+    : isColdMistSeason
+    ? "Crisp 16-18°C temperatures with early valley fog forming stunning cloud formations."
+    : "Pleasant sunny weather (24-28°C), crystal clear rivers ideal for swimming.";
+
+  const rainRisk = isRainy ? "high" : (weatherForecast && weatherForecast.rainChance > 40 ? "medium" : "low");
+  const cloudHuntingRating = (isColdMistSeason || isWetSeason) ? "excellent" : "fair";
+
+  const aiAlerts: string[] = [
+    transport === "motorbike"
+      ? "🏍️ Cảnh báo đèo QL49: Đỉnh đèo Mỏ Quạ và A Co sương mù dày nhất vào lúc 06:00-07:30 và sau 16:30. Bật đèn cốt, giữ khoảng cách 30m."
+      : "🚗 Cảnh báo ô tô: Đoạn cua đèo A Co dốc quanh co, lưu ý nhường đường xe tải chở nông sản đi ngược chiều.",
+    isRainy
+      ? "⚠️ Nước suối có thể chảy xiết hơn ngày thường: Tuyệt đối không tắm ở vùng xoáy sâu hoặc trèo lên vách đá ướt."
+      : "☀️ Khung giờ tắm suối đẹp nhất: 11:30 - 15:00 khi ánh nắng rọi xuyên qua tán rừng già làm nước ấm dịu.",
+    "🌙 Biên độ nhiệt cao: Đêm và rạng sáng ở A Lưới luôn giảm từ 6-8°C so với TP. Huế — mang áo ấm khi ngủ nhà sàn."
+  ];
+
+  const enAiAlerts: string[] = [
+    transport === "motorbike"
+      ? "🏍️ Pass Alert: Dense fog gathers at Mo Qua and A Co passes before 07:30 and after 16:30. Use fog lamps and keep 30m distance."
+      : "🚗 Driving Alert: Sharp hairpin curves along Pass 49 — yield to climbing mountain trucks.",
+    isRainy
+      ? "⚠️ High river volume: Avoid deep water currents and stay clear of mossy, slick boulders."
+      : "☀️ Optimal waterfall swimming window: 11:30 - 15:00 when sunlight warms the stream pools.",
+    "🌙 Temperature Swing: A Luoi nights drop 6-8°C below Hue lowland — pack a warm fleece for stilt-house stays."
+  ];
+
+  const adaptiveActions: string[] = isRainy
+    ? [
+        "Đã tự động ưu tiên Suối khoáng nóng A Roàng (ngâm nước nóng 60°C có mái che, chống rét hoàn hảo).",
+        "Tăng thời lượng trải nghiệm Làng Nghề Dệt Zèng & Giao lưu văn hóa trong nhà sàn Pa Cô ấm cúng.",
+        "Điều chỉnh thời gian vượt đèo xuống núi sớm trước 15:30 để đảm bảo tầm nhìn sáng rõ an toàn."
+      ]
+    : [
+        "Tối ưu cung đường đón nắng sớm tại đồi thông và suối nước mát vào giữa trưa.",
+        "Khung giờ vượt đèo được canh chỉnh để du khách dừng chân chụp ảnh mây vắt ngang thung lũng sông Hương.",
+        "Đêm lửa trại ngoài trời được xác nhận thuận lợi cho hoạt động giao lưu cồng chiêng."
+      ];
+
+  const enAdaptiveActions: string[] = isRainy
+    ? [
+        "Prioritized A Roang natural hot springs (covered warm mineral soaking, ideal for misty days).",
+        "Extended indoor cultural time with master Ta Oi Zeng weavers inside dry stilt houses.",
+        "Shifted return pass departure earlier before 15:30 for clear daylight visibility."
+      ]
+    : [
+        "Optimized schedule for morning sunbeams at pine hills and midday swim in pristine creeks.",
+        "Pass-crossing timed for dramatic photos of clouds rolling over the Huong River gorge.",
+        "Outdoor campfire and sacred gong ceremonies are set for optimal evening conditions."
+      ];
+
+  const weatherAdvisory: WeatherAdvisory = {
+    seasonName,
+    enSeasonName,
+    conditionSummary,
+    enConditionSummary,
+    tempRange: weatherForecast ? `${weatherForecast.tempMin}°C - ${weatherForecast.tempMax}°C` : (isColdMistSeason ? "16°C - 23°C" : "19°C - 28°C"),
+    rainRisk,
+    cloudHuntingRating,
+    aiAlerts,
+    enAiAlerts,
+    adaptiveActions,
+    enAdaptiveActions
+  };
+
   return {
     id: `al-plan-${Date.now().toString(36)}`,
     title: dynamicTitle,
@@ -769,6 +1076,8 @@ export function generateHighlandItinerary(params: {
     duration,
     transport,
     companion,
+    departureTime,
+    weatherAdvisory,
     totalDistanceKm,
     energyRating,
     estBudgetPerPerson: estBudget,

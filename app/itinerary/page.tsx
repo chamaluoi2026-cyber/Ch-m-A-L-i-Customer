@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import {
@@ -20,6 +20,8 @@ import {
   TripDuration,
   TransportType,
   TravelCompanion,
+  DepartureTime,
+  DEPARTURE_TIME_OPTIONS,
   LIKE_CHOICES,
   DISLIKE_CHOICES,
   generateHighlandItinerary,
@@ -37,6 +39,7 @@ export default function ItineraryPage() {
   const [duration, setDuration] = useState<TripDuration>("2-days");
   const [transport, setTransport] = useState<TransportType>("motorbike");
   const [companion, setCompanion] = useState<TravelCompanion>("friends");
+  const [departureTime, setDepartureTime] = useState<DepartureTime>("07:30");
   const [selectedLikes, setSelectedLikes] = useState<string[]>([
     "waterfalls",
     "hotspring",
@@ -44,6 +47,7 @@ export default function ItineraryPage() {
     "cuisine"
   ]);
   const [selectedDislikes, setSelectedDislikes] = useState<string[]>([]);
+  const [customRequest, setCustomRequest] = useState<string>("");
 
   // Workflow State
   const [step, setStep] = useState<number>(1);
@@ -62,20 +66,48 @@ export default function ItineraryPage() {
     );
   };
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     setIsGenerating(true);
-    setTimeout(() => {
-      const generated = generateHighlandItinerary({
-        duration,
-        transport,
-        companion,
-        likes: selectedLikes,
-        dislikes: selectedDislikes
+    try {
+      const res = await fetch("/api/itinerary/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          duration,
+          transport,
+          companion,
+          departureTime,
+          likes: selectedLikes,
+          dislikes: selectedDislikes,
+          customRequest,
+          language
+        })
       });
-      setPlan(generated);
-      setIsGenerating(false);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }, 600);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.plan) {
+          setPlan(data.plan);
+          setIsGenerating(false);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn("API itinerary error, using fallback:", err);
+    }
+
+    // Fallback if API is offline or returns error
+    const generated = generateHighlandItinerary({
+      duration,
+      transport,
+      companion,
+      departureTime,
+      likes: selectedLikes,
+      dislikes: selectedDislikes
+    });
+    setPlan(generated);
+    setIsGenerating(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleReset = () => {
@@ -98,7 +130,7 @@ export default function ItineraryPage() {
                 <Sparkles className="h-3.5 w-3.5 text-amber-600" />
                 <span>{t.quiz.heroBadge}</span>
               </div>
-              <h1 className="font-extrabold text-3xl sm:text-4xl tracking-tight text-ink sm:text-4xl md:text-5xl">
+              <h1 className="text-3xl font-extrabold tracking-tight text-ink sm:text-4xl md:text-5xl">
                 {t.quiz.heroTitle}
               </h1>
               <p className="text-sm leading-relaxed text-ink/75 sm:text-base">
@@ -150,7 +182,7 @@ export default function ItineraryPage() {
               {step === 1 && (
                 <div className="space-y-8">
                   <div>
-                    <h2 className="font-bold text-2xl text-ink">
+                    <h2 className="text-2xl font-bold text-ink">
                       {t.quiz.step1Title}
                     </h2>
                     <p className="text-sm text-ink/60">{t.quiz.step1Desc}</p>
@@ -268,6 +300,42 @@ export default function ItineraryPage() {
                       </div>
                     </div>
                   </div>
+
+
+                  {/* Sub-section: Departure Time */}
+                  <div className="space-y-3">
+                    <label className="text-xs font-bold uppercase tracking-wider text-ink/70">
+                      {isEn ? "⏰ Departure Time from Hue City" : "⏰ Khung Giờ Xuất Phát Từ TP. Huế"}
+                    </label>
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                      {DEPARTURE_TIME_OPTIONS.map((opt) => (
+                        <div
+                          key={opt.id}
+                          onClick={() => setDepartureTime(opt.id as DepartureTime)}
+                          className={`cursor-pointer rounded-2xl border p-4 transition-all ${
+                            departureTime === opt.id
+                              ? "border-amber-500 bg-amber-50 ring-2 ring-amber-400"
+                              : "border-forest/15 bg-[#FAF9F5] hover:border-amber-300 hover:bg-white"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-2xl font-black text-amber-600">{opt.id}</span>
+                            {departureTime === opt.id && (
+                              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[10px] text-white">
+                                ✓
+                              </span>
+                            )}
+                          </div>
+                          <h3 className="mt-2 text-sm font-bold text-ink">
+                            {isEn ? opt.enLabel : opt.label}
+                          </h3>
+                          <p className="mt-1 text-xs text-ink/60">
+                            {isEn ? opt.enDesc : opt.desc}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -275,7 +343,7 @@ export default function ItineraryPage() {
               {step === 2 && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="font-bold text-2xl text-ink">
+                    <h2 className="text-2xl font-bold text-ink">
                       {t.quiz.step2Title}
                     </h2>
                     <p className="text-sm text-ink/60">{t.quiz.step2Desc}</p>
@@ -341,7 +409,7 @@ export default function ItineraryPage() {
               {step === 3 && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="font-bold text-2xl text-ink">
+                    <h2 className="text-2xl font-bold text-ink">
                       {t.quiz.step3Title}
                     </h2>
                     <p className="text-sm text-ink/60">{t.quiz.step3Desc}</p>
@@ -387,7 +455,7 @@ export default function ItineraryPage() {
               {step === 4 && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="font-bold text-2xl text-ink">
+                    <h2 className="text-2xl font-bold text-ink">
                       {t.quiz.step4Title}
                     </h2>
                     <p className="text-sm text-ink/60">{t.quiz.step4Desc}</p>
@@ -425,6 +493,21 @@ export default function ItineraryPage() {
                         </div>
                       );
                     })}
+                  </div>
+
+                  {/* Gemini AI Special Request Field */}
+                  <div className="mt-6 rounded-2xl border border-amber-300/60 bg-amber-50/50 p-4 space-y-2">
+                    <div className="flex items-center gap-2 text-xs font-bold text-amber-900">
+                      <Sparkles className="h-4 w-4 text-amber-600" />
+                      <span>{isEn ? "Special request for Google Gemini AI (Optional):" : "Yêu cầu riêng cho Google Gemini AI (Tùy chọn):"}</span>
+                    </div>
+                    <textarea
+                      value={customRequest}
+                      onChange={(e) => setCustomRequest(e.target.value)}
+                      placeholder={isEn ? "e.g., We have elderly members, prefer vegetarian food, want sunset spots..." : "VD: Đoàn có người lớn tuổi đi cùng, muốn ăn chay, thích săn mây hoàng hôn..."}
+                      rows={2}
+                      className="w-full rounded-xl border border-forest/15 bg-white p-3 text-xs text-ink placeholder:text-ink/40 focus:border-forest focus:outline-none focus:ring-1 focus:ring-forest"
+                    />
                   </div>
                 </div>
               )}

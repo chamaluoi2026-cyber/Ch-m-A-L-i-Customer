@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -8,6 +8,7 @@ import { AuthNavLink } from "@/components/auth/auth-nav-link";
 import { Button } from "@/components/ui/button";
 import { AppImage } from "@/components/ui/app-image";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { WeatherNavBadge } from "@/components/weather-nav-badge";
 import { useLanguage } from "@/components/i18n-provider";
 import { navItems, siteConfig } from "@/data/site";
 import { cn } from "@/lib/utils";
@@ -32,11 +33,11 @@ export function Navbar({ initialLogo, initialMobileLogo }: NavbarProps = {}) {
   }
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-forest/10 bg-beige/95 shadow-[0_4px_24px_rgba(22,33,30,0.06)] backdrop-blur-xl">
-      <nav className="section-shell flex h-18 items-center justify-between gap-2" aria-label="Điều hướng chính">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-forest/10 bg-beige/95 shadow-[0_6px_28px_rgba(22,33,30,0.06)] backdrop-blur-xl">
+      <nav className="mx-auto flex h-20 w-full max-w-[1600px] items-center justify-between px-6 sm:px-8 lg:px-12 gap-4" aria-label="Điều hướng chính">
         {/* Logo */}
         <Link href="/" className="focus-ring flex shrink-0 items-center gap-2 transition hover:opacity-90">
-          <div className={cn("relative h-10 w-36 sm:w-44", activeMobileLogo !== activeLogo ? "hidden sm:block" : "block")}>
+          <div className={cn("relative h-11 w-44 sm:w-52", activeMobileLogo !== activeLogo ? "hidden sm:block" : "block")}>
             <AppImage
               src={activeLogo}
               alt="Logo Chạm A Lưới"
@@ -46,7 +47,7 @@ export function Navbar({ initialLogo, initialMobileLogo }: NavbarProps = {}) {
             />
           </div>
           {activeMobileLogo !== activeLogo && (
-            <div className="relative h-9 w-28 sm:hidden">
+            <div className="relative h-10 w-32 sm:hidden">
               <AppImage
                 src={activeMobileLogo}
                 alt="Logo Chạm A Lưới"
@@ -58,13 +59,13 @@ export function Navbar({ initialLogo, initialMobileLogo }: NavbarProps = {}) {
           )}
         </Link>
 
-        {/* Desktop Navigation Links - Single row, perfectly spaced */}
-        <ul className="hidden items-center gap-0.5 rounded-full border border-forest/10 bg-white/90 p-1 shadow-xs md:flex lg:gap-1">
+        {/* Desktop Navigation Links */}
+        <ul className="hidden items-center gap-1 xl:gap-2 rounded-full border border-forest/15 bg-white/95 p-1.5 shadow-sm md:flex">
           {navItems.map((item) => {
             const active = isActive(item.href);
             const label = isEn && item.enLabel ? item.enLabel : item.label;
 
-            // Highlighted AI Itinerary Menu Item
+            // Highlighted AI Itinerary: Distinct Amber/Gold Sunset Tone - NEVER clashes with active green items
             if (item.isHighlight) {
               return (
                 <li key={item.href} className="shrink-0">
@@ -72,15 +73,15 @@ export function Navbar({ initialLogo, initialMobileLogo }: NavbarProps = {}) {
                     href={item.href}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "focus-ring relative flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-all duration-300 lg:px-3.5 lg:text-sm",
+                      "focus-ring relative flex items-center gap-2 rounded-full px-4 py-2 text-sm font-extrabold whitespace-nowrap transition-all duration-300 xl:px-5",
                       active
-                        ? "bg-gradient-to-r from-forest via-[#0F5C4A] to-[#A85832] text-white shadow-sm ring-2 ring-amber-400"
-                        : "bg-gradient-to-r from-forest/90 via-[#10624F] to-[#964722] text-white shadow-2xs hover:brightness-110"
+                        ? "bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-md ring-2 ring-orange-400 scale-102"
+                        : "bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 text-[#291603] shadow-xs hover:from-amber-500 hover:to-orange-500 hover:text-white hover:shadow-md"
                     )}
                   >
-                    <Sparkles className="h-3.5 w-3.5 text-amber-300 animate-pulse shrink-0" />
+                    <Sparkles className="h-4 w-4 animate-pulse shrink-0" />
                     <span className="whitespace-nowrap">{label}</span>
-                    <span className="rounded-full bg-amber-400/30 border border-amber-300/60 px-1.5 py-0.2 text-[9px] font-black uppercase text-amber-200">
+                    <span className="rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-900 shadow-2xs">
                       {isEn ? "AI" : item.badge || "AI"}
                     </span>
                   </Link>
@@ -94,7 +95,7 @@ export function Navbar({ initialLogo, initialMobileLogo }: NavbarProps = {}) {
                   href={item.href}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "focus-ring rounded-full px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap transition lg:px-3.5 lg:text-sm",
+                    "focus-ring rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap transition-colors duration-150 xl:px-5",
                     active
                       ? "bg-forest text-white shadow-xs"
                       : "text-ink/80 hover:bg-forest/10 hover:text-forest"
@@ -107,22 +108,24 @@ export function Navbar({ initialLogo, initialMobileLogo }: NavbarProps = {}) {
           })}
         </ul>
 
-        {/* Right CTA Area: Compact & Sleek */}
-        <div className="hidden shrink-0 items-center gap-2 md:flex">
-          <LanguageSwitcher />
+        {/* Right CTA Area: Roomy, balanced & elegant */}
+        <div className="hidden shrink-0 items-center gap-3 md:flex">
+          <WeatherNavBadge variant="navbar" />
+          <LanguageSwitcher className="px-1 py-0.5" />
           <AuthNavLink />
-          <Button asChild size="sm" className="h-8.5 rounded-full bg-forest px-3.5 text-xs font-bold text-white shadow-xs hover:bg-forest-light whitespace-nowrap">
+          <Button asChild className="h-10 rounded-full bg-forest px-5 text-sm font-bold text-white shadow-sm hover:bg-forest-light whitespace-nowrap transition-all">
             <Link href="/book-tour">{t.nav.bookTour}</Link>
           </Button>
         </div>
 
         {/* Mobile controls */}
-        <div className="flex shrink-0 items-center gap-1.5 md:hidden">
+        <div className="flex shrink-0 items-center gap-2 md:hidden">
+          <WeatherNavBadge variant="compact" />
           <LanguageSwitcher variant="compact" />
           <button
             type="button"
             aria-label="Mở menu di động"
-            className="focus-ring rounded-full bg-white p-2 text-ink shadow-sm"
+            className="focus-ring rounded-full bg-white p-2.5 text-ink shadow-sm"
             onClick={() => setOpen((value) => !value)}
           >
             {open ? <X aria-hidden="true" className="h-5 w-5" /> : <Menu aria-hidden="true" className="h-5 w-5" />}
@@ -133,7 +136,7 @@ export function Navbar({ initialLogo, initialMobileLogo }: NavbarProps = {}) {
       {/* Mobile Drawer */}
       {open ? (
         <nav className="section-shell pb-5 md:hidden" aria-label="Điều hướng di động">
-          <ul className="grid gap-2 rounded-2xl border border-forest/10 bg-white p-3 shadow-card">
+          <ul className="grid gap-2 rounded-2xl border border-forest/10 bg-white p-3.5 shadow-card">
             {navItems.map((item) => {
               const active = isActive(item.href);
               const label = isEn && item.enLabel ? item.enLabel : item.label;
@@ -146,15 +149,17 @@ export function Navbar({ initialLogo, initialMobileLogo }: NavbarProps = {}) {
                       onClick={() => setOpen(false)}
                       aria-current={active ? "page" : undefined}
                       className={cn(
-                        "focus-ring flex items-center justify-between rounded-xl p-3 text-sm font-bold text-white transition",
-                        "bg-gradient-to-r from-forest via-[#0F5C4A] to-[#A85832] shadow-md"
+                        "focus-ring flex items-center justify-between rounded-xl p-3.5 text-sm font-extrabold transition",
+                        active
+                          ? "bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-md"
+                          : "bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 text-[#291603] shadow-xs"
                       )}
                     >
                       <div className="flex items-center gap-2">
-                        <Sparkles className="h-4 w-4 text-amber-300" />
+                        <Sparkles className="h-4 w-4" />
                         <span>{label}</span>
                       </div>
-                      <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-black text-ink">
+                      <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-black text-amber-900">
                         {isEn ? "AI NEW" : "MỚI"}
                       </span>
                     </Link>
@@ -169,7 +174,7 @@ export function Navbar({ initialLogo, initialMobileLogo }: NavbarProps = {}) {
                     onClick={() => setOpen(false)}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "focus-ring block rounded-xl px-4 py-2.5 text-sm font-semibold",
+                      "focus-ring block rounded-xl px-4 py-3 text-sm font-semibold",
                       active ? "bg-forest text-white" : "text-ink hover:bg-beige"
                     )}
                   >
@@ -178,7 +183,10 @@ export function Navbar({ initialLogo, initialMobileLogo }: NavbarProps = {}) {
                 </li>
               );
             })}
-            <li className="border-t border-forest/10 pt-2 flex items-center gap-2">
+            <li className="pt-1 pb-1">
+              <WeatherNavBadge variant="drawer" />
+            </li>
+            <li className="border-t border-forest/10 pt-2.5 flex items-center gap-2">
               <Link
                 href="/login"
                 onClick={() => setOpen(false)}

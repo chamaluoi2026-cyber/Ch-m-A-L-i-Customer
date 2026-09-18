@@ -22,13 +22,17 @@ import {
   Car,
   Utensils,
   Home,
-  Ticket
+  Ticket,
+  CloudSun,
+  Thermometer,
+  Eye
 } from "lucide-react";
 import { ItineraryPlan } from "@/lib/highland-itinerary-engine";
 import { useLanguage } from "@/components/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { AppImage } from "@/components/ui/app-image";
 import { formatCurrency } from "@/lib/utils";
+import { WeatherWidget } from "@/components/itinerary/weather-widget";
 
 interface HighlandItineraryViewProps {
   plan: ItineraryPlan;
@@ -125,8 +129,8 @@ export function HighlandItineraryView({ plan, onReset }: HighlandItineraryViewPr
           </div>
         </div>
 
-        {/* 4 Metric Chips */}
-        <div className="mt-8 grid grid-cols-2 gap-3 border-t border-white/10 pt-6 sm:grid-cols-4">
+        {/* 5 Metric Chips */}
+        <div className="mt-8 grid grid-cols-2 gap-3 border-t border-white/10 pt-6 sm:grid-cols-5">
           <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5 backdrop-blur-xs">
             <span className="text-xs font-medium text-white/65">
               {t.itinerary.totalDistance}
@@ -172,7 +176,108 @@ export function HighlandItineraryView({ plan, onReset }: HighlandItineraryViewPr
               </span>
             </div>
           </div>
+
+          {plan.departureTime && (
+            <div className="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-3.5 backdrop-blur-xs">
+              <span className="text-xs font-medium text-amber-200/80">
+                {isEn ? "Departs Hue" : "Xuất phát lúc"}
+              </span>
+              <div className="mt-1 flex items-baseline gap-1">
+                <span className="text-xl font-extrabold text-amber-300">{plan.departureTime}</span>
+              </div>
+            </div>
+          )}
         </div>
+
+
+        {/* Google Gemini AI & Highland Weather Advisory Card */}
+        {plan.weatherAdvisory && (
+          <div className="mt-6 overflow-hidden rounded-2xl border border-amber-300/30 bg-gradient-to-br from-white/10 via-amber-400/5 to-white/5 p-5 text-white backdrop-blur-md">
+            {/* Header Badge */}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
+              <div className="flex items-center gap-2">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-400/20 text-amber-300">
+                  <Sparkles className="h-4 w-4 animate-pulse" />
+                </span>
+                <div>
+                  <h3 className="text-sm font-extrabold uppercase tracking-wider text-amber-300">
+                    {isEn ? "AI Highland Climate & Route Advisory" : "Cố Vấn Khí Hậu & Lộ Trình Thông Minh Từ AI"}
+                  </h3>
+                  <p className="text-[11px] text-white/60">
+                    {isEn ? "Synchronized with Open-Meteo & Gemini 2.5 Flash" : "Đồng bộ dữ liệu thời tiết thực & Gemini 2.5 Flash"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Badges */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1 rounded-full border border-sky-400/30 bg-sky-500/15 px-2.5 py-1 text-xs font-semibold text-sky-200">
+                  <CloudSun className="h-3 w-3" />
+                  <span>{isEn ? plan.weatherAdvisory.enSeasonName : plan.weatherAdvisory.seasonName}</span>
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-500/15 px-2.5 py-1 text-xs font-semibold text-amber-200">
+                  <Thermometer className="h-3 w-3" />
+                  <span>{plan.weatherAdvisory.tempRange}</span>
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-500/15 px-2.5 py-1 text-xs font-semibold text-emerald-200">
+                  <Eye className="h-3 w-3" />
+                  <span>
+                    {isEn
+                      ? `Cloud Hunting: ${plan.weatherAdvisory.cloudHuntingRating === "excellent" ? "Prime 95%" : "Fair"}`
+                      : `Săn mây: ${plan.weatherAdvisory.cloudHuntingRating === "excellent" ? "Đỉnh cao (06:15)" : "Khá tốt"}`}
+                  </span>
+                </span>
+              </div>
+            </div>
+
+            {/* AI Personalized Insight Text */}
+            {(plan.geminiIntro || plan.weatherAdvisory.conditionSummary) && (
+              <div className="mt-4 rounded-xl border border-white/5 bg-black/20 p-3.5">
+                <p className="text-xs leading-relaxed text-white/90">
+                  <strong className="text-amber-300">
+                    {isEn ? "🤖 AI Recommendation: " : "🤖 Nhận định của Cố Vấn AI: "}
+                  </strong>
+                  "{isEn ? (plan.enGeminiIntro || plan.geminiIntro || plan.weatherAdvisory.enConditionSummary) : (plan.geminiIntro || plan.weatherAdvisory.conditionSummary)}"
+                </p>
+              </div>
+            )}
+
+            {/* 2-Column Actionable Grid */}
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              {/* Col 1: Road & Weather Alerts */}
+              <div className="rounded-xl border border-rose-400/20 bg-rose-500/10 p-3.5">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-rose-300">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                  <span>{isEn ? "Pass 49 & River Alerts" : "Cảnh Báo Đèo QL49 & Nước Suối"}</span>
+                </div>
+                <ul className="mt-2 space-y-1.5 text-xs text-rose-100/90">
+                  {(isEn ? (plan.weatherAdvisory.enAiAlerts || plan.weatherAdvisory.aiAlerts) : plan.weatherAdvisory.aiAlerts).map((alert, idx) => (
+                    <li key={idx} className="flex items-start gap-1.5">
+                      <span className="text-rose-400">•</span>
+                      <span>{alert}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Col 2: Adaptive Route Changes */}
+              <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-3.5">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-300">
+                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                  <span>{isEn ? "Weather-Adaptive Plan Adjustments" : "Lịch Trình Đã Được AI Thích Ứng Như Thế Nào"}</span>
+                </div>
+                <ul className="mt-2 space-y-1.5 text-xs text-emerald-100/90">
+                  {(isEn ? (plan.weatherAdvisory.enAdaptiveActions || plan.weatherAdvisory.adaptiveActions) : plan.weatherAdvisory.adaptiveActions).map((act, idx) => (
+                    <li key={idx} className="flex items-start gap-1.5">
+                      <span className="text-emerald-400">✓</span>
+                      <span>{act}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Tabs Navigation */}
@@ -237,23 +342,70 @@ export function HighlandItineraryView({ plan, onReset }: HighlandItineraryViewPr
                 {day.stops.map((stop, sIdx) => {
                   const isEatery = stop.category === "Ăn uống";
                   const isHomestay = stop.category === "Lưu trú" || stop.category === "Lửa trại";
-
                   const isTravelLeg = stop.isTravelLeg || stop.category === "Di chuyển";
+                  const isCheckin = stop.stopType === "checkin";
+                  const isCheckout = stop.stopType === "checkout";
+                  const isRest = stop.stopType === "rest";
+                  const isBreakfast = stop.stopType === "breakfast";
+                  const isCoffee = stop.stopType === "coffee";
+
+                  const cardClass = isCheckin
+                    ? "border-teal-300 bg-gradient-to-br from-teal-50/90 via-emerald-50/50 to-white shadow-sm"
+                    : isCheckout
+                    ? "border-slate-300 bg-gradient-to-br from-slate-50/90 to-white shadow-sm"
+                    : isRest
+                    ? "border-indigo-200 bg-gradient-to-br from-indigo-50/70 to-sky-50/50 shadow-sm"
+                    : isBreakfast
+                    ? "border-orange-200 bg-gradient-to-br from-orange-50/80 via-amber-50/50 to-white shadow-sm"
+                    : isCoffee
+                    ? "border-amber-300 bg-gradient-to-br from-amber-50/80 via-yellow-50/40 to-white shadow-sm"
+                    : isTravelLeg
+                    ? "border-emerald-300 bg-gradient-to-br from-emerald-50/90 via-teal-50/50 to-white shadow-sm"
+                    : "border-forest/10 bg-[#FAF9F5] hover:border-forest/30 hover:bg-white hover:shadow-md";
+
+                  const dotClass = isCheckin
+                    ? "bg-teal-600 text-white"
+                    : isCheckout
+                    ? "bg-slate-500 text-white"
+                    : isRest
+                    ? "bg-indigo-500 text-white"
+                    : isBreakfast
+                    ? "bg-orange-500 text-white"
+                    : isCoffee
+                    ? "bg-amber-600 text-white"
+                    : isTravelLeg
+                    ? "bg-emerald-600 text-white"
+                    : "bg-forest text-white";
 
                   return (
                     <article
                       key={stop.id}
-                      className={`relative flex flex-col gap-4 rounded-2xl border p-4 transition-all md:ml-12 md:p-5 ${
-                        isTravelLeg
-                          ? "border-emerald-300 bg-gradient-to-br from-emerald-50/90 via-teal-50/50 to-white shadow-sm"
-                          : "border-forest/10 bg-[#FAF9F5] hover:border-forest/30 hover:bg-white hover:shadow-md"
-                      }`}
+                      className={`relative flex flex-col gap-4 rounded-2xl border p-4 transition-all md:ml-12 md:p-5 ${cardClass}`}
                     >
+                      {/* Special top-banner for checkin / checkout / rest / breakfast / coffee */}
+                      {(isCheckin || isCheckout || isRest || isBreakfast || isCoffee) && (
+                        <div className={`-mx-4 -mt-4 mb-2 flex items-center gap-2 rounded-t-2xl px-4 py-2 text-xs font-extrabold uppercase tracking-widest ${
+                          isCheckin
+                            ? "bg-teal-600 text-white"
+                            : isCheckout
+                            ? "bg-slate-500 text-white"
+                            : isBreakfast
+                            ? "bg-orange-500 text-white"
+                            : isCoffee
+                            ? "bg-amber-600 text-white"
+                            : "bg-indigo-500 text-white"
+                        }`}>
+                          {isCheckin && <span>🏨 {isEn ? "CHECK-IN · NHẬN PHÒNG" : "CHECK-IN · NHẬN PHÒNG HOMESTAY"}</span>}
+                          {isCheckout && <span>🚪 {isEn ? "CHECK-OUT · DEPARTURE" : "CHECK-OUT · TRẢ PHÒNG"}</span>}
+                          {isRest && <span>🛌 {isEn ? "REST & RECHARGE" : "NGHỈ NGƠI & THƯ GIÃN"}</span>}
+                          {isBreakfast && <span>🍚 {isEn ? "BREAKFAST · ĂN SÁNG VÙNG CAO" : "BỮA SÁNG ĐẶC SẢN VÙNG CAO"}</span>}
+                          {isCoffee && <span>☕ {isEn ? "HIGHLAND COFFEE BREAK" : "CÀ PHÊ VÙNG CAO"}</span>}
+                        </div>
+                      )}
+
                       {/* Stepper Dot on the River Line */}
                       <div
-                        className={`absolute -left-[3.25rem] top-6 hidden h-6 w-6 items-center justify-center rounded-full border-2 border-white text-xs font-bold shadow-xs md:flex ${
-                          isTravelLeg ? "bg-emerald-600 text-white" : "bg-forest text-white"
-                        }`}
+                        className={`absolute -left-[3.25rem] top-6 hidden h-6 w-6 items-center justify-center rounded-full border-2 border-white text-xs font-bold shadow-xs md:flex ${dotClass}`}
                         aria-hidden="true"
                       >
                         {sIdx + 1}
@@ -356,6 +508,23 @@ export function HighlandItineraryView({ plan, onReset }: HighlandItineraryViewPr
                           </div>
                         </div>
                       </div>
+
+                      {/* MustTry Chips */}
+                      {stop.mustTry && stop.mustTry.length > 0 && (
+                        <div className="mt-1 rounded-xl border border-amber-100 bg-amber-50/60 p-3">
+                          <p className="mb-2 text-[10px] font-extrabold uppercase tracking-widest text-amber-700">
+                            {isEn ? "✨ Nhất định phải thử" : "✨ Nhất định phải thử"}
+                          </p>
+                          <ul className="space-y-1">
+                            {(isEn ? (stop.enMustTry ?? stop.mustTry) : stop.mustTry).map((tip, ti) => (
+                              <li key={ti} className="flex items-start gap-1.5 text-xs text-amber-900">
+                                <span className="mt-0.5 shrink-0 text-amber-500">›</span>
+                                <span>{tip}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     </article>
                   );
                 })}
@@ -491,6 +660,9 @@ export function HighlandItineraryView({ plan, onReset }: HighlandItineraryViewPr
           </Button>
         </div>
       </div>
+
+      {/* Floating Weather Widget — bottom-left corner */}
+      <WeatherWidget />
     </div>
   );
 }
