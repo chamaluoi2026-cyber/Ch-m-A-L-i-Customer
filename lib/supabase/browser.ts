@@ -72,20 +72,66 @@ async function requestAuth(path: string, body: Record<string, unknown>) {
   return payload;
 }
 
-export function getGoogleLoginUrl(next = "/account") {
+export function hasProviderConfig(provider: "google" | "facebook"): boolean {
   const config = getOptionalSupabasePublicConfig();
+  if (config) return true;
+  if (provider === "google") {
+    return Boolean(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID);
+  }
+  if (provider === "facebook") {
+    return Boolean(process.env.NEXT_PUBLIC_FACEBOOK_APP_ID);
+  }
+  return false;
+}
 
-  if (!config) {
-    throw new Error("Chưa cấu hình Supabase. Hãy điền NEXT_PUBLIC_SUPABASE_URL và NEXT_PUBLIC_SUPABASE_ANON_KEY trong .env.local.");
+export function getProviderOAuthUrl(provider: "google" | "facebook", next = "/account"): string | null {
+  const config = getOptionalSupabasePublicConfig();
+  const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
+  const callbackUrl = `${origin}/auth/callback?next=${encodeURIComponent(next)}`;
+
+  // 1. Supabase OAuth nếu đã cấu hình Supabase
+  if (config) {
+    const params = new URLSearchParams({
+      provider,
+      redirect_to: callbackUrl
+    });
+    return `${config.url}/auth/v1/authorize?${params.toString()}`;
   }
 
-  const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
-  const params = new URLSearchParams({
-    provider: "google",
-    redirect_to: redirectTo
-  });
+  // 2. Google Direct OAuth nếu có Google Client ID
+  if (provider === "google" && process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) {
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    const params = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: callbackUrl,
+      response_type: "token",
+      scope: "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email openid",
+      prompt: "select_account"
+    });
+    return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+  }
 
-  return `${config.url}/auth/v1/authorize?${params.toString()}`;
+  // 3. Facebook Direct OAuth nếu có Facebook App ID
+  if (provider === "facebook" && process.env.NEXT_PUBLIC_FACEBOOK_APP_ID) {
+    const appId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID;
+    const params = new URLSearchParams({
+      client_id: appId,
+      redirect_uri: callbackUrl,
+      response_type: "token",
+      scope: "email,public_profile"
+    });
+    return `https://www.facebook.com/v19.0/dialog/oauth?${params.toString()}`;
+  }
+
+  return null;
+}
+
+export function getGoogleLoginUrl(next = "/account") {
+  const oauthUrl = getProviderOAuthUrl("google", next);
+  if (!oauthUrl) {
+    throw new Error("Chưa cấu hình Google OAuth hoặc Supabase trong .env.local.");
+  }
+  return oauthUrl;
 }
 
 export function saveSessionFromHash(hash: string) {

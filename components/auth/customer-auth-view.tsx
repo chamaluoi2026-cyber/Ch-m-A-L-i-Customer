@@ -16,9 +16,14 @@ import {
   EyeOff,
   X,
   ShieldCheck,
+  Info,
+  ExternalLink,
+  Copy,
+  Check,
+  Code2,
 } from "lucide-react";
 import { loginCustomerAction, registerCustomerAction, socialAuthCustomerAction } from "@/app/actions/auth";
-import { saveCustomerSession } from "@/lib/supabase/browser";
+import { saveCustomerSession, getProviderOAuthUrl } from "@/lib/supabase/browser";
 
 interface CustomerAuthViewProps {
   nextUrl?: string;
@@ -41,6 +46,8 @@ export function CustomerAuthView({ nextUrl = "/account" }: CustomerAuthViewProps
 
   // Social Modal State
   const [socialModal, setSocialModal] = useState<"google" | "facebook" | null>(null);
+  const [modalTab, setModalTab] = useState<"test" | "guide">("test");
+  const [copiedEnv, setCopiedEnv] = useState(false);
   const [socialName, setSocialName] = useState("");
   const [socialEmail, setSocialEmail] = useState("");
   const [socialPhone, setSocialPhone] = useState("");
@@ -127,16 +134,21 @@ export function CustomerAuthView({ nextUrl = "/account" }: CustomerAuthViewProps
 
   const handleOpenSocialModal = (provider: "google" | "facebook") => {
     setError(null);
-    setSocialModal(provider);
-    if (provider === "google") {
-      setSocialName("Nguyễn Hoàng Nam");
-      setSocialEmail("hoangnam.travel@gmail.com");
-      setSocialPhone("");
-    } else {
-      setSocialName("Thảo Vy A Lưới");
-      setSocialEmail("thaovy.al@facebook.com");
-      setSocialPhone("");
+    const oauthUrl = getProviderOAuthUrl(provider, nextUrl);
+    if (oauthUrl) {
+      // Đã có cấu hình Google / Facebook OAuth hoặc Supabase:
+      // Chuyển hướng trực tiếp 100% sang trang đăng nhập chính thức của Google hoặc Facebook!
+      window.location.href = oauthUrl;
+      return;
     }
+
+    // Nếu chưa có Client ID trong .env.local:
+    // Mở hộp thoại giải thích rõ ràng và cho phép kiểm thử / xem hướng dẫn kích hoạt
+    setSocialModal(provider);
+    setModalTab("test");
+    setSocialName("");
+    setSocialEmail("");
+    setSocialPhone("");
   };
 
   const handleSocialSubmit = async (e: React.FormEvent) => {
@@ -481,10 +493,11 @@ export function CustomerAuthView({ nextUrl = "/account" }: CustomerAuthViewProps
       {/* MODAL THU THẬP THÔNG TIN MẠNG XÃ HỘI (GOOGLE / FACEBOOK) */}
       {socialModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-150">
-          <div className="w-full max-w-md rounded-3xl bg-white shadow-2xl border border-forest/10 overflow-hidden text-left p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-black/5 pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="size-9 rounded-full bg-gray-100 flex items-center justify-center">
+          <div className="w-full max-w-lg rounded-3xl bg-white shadow-2xl border border-forest/10 overflow-hidden text-left p-6 md:p-7 space-y-4 max-h-[90vh] overflow-y-auto">
+            {/* Header Modal */}
+            <div className="flex items-center justify-between border-b border-black/5 pb-3.5">
+              <div className="flex items-center gap-3">
+                <div className="size-10 rounded-2xl bg-gray-100 flex items-center justify-center shadow-2xs">
                   {socialModal === "google" ? (
                     <svg className="w-5 h-5" viewBox="0 0 24 24">
                       <path
@@ -511,80 +524,197 @@ export function CustomerAuthView({ nextUrl = "/account" }: CustomerAuthViewProps
                   )}
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-sm text-ink">
+                  <h3 className="font-black text-sm md:text-base text-ink">
                     Đăng nhập bằng {socialModal === "google" ? "Google" : "Facebook"}
                   </h3>
-                  <p className="text-[11px] text-ink/60">Xác thực 1-chạm & đồng bộ hồ sơ du khách</p>
+                  <p className="text-[11px] text-ink/60">Xác thực du khách & đồng bộ quyền lợi</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setSocialModal(null)}
-                className="rounded-full p-1 text-gray-400 hover:text-ink hover:bg-gray-100"
+                className="rounded-full p-1.5 text-gray-400 hover:text-ink hover:bg-gray-100 transition"
               >
                 <X className="size-4" />
               </button>
             </div>
 
-            <form onSubmit={handleSocialSubmit} className="space-y-3.5">
-              <div>
-                <label className="block text-xs font-bold text-ink mb-1">Họ và tên hiển thị</label>
-                <input
-                  type="text"
-                  value={socialName}
-                  onChange={(e) => setSocialName(e.target.value)}
-                  className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-xs text-ink focus:border-forest focus:outline-none"
-                  required
-                />
+            {/* Thông báo lý do & trạng thái kết nối */}
+            <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/80 text-amber-900 text-xs leading-relaxed space-y-1">
+              <div className="flex items-center gap-1.5 font-bold text-amber-800">
+                <Info className="size-3.5 shrink-0 text-amber-600" />
+                Chưa gắn Google / Facebook Client ID vào .env.local
               </div>
+              <p className="text-[11px] text-amber-900/80">
+                Để trình duyệt tự động chuyển hướng sang trang chọn tài khoản chính thức của {socialModal === "google" ? "Google (accounts.google.com)" : "Facebook (facebook.com)"}, hệ thống cần có khóa OAuth Client ID do Google / Meta cấp.
+              </p>
+            </div>
 
-              <div>
-                <label className="block text-xs font-bold text-ink mb-1">
-                  Email tài khoản {socialModal === "google" ? "Google" : "Facebook"}
-                </label>
-                <input
-                  type="email"
-                  value={socialEmail}
-                  onChange={(e) => setSocialEmail(e.target.value)}
-                  className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-xs text-ink focus:border-forest focus:outline-none"
-                  required
-                />
-              </div>
+            {/* Tabs chuyển đổi trong Modal */}
+            <div className="flex border-b border-black/10 text-xs font-bold gap-2">
+              <button
+                type="button"
+                onClick={() => setModalTab("test")}
+                className={`pb-2.5 px-3 border-b-2 transition flex items-center gap-1.5 ${
+                  modalTab === "test"
+                    ? "border-forest text-forest"
+                    : "border-transparent text-ink/50 hover:text-ink"
+                }`}
+              >
+                <Sparkles className="size-3.5 text-amber-500" />
+                Trải nghiệm thử (Test Mode)
+              </button>
+              <button
+                type="button"
+                onClick={() => setModalTab("guide")}
+                className={`pb-2.5 px-3 border-b-2 transition flex items-center gap-1.5 ${
+                  modalTab === "guide"
+                    ? "border-forest text-forest"
+                    : "border-transparent text-ink/50 hover:text-ink"
+                }`}
+              >
+                <Code2 className="size-3.5 text-blue-500" />
+                Cách kết nối OAuth thật (1 phút)
+              </button>
+            </div>
 
-              <div>
-                <label className="block text-xs font-bold text-ink mb-1">
-                  Số điện thoại Zalo <span className="text-[10px] text-forest font-semibold">(Nhận mã giảm giá 10%)</span>
-                </label>
-                <input
-                  type="tel"
-                  value={socialPhone}
-                  onChange={(e) => setSocialPhone(e.target.value)}
-                  placeholder="Ví dụ: 0912 345 678"
-                  className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-xs text-ink focus:border-forest focus:outline-none"
-                />
-                <p className="text-[10px] text-gray-400 mt-1">
-                  Thông tin được bảo mật và dùng để lưu trữ voucher, xác nhận homestay.
+            {modalTab === "test" ? (
+              <form onSubmit={handleSocialSubmit} className="space-y-3.5 pt-1">
+                <p className="text-xs text-ink/70">
+                  Bạn có thể nhập Họ tên và Email {socialModal === "google" ? "Google" : "Facebook"} của bạn để hệ thống lưu tài khoản du khách ngay:
                 </p>
-              </div>
 
-              <div className="pt-2 flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setSocialModal(null)}
-                  className="flex-1 py-2.5 rounded-xl border border-black/10 text-xs font-bold text-ink/70 hover:bg-gray-50"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 py-2.5 rounded-xl bg-forest text-white text-xs font-bold hover:bg-forest/90 shadow flex items-center justify-center gap-2"
-                >
-                  {loading ? <Loader2 className="size-3.5 animate-spin" /> : <ShieldCheck className="size-4" />}
-                  {loading ? "Đang xác thực..." : "Tiếp Tục Đăng Nhập"}
-                </button>
+                <div>
+                  <label className="block text-xs font-bold text-ink mb-1">Họ và tên du khách</label>
+                  <input
+                    type="text"
+                    value={socialName}
+                    onChange={(e) => setSocialName(e.target.value)}
+                    placeholder="Ví dụ: Nguyễn Hoàng Nam"
+                    className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-xs text-ink focus:border-forest focus:outline-none transition"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-ink mb-1">
+                    Email tài khoản {socialModal === "google" ? "Google (Gmail)" : "Facebook"}
+                  </label>
+                  <input
+                    type="email"
+                    value={socialEmail}
+                    onChange={(e) => setSocialEmail(e.target.value)}
+                    placeholder={socialModal === "google" ? "Ví dụ: hoangnam.travel@gmail.com" : "Ví dụ: thaovy@facebook.com"}
+                    className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-xs text-ink focus:border-forest focus:outline-none transition"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-ink mb-1">
+                    Số điện thoại Zalo <span className="text-[10px] text-forest font-semibold">(Tùy chọn - Nhận mã giảm giá 10%)</span>
+                  </label>
+                  <input
+                    type="tel"
+                    value={socialPhone}
+                    onChange={(e) => setSocialPhone(e.target.value)}
+                    placeholder="Ví dụ: 0912 345 678"
+                    className="w-full rounded-xl border border-black/10 px-3.5 py-2.5 text-xs text-ink focus:border-forest focus:outline-none transition"
+                  />
+                </div>
+
+                <div className="pt-2 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (socialModal === "google") {
+                        setSocialName("Hoàng Nam Travel");
+                        setSocialEmail("hoangnam.google@gmail.com");
+                        setSocialPhone("0912345678");
+                      } else {
+                        setSocialName("Thảo Vy A Lưới");
+                        setSocialEmail("thaovy.fb@gmail.com");
+                        setSocialPhone("0987654321");
+                      }
+                    }}
+                    className="py-2.5 px-3 rounded-xl border border-black/10 text-xs font-semibold text-ink/70 hover:bg-gray-50 transition whitespace-nowrap"
+                  >
+                    Điền nhanh mẫu
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="flex-1 py-2.5 rounded-xl bg-forest text-white text-xs font-bold hover:bg-forest/90 shadow flex items-center justify-center gap-2 transition"
+                  >
+                    {loading ? <Loader2 className="size-3.5 animate-spin" /> : <ShieldCheck className="size-4" />}
+                    {loading ? "Đang xác thực..." : "Xác Nhận & Đăng Nhập"}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="space-y-3 pt-1 text-xs">
+                <p className="text-ink/80 leading-relaxed">
+                  Để nút đăng nhập mạng xã hội tự động mở trang xác thực chính thức của <strong>Google</strong> hoặc <strong>Facebook</strong>, bạn chỉ cần 1 trong 2 cách sau:
+                </p>
+
+                <div className="p-3 rounded-2xl bg-gray-50 border border-black/5 space-y-2">
+                  <div className="font-bold text-ink text-xs flex items-center gap-1.5">
+                    <span className="size-5 rounded-full bg-forest text-white text-[11px] flex items-center justify-center font-bold">1</span>
+                    Cách 1: Thêm Google Client ID trực tiếp (Khuyên dùng)
+                  </div>
+                  <p className="text-ink/65 text-[11px] leading-relaxed">
+                    Vào <strong>Google Cloud Console</strong> → Tạo <em>OAuth 2.0 Client ID (Web Application)</em> → Thêm Authorized Redirect URI là: <code className="bg-white px-1.5 py-0.5 rounded border text-forest font-mono text-[10px]">http://localhost:3000/auth/callback</code> (hoặc tên miền Vercel của bạn).
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-2xl bg-gray-50 border border-black/5 space-y-2">
+                  <div className="font-bold text-ink text-xs flex items-center gap-1.5">
+                    <span className="size-5 rounded-full bg-forest text-white text-[11px] flex items-center justify-center font-bold">2</span>
+                    Cách 2: Sử dụng Supabase Auth (Tích hợp cả Google & Facebook)
+                  </div>
+                  <p className="text-ink/65 text-[11px] leading-relaxed">
+                    Tạo Project miễn phí tại <strong>supabase.com</strong> → Vào tab <em>Authentication → Providers</em> → Bật Google và Facebook.
+                  </p>
+                </div>
+
+                {/* Đoạn mã mẫu copy vào .env.local */}
+                <div className="rounded-2xl bg-[#1E293B] text-slate-100 p-3 space-y-2 text-[11px] font-mono relative">
+                  <div className="flex items-center justify-between text-slate-400 text-[10px]">
+                    <span>Dán vào file .env.local:</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const envSnippet = `# Google OAuth Client ID\nNEXT_PUBLIC_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com\n\n# Hoặc Supabase Auth\nNEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co\nNEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key`;
+                        navigator.clipboard.writeText(envSnippet);
+                        setCopiedEnv(true);
+                        setTimeout(() => setCopiedEnv(false), 2000);
+                      }}
+                      className="inline-flex items-center gap-1 text-emerald-400 hover:text-emerald-300 font-sans text-[11px]"
+                    >
+                      {copiedEnv ? <Check className="size-3" /> : <Copy className="size-3" />}
+                      {copiedEnv ? "Đã chép!" : "Sao chép"}
+                    </button>
+                  </div>
+                  <pre className="text-[10px] overflow-x-auto text-emerald-300 leading-relaxed">
+{`NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-id.apps.googleusercontent.com
+# Hoặc:
+NEXT_PUBLIC_SUPABASE_URL=https://xyz.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi...`}
+                  </pre>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setModalTab("test")}
+                    className="w-full py-2.5 rounded-xl bg-forest text-white font-bold text-xs hover:bg-forest/90 transition text-center"
+                  >
+                    Quay lại form thử nghiệm
+                  </button>
+                </div>
               </div>
-            </form>
+            )}
           </div>
         </div>
       )}
