@@ -40,6 +40,33 @@ export default function ItineraryPage() {
   const [transport, setTransport] = useState<TransportType>("motorbike");
   const [companion, setCompanion] = useState<TravelCompanion>("friends");
   const [departureTime, setDepartureTime] = useState<DepartureTime>("07:30");
+
+  // Date State & Helpers
+  const today = new Date();
+  const todayStr = today.toISOString().split("T")[0];
+  const tomorrow = new Date(Date.now() + 86400000);
+  const tomorrowStr = tomorrow.toISOString().split("T")[0];
+
+  const getNextSaturdayStr = () => {
+    const d = new Date();
+    const day = d.getDay();
+    const diff = day === 6 ? 7 : (6 - day);
+    d.setDate(d.getDate() + diff);
+    return d.toISOString().split("T")[0];
+  };
+  const weekendStr = getNextSaturdayStr();
+
+  const [departureDate, setDepartureDate] = useState<string>(todayStr);
+
+  const formatDateDisplay = (dateStr: string) => {
+    if (!dateStr) return "";
+    const parts = dateStr.split("-");
+    if (parts.length === 3) {
+      return `${parts[2]}/${parts[1]}`;
+    }
+    return dateStr;
+  };
+
   const [selectedLikes, setSelectedLikes] = useState<string[]>([
     "waterfalls",
     "hotspring",
@@ -77,6 +104,7 @@ export default function ItineraryPage() {
           transport,
           companion,
           departureTime,
+          departureDate,
           likes: selectedLikes,
           dislikes: selectedDislikes,
           customRequest,
@@ -102,6 +130,7 @@ export default function ItineraryPage() {
       transport,
       companion,
       departureTime,
+      departureDate,
       likes: selectedLikes,
       dislikes: selectedDislikes
     });
@@ -238,6 +267,105 @@ export default function ItineraryPage() {
                           <p className="mt-1 text-xs text-ink/60">{item.desc}</p>
                         </div>
                       ))}
+                    </div>
+                  </div>
+
+                  {/* Sub-section: Departure Date */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold uppercase tracking-wider text-ink/70">
+                        {isEn ? "📅 Departure Date" : "📅 Ngày Khởi Hành"}
+                      </label>
+                      <span className="text-xs font-medium text-forest">
+                        {isEn ? "⚡ Synced with live weather" : "⚡ Tự động khớp dự báo thời tiết"}
+                      </span>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                      {/* Option 1: Hôm nay */}
+                      <div
+                        onClick={() => setDepartureDate(todayStr)}
+                        className={`cursor-pointer rounded-2xl border p-4 transition-all ${
+                          departureDate === todayStr
+                            ? "border-forest bg-forest/5 ring-2 ring-forest"
+                            : "border-forest/15 bg-[#FAF9F5] hover:border-forest/40 hover:bg-white"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-black text-forest">
+                            {isEn ? "Today" : "Hôm nay"}
+                          </span>
+                          {departureDate === todayStr && (
+                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-forest text-[10px] text-white">✓</span>
+                          )}
+                        </div>
+                        <p className="mt-1 text-base font-bold text-ink">{formatDateDisplay(todayStr)}</p>
+                        <p className="mt-0.5 text-xs text-ink/60">{isEn ? "Depart today" : "Khởi hành ngay"}</p>
+                      </div>
+
+                      {/* Option 2: Ngày mai */}
+                      <div
+                        onClick={() => setDepartureDate(tomorrowStr)}
+                        className={`cursor-pointer rounded-2xl border p-4 transition-all ${
+                          departureDate === tomorrowStr
+                            ? "border-forest bg-forest/5 ring-2 ring-forest"
+                            : "border-forest/15 bg-[#FAF9F5] hover:border-forest/40 hover:bg-white"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-black text-forest">
+                            {isEn ? "Tomorrow" : "Ngày mai"}
+                          </span>
+                          {departureDate === tomorrowStr && (
+                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-forest text-[10px] text-white">✓</span>
+                          )}
+                        </div>
+                        <p className="mt-1 text-base font-bold text-ink">{formatDateDisplay(tomorrowStr)}</p>
+                        <p className="mt-0.5 text-xs text-ink/60">{isEn ? "Depart tomorrow" : "Khởi hành ngày mai"}</p>
+                      </div>
+
+                      {/* Option 3: Cuối tuần này */}
+                      <div
+                        onClick={() => setDepartureDate(weekendStr)}
+                        className={`cursor-pointer rounded-2xl border p-4 transition-all ${
+                          departureDate === weekendStr
+                            ? "border-forest bg-forest/5 ring-2 ring-forest"
+                            : "border-forest/15 bg-[#FAF9F5] hover:border-forest/40 hover:bg-white"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-black text-forest">
+                            {isEn ? "This Weekend" : "Cuối tuần này"}
+                          </span>
+                          {departureDate === weekendStr && (
+                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-forest text-[10px] text-white">✓</span>
+                          )}
+                        </div>
+                        <p className="mt-1 text-base font-bold text-ink">{formatDateDisplay(weekendStr)}</p>
+                        <p className="mt-0.5 text-xs text-ink/60">{isEn ? "Saturday trip" : "Thứ 7 thảnh thơi"}</p>
+                      </div>
+
+                      {/* Option 4: Chọn trên lịch */}
+                      <div
+                        className={`rounded-2xl border p-3.5 transition-all ${
+                          departureDate !== todayStr && departureDate !== tomorrowStr && departureDate !== weekendStr
+                            ? "border-forest bg-forest/5 ring-2 ring-forest"
+                            : "border-forest/15 bg-[#FAF9F5] hover:border-forest/40 hover:bg-white"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-black text-forest">
+                            {isEn ? "Custom Date" : "Chọn ngày trên lịch"}
+                          </span>
+                          <Calendar className="h-4 w-4 text-forest" />
+                        </div>
+                        <input
+                          type="date"
+                          value={departureDate}
+                          min={todayStr}
+                          onChange={(e) => setDepartureDate(e.target.value)}
+                          className="mt-2 w-full rounded-lg border border-forest/20 bg-white px-2 py-1 text-xs font-bold text-ink shadow-2xs focus:border-forest focus:outline-hidden"
+                        />
+                      </div>
                     </div>
                   </div>
 

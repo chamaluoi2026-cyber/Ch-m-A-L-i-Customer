@@ -9,13 +9,14 @@ export async function POST(req: NextRequest) {
       transport = "motorbike",
       companion = "friends",
       departureTime = "07:30",
+      departureDate,
       likes = [],
       dislikes = [],
       customRequest = "",
       language = "vi"
     } = body;
 
-    // 1. Lấy dữ liệu dự báo thời tiết thực tế từ Open-Meteo (A Lưới: 16.22°N, 107.31°E)
+    // 1. Lấy dữ liệu dự báo thời tiết 7 ngày từ Open-Meteo (A Lưới: 16.22°N, 107.31°E)
     let isRainy = false;
     let weatherForecast = {
       condition: "Thời tiết mát mẻ vùng cao",
@@ -26,15 +27,20 @@ export async function POST(req: NextRequest) {
 
     try {
       const weatherRes = await fetch(
-        "https://api.open-meteo.com/v1/forecast?latitude=16.22&longitude=107.31&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FHo_Chi_Minh&forecast_days=2",
+        "https://api.open-meteo.com/v1/forecast?latitude=16.22&longitude=107.31&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FHo_Chi_Minh&forecast_days=7",
         { signal: AbortSignal.timeout(3500) }
       );
       if (weatherRes.ok) {
         const wData = await weatherRes.json();
-        const maxT = Math.round(wData.daily?.temperature_2m_max?.[0] ?? 26);
-        const minT = Math.round(wData.daily?.temperature_2m_min?.[0] ?? 18);
-        const rain = wData.daily?.precipitation_probability_max?.[0] ?? 20;
-        const wCode = wData.daily?.weathercode?.[0] ?? 0;
+        const times: string[] = wData.daily?.time || [];
+        // Khớp ngày khởi hành với ngày trong dự báo thời tiết
+        let targetIdx = departureDate ? times.indexOf(departureDate) : 0;
+        if (targetIdx < 0) targetIdx = 0; // Nếu ngày xa hơn 7 ngày thì lấy ngày gần nhất
+
+        const maxT = Math.round(wData.daily?.temperature_2m_max?.[targetIdx] ?? 26);
+        const minT = Math.round(wData.daily?.temperature_2m_min?.[targetIdx] ?? 18);
+        const rain = wData.daily?.precipitation_probability_max?.[targetIdx] ?? 20;
+        const wCode = wData.daily?.weathercode?.[targetIdx] ?? 0;
         isRainy = rain >= 50 || [51, 53, 55, 61, 63, 65, 80, 81, 82, 95].includes(wCode);
         weatherForecast = {
           condition: isRainy ? "Độ ẩm cao, có mưa/sương mù" : (wCode === 0 ? "Nắng đẹp" : "Nhiều mây mát mẻ"),
@@ -47,12 +53,13 @@ export async function POST(req: NextRequest) {
       // Dùng fallback mặc định
     }
 
-    // 2. Thuật toán AI tạo khung lịch trình thích ứng theo thời tiết & phương tiện
+    // 2. Thuật toán AI tạo khung lịch trình thích ứng theo thời tiết, ngày đi & phương tiện
     const basePlan = generateHighlandItinerary({
       duration: duration as TripDuration,
       transport: transport as TransportType,
       companion: companion as TravelCompanion,
       departureTime: departureTime as DepartureTime,
+      departureDate,
       likes,
       dislikes,
       isRainy,
@@ -71,9 +78,10 @@ Khách hàng vừa gửi yêu cầu:
 - Phương tiện: ${transport}
 - Bạn đồng hành: ${companion}
 - Khung giờ xuất phát: ${departureTime}
+- Ngày khởi hành dự kiến: ${departureDate || "Hôm nay"}
 - Thích: ${likes.join(", ") || "Khám phá tự nhiên"}
 - Tránh: ${dislikes.join(", ") || "Không có"}
-- Dự báo thời tiết A Lưới hiện tại: ${weatherForecast.condition}, nhiệt độ ${weatherForecast.tempMin}°C - ${weatherForecast.tempMax}°C, xác suất mưa ${weatherForecast.rainChance}%
+- Dự báo thời tiết A Lưới cho ngày khởi hành: ${weatherForecast.condition}, nhiệt độ ${weatherForecast.tempMin}°C - ${weatherForecast.tempMax}°C, xác suất mưa ${weatherForecast.rainChance}%
 - Yêu cầu riêng: "${customRequest || "Không có"}"
 
 Cấu trúc lịch trình đã tạo:
