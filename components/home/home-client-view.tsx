@@ -133,11 +133,12 @@ export function HomeClientView({
 
   const overlayOpacity = Math.min(Math.max(settings?.heroOverlayOpacity ?? 60, 20), 95) / 100;
 
-  // Cấu hình Layer Giữa (Khung chữ / Middle card layer)
-  const cardStyle = settings?.heroCardStyle || "frosted";
+  // Cấu hình Vị trí hiển thị & Layer Giữa (Khung chữ)
+  const position = settings?.heroPosition || "top";
+  const cardStyle = settings?.heroCardStyle || "crystal";
   const cardColor = settings?.heroCardColor || "#0f382e";
-  const cardOpacity = settings?.heroCardOpacity ?? 28;
-  const cardBlur = settings?.heroCardBlur || "lg";
+  const cardOpacity = settings?.heroCardOpacity ?? 20;
+  const cardBlur = settings?.heroCardBlur || "md";
 
   const blurClass = {
     none: "backdrop-blur-none",
@@ -148,19 +149,27 @@ export function HomeClientView({
   }[cardBlur] || "backdrop-blur-md";
 
   let containerBgStyle: React.CSSProperties = {};
-  let containerClasses = `relative mx-auto max-w-3xl sm:max-w-4xl px-6 py-8 sm:px-12 sm:py-12 transition-all duration-300 `;
+  const isTop = position === "top";
+  let containerClasses = `relative mx-auto max-w-3xl sm:max-w-4xl ${isTop ? "px-6 py-5 sm:px-10 sm:py-7" : "px-6 py-8 sm:px-12 sm:py-12"} transition-all duration-300 `;
 
   if (cardStyle === "none") {
     containerClasses += "bg-transparent border-0 shadow-none";
+  } else if (cardStyle === "crystal") {
+    // Kính pha lê siêu trong suốt chuẩn Apple Liquid Crystal - Không làm tối mặt người phía sau
+    containerClasses += `rounded-3xl border border-white/30 shadow-2xl ${blurClass}`;
+    containerBgStyle = {
+      background: "linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.05) 100%)",
+      boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.3)"
+    };
   } else if (cardStyle === "radial") {
     containerClasses += `rounded-3xl border-0 shadow-none ${blurClass}`;
     containerBgStyle = {
-      background: `radial-gradient(ellipse at center, ${hexToRgba(cardColor, cardOpacity)} 0%, ${hexToRgba(cardColor, Math.round(cardOpacity * 0.4))} 55%, transparent 75%)`
+      background: `radial-gradient(ellipse at center, ${hexToRgba(cardColor, cardOpacity)} 0%, ${hexToRgba(cardColor, Math.round(cardOpacity * 0.3))} 55%, transparent 75%)`
     };
   } else if (cardStyle === "gradient") {
     containerClasses += `rounded-3xl border border-white/20 shadow-2xl ${blurClass}`;
     containerBgStyle = {
-      background: `linear-gradient(180deg, ${hexToRgba(cardColor, Math.min(cardOpacity + 15, 95))} 0%, ${hexToRgba(cardColor, cardOpacity)} 50%, ${hexToRgba(cardColor, Math.min(cardOpacity + 20, 95))} 100%)`
+      background: `linear-gradient(180deg, ${hexToRgba(cardColor, Math.min(cardOpacity + 12, 95))} 0%, ${hexToRgba(cardColor, cardOpacity)} 50%, ${hexToRgba(cardColor, Math.min(cardOpacity + 16, 95))} 100%)`
     };
   } else {
     // "frosted" or "custom"
@@ -170,17 +179,24 @@ export function HomeClientView({
     };
   }
 
+  // Section alignment according to heroPosition
+  const sectionAlignClass = isTop
+    ? "items-start pt-24 sm:pt-28 pb-8"
+    : position === "bottom"
+    ? "items-end pt-16 pb-16"
+    : "items-center pt-24 pb-16";
+
   return (
     <main className="space-y-0">
       {/* 1. HERO BANNER */}
-      <section className="relative min-h-[94vh] flex items-center justify-center overflow-hidden bg-forest pt-24 pb-16 text-white">
+      <section className={`relative min-h-[94vh] flex justify-center overflow-hidden bg-forest ${sectionAlignClass} text-white`}>
         <figure className="absolute inset-0">
           <AppImage
             src={activeHeroImage}
             alt="Phong cảnh núi rừng A Lưới"
             fill
             priority
-            className="object-cover object-center brightness-[0.78] contrast-[1.05]"
+            className="object-cover object-center brightness-[0.82] contrast-[1.05]"
           />
           <figcaption className="sr-only">Hình ảnh đại diện phong cảnh thiên nhiên A Lưới</figcaption>
           {/* Enhanced Dark Overlay Scrim with dynamic opacity */}
@@ -191,12 +207,12 @@ export function HomeClientView({
           <div className="absolute inset-0 bg-radial-vignette opacity-70" />
         </figure>
 
-        <header className="relative z-10 mx-auto max-w-5xl px-4 py-8 text-center sm:px-6 lg:px-8">
+        <header className={`relative z-10 mx-auto max-w-5xl px-4 ${isTop ? "py-2 sm:py-4" : "py-8"} text-center sm:px-6 lg:px-8`}>
           {/* Glassmorphism Frosted Backdrop Card (Layer mờ dưới chữ để làm nổi bật nội dung) */}
           <div className={containerClasses} style={containerBgStyle}>
             {/* Ambient top border glow */}
             {cardStyle !== "none" && cardStyle !== "radial" && (
-              <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+              <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent" />
             )}
 
             <MotionReveal>
