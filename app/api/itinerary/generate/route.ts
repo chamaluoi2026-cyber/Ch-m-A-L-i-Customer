@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateHighlandItinerary, ItineraryPlan, TripDuration, TransportType, TravelCompanion, DepartureTime } from "@/lib/highland-itinerary-engine";
+import { getActivePlaces } from "@/lib/places";
 
 export async function POST(req: NextRequest) {
   try {
@@ -71,6 +72,15 @@ export async function POST(req: NextRequest) {
     // 3. Nếu có Gemini API Key: Kích hoạt Gemini 2.5 Flash làm Chuyên Gia Cố Vấn Khí Hậu & Lịch Trình
     if (apiKey) {
       try {
+        const activePlaces = getActivePlaces();
+        const placesCatalog = activePlaces
+          .slice(0, 25)
+          .map(
+            (p) =>
+              `- [${p.name}] (Loại: ${p.category}, Điểm đặc sắc: ${p.highlights?.join(", ") || p.summary}, Hoạt động: ${p.activities?.join(", ") || "Tham quan"}, Ưu đãi: ${p.voucherOffer || "Ưu đãi đặt trước"}, Phù hợp: ${p.suitableFor?.join(", ") || "Mọi người"})`
+          )
+          .join("\n");
+
         const prompt = `
 Bạn là "Hội đồng Cố vấn Khí hậu & Lịch trình Bản địa" của Chạm A Lưới (A Lưới, Thừa Thiên Huế).
 Khách hàng vừa gửi yêu cầu:
@@ -84,19 +94,25 @@ Khách hàng vừa gửi yêu cầu:
 - Dự báo thời tiết A Lưới cho ngày khởi hành: ${weatherForecast.condition}, nhiệt độ ${weatherForecast.tempMin}°C - ${weatherForecast.tempMax}°C, xác suất mưa ${weatherForecast.rainChance}%
 - Yêu cầu riêng: "${customRequest || "Không có"}"
 
-Cấu trúc lịch trình đã tạo:
+Cấu trúc lịch trình cơ bản:
 Tiêu đề: ${basePlan.title}
 Tổng cự ly: ${basePlan.totalDistanceKm}km qua đèo QL49
-Các điểm dừng: ${basePlan.days.map(d => d.stops.map(s => s.name).join(", ")).join("; ")}
+Các điểm dừng chính: ${basePlan.days.map(d => d.stops.map(s => s.name).join(", ")).join("; ")}
+
+DANH MỤC ĐỊA ĐIỂM THỰC TẾ & MỚI NHẤT TRÊN HỆ THỐNG CHẠM A LƯỚI (DO BAN QUẢN TRỊ CẬP NHẬT):
+${placesCatalog}
 
 NHIỆM VỤ CỦA BẠN:
 1. Phân tích tác động của thời tiết / mùa này ở A Lưới lên chuyến đi của khách.
-2. Đưa ra các dự đoán & lời khuyên thực tế: điều kiện đèo QL49 theo giờ xuất phát ${departureTime}, khả năng săn mây Đồi Thông, an toàn suối thác, và trang phục thích ứng.
-3. Cho biết AI đã tự động điều chỉnh hoặc gợi ý phương án linh hoạt như thế nào nếu thời tiết thay đổi.
+2. ĐỐI CHIẾU GU CỦA KHÁCH VỚI DANH MỤC ĐỊA ĐIỂM Ở TRÊN:
+   - Hãy chủ động tìm trong danh mục xem có địa điểm nào (đặc biệt là các địa điểm hoang sơ, mới cập nhật, hoặc quán ăn / homestay phù hợp) để ĐỀ XUẤT VÀ NHẮC TÊN CỤ THỂ trong "personalizedIntro" và "adaptiveActions".
+   - Nhấn mạnh điểm đó mang lại trải nghiệm bản địa đặc biệt gì cho khách.
+3. Đưa ra các dự đoán & lời khuyên thực tế: điều kiện đèo QL49 theo giờ xuất phát ${departureTime}, khả năng săn mây Đồi Thông, an toàn suối thác, và trang phục thích ứng.
+4. Cho biết AI đã tự động điều chỉnh hoặc gợi ý phương án linh hoạt như thế nào nếu thời tiết thay đổi.
 
 Trả về duy nhất định dạng JSON:
 {
-  "personalizedIntro": "3-4 câu lời khuyên sắc bén, phân tích vì sao lịch trình và giờ xuất phát này phù hợp nhất với thời tiết và gu của khách",
+  "personalizedIntro": "3-4 câu lời khuyên sắc bén, phân tích vì sao lịch trình và giờ xuất phát này phù hợp nhất với thời tiết và gu của khách, nêu đích danh địa điểm nổi bật/mới phù hợp",
   "enPersonalizedIntro": "English version of personalizedIntro",
   "seasonInsight": "Phân tích 2-3 câu về đặc trưng mùa và khí hậu A Lưới tháng này (độ ẩm, chênh lệch nhiệt ngày/đêm 6-8 độ)",
   "enSeasonInsight": "English version of seasonInsight",
@@ -111,7 +127,7 @@ Trả về duy nhất định dạng JSON:
     "Alert 3 in English"
   ],
   "adaptiveActions": [
-    "Điều chỉnh 1 mà AI đề xuất theo thời tiết",
+    "Điều chỉnh 1 mà AI đề xuất theo thời tiết (gợi ý điểm đến/hoạt động cụ thể)",
     "Điều chỉnh 2 tối ưu theo khung giờ xuất phát",
     "Phương án dự phòng 3 nếu gặp mưa"
   ],

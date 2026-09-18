@@ -1,52 +1,50 @@
-import { placeCategories, places as defaultPlaces, type PlaceCategory } from "@/data/places";
-import { getPlaces, getPlaceBySlug as getStorePlaceBySlug, type PlaceRecord } from "@/lib/server-store";
+import { placeCategories, places as staticPlaces, type PlaceCategory, type Place } from "@/data/places";
+import { getAllPlaces as getStorePlaces, getPlaceBySlug as getStorePlaceBySlug, getActivePlaces as getStoreActivePlaces } from "@/lib/server-store";
 
-export type { PlaceRecord };
-
-/**
- * Lấy danh sách toàn bộ địa điểm từ server-store (fallback sang defaultPlaces nếu store rỗng)
- */
-export function getAllPlacesList(): PlaceRecord[] {
+export function getAllPlaces(): Place[] {
   try {
-    const list = getPlaces();
-    if (list && list.length > 0) return list;
+    return getStorePlaces();
   } catch {
-    // fallback
+    return staticPlaces;
   }
-  return defaultPlaces as unknown as PlaceRecord[];
 }
 
-export function getPlaceBySlug(slug: string): PlaceRecord | undefined {
+export function getActivePlaces(): Place[] {
   try {
-    const p = getStorePlaceBySlug(slug);
-    if (p) return p;
+    return getStoreActivePlaces();
   } catch {
-    // fallback
+    return staticPlaces.filter((p) => p.status === "active");
   }
-  return (defaultPlaces as unknown as PlaceRecord[]).find((place) => place.slug === slug);
+}
+
+export function getPlaceBySlug(slug: string): Place | undefined {
+  try {
+    return getStorePlaceBySlug(slug) || staticPlaces.find((place) => place.slug === slug);
+  } catch {
+    return staticPlaces.find((place) => place.slug === slug);
+  }
 }
 
 export function getPlaceStaticParams() {
-  const all = getAllPlacesList();
-  return all.map((place) => ({ slug: place.slug }));
+  return getAllPlaces().map((place) => ({ slug: place.slug }));
 }
 
 export function getCategoryById(categoryId: string) {
   return placeCategories.find((category) => category.id === categoryId);
 }
 
-export function getPlacesByCategory(categoryId?: string, includeHidden = false) {
-  const all = getAllPlacesList().filter((p) => includeHidden || p.status !== "hidden");
-  if (!categoryId || categoryId === "all") return all;
-  return all.filter((place) => place.category === categoryId);
+export function getPlacesByCategory(categoryId?: string) {
+  const currentPlaces = getAllPlaces();
+  if (!categoryId || categoryId === "all") return currentPlaces;
+  return currentPlaces.filter((place) => place.category === categoryId);
 }
 
 export function getFeaturedPlaces(limit = 3) {
-  const all = getAllPlacesList().filter((p) => p.status === "active");
-  return all.slice(0, limit);
+  return getAllPlaces().slice(0, limit);
 }
 
 export function getRelatedPlaces(currentSlug: string, category: PlaceCategory) {
-  const all = getAllPlacesList().filter((p) => p.status === "active");
-  return all.filter((place) => place.slug !== currentSlug && (place.category === category || category === "all")).slice(0, 3);
+  return getAllPlaces()
+    .filter((place) => place.slug !== currentSlug && (place.category === category || category === "all"))
+    .slice(0, 3);
 }

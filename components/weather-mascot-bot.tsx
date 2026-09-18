@@ -324,6 +324,7 @@ export function WeatherMascotBot() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showSpeechBubble, setShowSpeechBubble] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -447,7 +448,7 @@ export function WeatherMascotBot() {
       aria-label={isEn ? "A Luoi Weather Bot" : "Bé Mây - Bot thời tiết A Lưới"}
     >
       {/* 1. iOS NOTIFICATION-STYLE SPEECH BUBBLE */}
-      {(showSpeechBubble || isHovered) && !isExpanded && (
+      {!isDismissed && (showSpeechBubble || isHovered) && !isExpanded && (
         <div className="absolute bottom-20 left-0 w-[280px] sm:w-[320px] ios-speech">
           <div className="relative rounded-[24px] ios-glass p-3.5 ring-1 ring-black/5 dark:ring-white/10 shadow-[0_16px_36px_rgba(0,0,0,0.16)]">
             {/* iOS Notification Header */}
@@ -466,13 +467,16 @@ export function WeatherMascotBot() {
               <button
                 type="button"
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
+                  setIsDismissed(true);
                   setShowSpeechBubble(false);
+                  setIsHovered(false);
                 }}
-                className="ios-haptic-tap rounded-full p-1 text-gray-400 hover:text-gray-700 hover:bg-black/5 dark:hover:bg-white/10"
+                className="ios-haptic-tap cursor-pointer z-30 flex h-7 w-7 items-center justify-center rounded-full text-gray-400 hover:text-gray-700 hover:bg-black/10 dark:hover:bg-white/20 transition-colors"
                 aria-label="Đóng thông báo"
               >
-                <X className="h-3 w-3" />
+                <X className="h-4 w-4 pointer-events-none" />
               </button>
             </div>
 
@@ -687,6 +691,7 @@ export function WeatherMascotBot() {
                 type="button"
                 onClick={() => {
                   setIsExpanded(false);
+                  setIsDismissed(false);
                   setShowSpeechBubble(true);
                 }}
                 className="ios-haptic-tap text-forest hover:underline font-bold"
