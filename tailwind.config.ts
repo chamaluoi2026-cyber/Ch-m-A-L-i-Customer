@@ -1,4 +1,4 @@
-import type { Config } from "tailwindcss";
+﻿import type { Config } from "tailwindcss";
 import tailwindcssAnimate from "tailwindcss-animate";
 
 const config: Config = {
@@ -21,7 +21,8 @@ const config: Config = {
         ink: "#16211E"
       },
       fontFamily: {
-        sans: ["Segoe UI", "Roboto", "Helvetica Neue", "Arial", "ui-sans-serif", "system-ui", "sans-serif"]
+        sans: ["'Plus Jakarta Sans'", "'Be Vietnam Pro'", "-apple-system", "BlinkMacSystemFont", "'Segoe UI'", "Roboto", "sans-serif"],
+        serif: ["'Playfair Display'", "Georgia", "serif"]
       },
       boxShadow: {
         soft: "0 24px 80px rgba(15, 92, 74, 0.12)",

@@ -4,13 +4,13 @@ import { Footer } from "@/components/footer";
 import { CustomerChatbox } from "@/components/customer-chatbox";
 import { Navbar } from "@/components/navbar";
 import { siteUrl } from "@/lib/utils";
-import { getSiteSettings, getSiteSettingsAsync } from "@/lib/server-store";
+import { getSiteSettings } from "@/lib/server-store";
+import { I18nProvider } from "@/components/i18n-provider";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const settings = await getSiteSettingsAsync();
+  const settings = getSiteSettings();
   const faviconUrl = settings.favicon || "/favicon.ico";
 
   return {
@@ -44,8 +44,8 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const settings = await getSiteSettingsAsync();
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const settings = getSiteSettings();
   const activeFavicon = settings.favicon || "/favicon.ico";
   const organizationJsonLd = {
     "@context": "https://schema.org",
@@ -57,13 +57,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       : `${siteUrl}/images/logo.png`,
     address: {
       "@type": "PostalAddress",
-      streetAddress: settings.contactAddress || "Huyện A Lưới",
       addressLocality: "A Lưới",
       addressRegion: "Huế",
       addressCountry: "VN"
-    },
-    telephone: settings.contactPhone || "0905 000 118",
-    email: settings.contactEmail || "hotro@chamaluoi.vn"
+    }
   };
 
   return (
@@ -73,16 +70,12 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       </head>
       <body className="font-sans antialiased">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
-        <Navbar
-          initialLogo={settings.logo}
-          initialMobileLogo={settings.logoMobile}
-          initialLogoHeight={settings.logoHeight}
-          initialLogoWidth={settings.logoWidth}
-          initialLogoScale={settings.logoScale}
-        />
-        {children}
-        <CustomerChatbox />
-        <Footer logo={settings.logoDark || settings.logo} settings={settings} />
+        <I18nProvider>
+          <Navbar initialLogo={settings.logo} initialMobileLogo={settings.logoMobile} />
+          {children}
+          <CustomerChatbox />
+          <Footer logo={settings.logoDark || settings.logo} />
+        </I18nProvider>
       </body>
     </html>
   );

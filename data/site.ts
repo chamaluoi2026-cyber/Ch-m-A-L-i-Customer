@@ -1,4 +1,4 @@
-import {
+﻿import {
   BadgeCheck,
   Camera,
   Flame,
@@ -13,13 +13,27 @@ import {
   Waves
 } from "lucide-react";
 
-export const navItems = [
-  { href: "/", label: "Trang chủ" },
-  { href: "/places", label: "Địa điểm" },
-  { href: "/blog", label: "Blog" },
-  { href: "/products", label: "Sản phẩm" },
-  { href: "/book-tour", label: "Đặt tour" },
-  { href: "/about", label: "Giới thiệu" }
+export interface NavItem {
+  href: string;
+  label: string;
+  enLabel?: string;
+  isHighlight?: boolean;
+  badge?: string;
+}
+
+export const navItems: NavItem[] = [
+  { href: "/", label: "Trang chủ", enLabel: "Home" },
+  { href: "/places", label: "Địa điểm", enLabel: "Destinations" },
+  {
+    href: "/itinerary",
+    label: "Lịch trình AI",
+    enLabel: "AI Planner",
+    isHighlight: true,
+    badge: "MỚI"
+  },
+  { href: "/blog", label: "Cẩm nang", enLabel: "Guide" },
+  { href: "/products", label: "Đặc sản", enLabel: "Specialties" },
+  { href: "/about", label: "Giới thiệu", enLabel: "About" }
 ];
 
 export const imageFor = (id: string) =>
