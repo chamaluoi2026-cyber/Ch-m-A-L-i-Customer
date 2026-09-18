@@ -12,16 +12,17 @@ function AuthCallbackContent() {
   const [statusMsg, setStatusMsg] = useState("Đang đồng bộ phiên xác thực...");
 
   useEffect(() => {
-    const next = searchParams.get("next")?.startsWith("/") ? searchParams.get("next")! : "/account";
-    const error = searchParams.get("error_description") ?? searchParams.get("error");
-
+    const hash = typeof window !== "undefined" ? window.location.hash : "";
+    const params = new URLSearchParams(hash.replace(/^#/, ""));
+    const stateParam = params.get("state") || searchParams.get("state");
+    const next = searchParams.get("next")?.startsWith("/")
+      ? searchParams.get("next")!
+      : (stateParam && stateParam.startsWith("/") ? stateParam : "/account");
+    const error = searchParams.get("error_description") ?? searchParams.get("error") ?? params.get("error_description") ?? params.get("error");
     if (error) {
       router.replace(`/login?error=${encodeURIComponent(error)}`);
       return;
     }
-
-    const hash = typeof window !== "undefined" ? window.location.hash : "";
-    const params = new URLSearchParams(hash.replace(/^#/, ""));
     const accessToken = params.get("access_token");
 
     if (!accessToken) {

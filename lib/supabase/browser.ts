@@ -114,9 +114,11 @@ export function getProviderOAuthUrl(provider: "google" | "facebook", next = "/ac
   // 3. Facebook Direct OAuth nếu có Facebook App ID
   if (provider === "facebook" && process.env.NEXT_PUBLIC_FACEBOOK_APP_ID) {
     const appId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID;
+    const cleanCallbackUrl = `${origin}/auth/callback`;
     const params = new URLSearchParams({
       client_id: appId,
-      redirect_uri: callbackUrl,
+      redirect_uri: cleanCallbackUrl,
+      state: next,
       response_type: "token",
       scope: "email,public_profile"
     });
