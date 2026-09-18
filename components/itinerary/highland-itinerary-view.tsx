@@ -32,7 +32,6 @@ import { useLanguage } from "@/components/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { AppImage } from "@/components/ui/app-image";
 import { formatCurrency } from "@/lib/utils";
-import { WeatherWidget } from "@/components/itinerary/weather-widget";
 
 interface HighlandItineraryViewProps {
   plan: ItineraryPlan;
@@ -129,8 +128,8 @@ export function HighlandItineraryView({ plan, onReset }: HighlandItineraryViewPr
           </div>
         </div>
 
-        {/* 5 Metric Chips */}
-        <div className="mt-8 grid grid-cols-2 gap-3 border-t border-white/10 pt-6 sm:grid-cols-5">
+        {/* 6 Metric Chips */}
+        <div className="mt-8 grid grid-cols-2 gap-3 border-t border-white/10 pt-6 sm:grid-cols-3 lg:grid-cols-6">
           <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5 backdrop-blur-xs">
             <span className="text-xs font-medium text-white/65">
               {t.itinerary.totalDistance}
@@ -176,6 +175,19 @@ export function HighlandItineraryView({ plan, onReset }: HighlandItineraryViewPr
               </span>
             </div>
           </div>
+
+          {plan.departureDate && (
+            <div className="rounded-2xl border border-sky-400/30 bg-sky-400/10 p-3.5 backdrop-blur-xs">
+              <span className="text-xs font-medium text-sky-200/80">
+                {isEn ? "Departure Date" : "Ngày khởi hành"}
+              </span>
+              <div className="mt-1 flex items-baseline gap-1">
+                <span className="text-sm font-extrabold text-sky-300">
+                  {plan.days[0]?.dateLabel?.split(", ")?.[1] || plan.departureDate}
+                </span>
+              </div>
+            </div>
+          )}
 
           {plan.departureTime && (
             <div className="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-3.5 backdrop-blur-xs">
@@ -319,8 +331,13 @@ export function HighlandItineraryView({ plan, onReset }: HighlandItineraryViewPr
               {/* Day Header Banner */}
               <div className="flex flex-col gap-1 border-b border-forest/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <div className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-forest">
+                  <div className="inline-flex flex-wrap items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-forest">
                     <span>{isEn ? `DAY 0${day.dayNumber}` : `NGÀY 0${day.dayNumber}`}</span>
+                    {day.dateLabel && (
+                      <span className="rounded-md bg-forest/10 px-2.5 py-0.5 text-[11px] font-bold text-forest">
+                        {isEn ? day.enDateLabel : day.dateLabel}
+                      </span>
+                    )}
                   </div>
                   <h2 className="text-xl font-black text-ink sm:text-2xl">
                     {isEn ? day.enTitle : day.title}
@@ -660,9 +677,6 @@ export function HighlandItineraryView({ plan, onReset }: HighlandItineraryViewPr
           </Button>
         </div>
       </div>
-
-      {/* Floating Weather Widget — bottom-left corner */}
-      <WeatherWidget />
     </div>
   );
 }

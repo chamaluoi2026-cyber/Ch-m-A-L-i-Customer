@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "@/styles/globals.css";
 import { Footer } from "@/components/footer";
 import { CustomerChatbox } from "@/components/customer-chatbox";
+import { WeatherMascotBot } from "@/components/weather-mascot-bot";
 import { Navbar } from "@/components/navbar";
 import { siteUrl } from "@/lib/utils";
 import { getSiteSettings } from "@/lib/server-store";
@@ -74,6 +75,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <Navbar initialLogo={settings.logo} initialMobileLogo={settings.logoMobile} />
           {children}
           <CustomerChatbox />
+          <WeatherMascotBot />
           <Footer logo={settings.logoDark || settings.logo} />
         </I18nProvider>
       </body>
