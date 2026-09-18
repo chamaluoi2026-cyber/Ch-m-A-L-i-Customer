@@ -100,10 +100,12 @@ export function getProviderOAuthUrl(provider: "google" | "facebook", next = "/ac
 
   // 2. Google Direct OAuth nếu có Google Client ID
   if (provider === "google" && process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) {
-    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID.trim();
+    const cleanCallbackUrl = `${origin}/auth/callback`;
     const params = new URLSearchParams({
       client_id: clientId,
-      redirect_uri: callbackUrl,
+      redirect_uri: cleanCallbackUrl,
+      state: next,
       response_type: "token",
       scope: "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email openid",
       prompt: "select_account"
@@ -113,7 +115,7 @@ export function getProviderOAuthUrl(provider: "google" | "facebook", next = "/ac
 
   // 3. Facebook Direct OAuth nếu có Facebook App ID
   if (provider === "facebook" && process.env.NEXT_PUBLIC_FACEBOOK_APP_ID) {
-    const appId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID;
+    const appId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID.trim();
     const cleanCallbackUrl = `${origin}/auth/callback`;
     const params = new URLSearchParams({
       client_id: appId,
