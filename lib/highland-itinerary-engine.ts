@@ -183,6 +183,8 @@ export interface ItineraryStop {
 
 export interface ItineraryDay {
   dayNumber: number;
+  dateLabel?: string;
+  enDateLabel?: string;
   title: string;
   enTitle: string;
   theme: string;
@@ -213,6 +215,7 @@ export interface ItineraryPlan {
   title: string;
   enTitle: string;
   duration: TripDuration;
+  departureDate?: string;
   departureTime?: DepartureTime;
   transport: TransportType;
   companion: TravelCompanion;
@@ -241,14 +244,42 @@ export function generateHighlandItinerary(params: {
   transport: TransportType;
   companion: TravelCompanion;
   departureTime?: DepartureTime;
+  departureDate?: string;
   likes: string[];
   dislikes: string[];
   isRainy?: boolean;
   weatherForecast?: { condition: string; tempMax: number; tempMin: number; rainChance: number };
 }): ItineraryPlan {
-  const { duration, transport, companion, likes, dislikes, departureTime = "07:30", isRainy = false, weatherForecast } = params;
+  const {
+    duration,
+    transport,
+    companion,
+    likes,
+    dislikes,
+    departureTime = "07:30",
+    departureDate,
+    isRainy = false,
+    weatherForecast
+  } = params;
 
-  const currentMonth = new Date().getMonth() + 1; // 1 - 12
+  // Tính toán nhãn ngày tháng cụ thể cho từng ngày
+  const baseDate = departureDate ? new Date(departureDate + "T00:00:00") : new Date();
+  const formatDateLabel = (d: Date, isEn: boolean) => {
+    const day = d.getDate().toString().padStart(2, "0");
+    const month = (d.getMonth() + 1).toString().padStart(2, "0");
+    const year = d.getFullYear();
+    const viDays = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
+    const enDays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    return isEn ? `${enDays[d.getDay()]}, ${day}/${month}/${year}` : `${viDays[d.getDay()]}, ${day}/${month}/${year}`;
+  };
+
+  const day1Date = new Date(baseDate);
+  const day2Date = new Date(baseDate);
+  day2Date.setDate(day2Date.getDate() + 1);
+  const day3Date = new Date(baseDate);
+  day3Date.setDate(day3Date.getDate() + 2);
+
+  const currentMonth = baseDate.getMonth() + 1; // Tính theo tháng của ngày khởi hành
   const isWetSeason = currentMonth >= 9 && currentMonth <= 11;
   const isColdMistSeason = currentMonth === 12 || currentMonth <= 2;
   const isDrySummerSeason = currentMonth >= 3 && currentMonth <= 8;
@@ -612,6 +643,8 @@ export function generateHighlandItinerary(params: {
 
   days.push({
     dayNumber: 1,
+    dateLabel: formatDateLabel(day1Date, false),
+    enDateLabel: formatDateLabel(day1Date, true),
     title:
       duration === "1-day"
         ? "Ngày 1: Vượt Đèo QL49 & Trọn Vẹn Một Ngày Chạm Đại Ngàn"
@@ -847,6 +880,8 @@ export function generateHighlandItinerary(params: {
 
     days.push({
       dayNumber: 2,
+      dateLabel: formatDateLabel(day2Date, false),
+      enDateLabel: formatDateLabel(day2Date, true),
       title:
         duration === "2-days"
           ? "Ngày 2: Hơi Ấm Suối Khoáng, Tinh Hoa Bản Làng & Trở Về Cố Đô"
@@ -948,6 +983,8 @@ export function generateHighlandItinerary(params: {
 
     days.push({
       dayNumber: 3,
+      dateLabel: formatDateLabel(day3Date, false),
+      enDateLabel: formatDateLabel(day3Date, true),
       title: "Ngày 3: Dấu Tích Trường Sơn Oai Hùng & Chặng Đường Về Cố Đô",
       enTitle: "Day 3: Heroic Truong Son Landmarks & Return Journey to Hue",
       theme: "Ký ức lịch sử • Rừng già ngàn năm • Xuống đèo QL49 về Huế an toàn",
@@ -1074,6 +1111,7 @@ export function generateHighlandItinerary(params: {
     title: dynamicTitle,
     enTitle: dynamicEnTitle,
     duration,
+    departureDate,
     transport,
     companion,
     departureTime,
