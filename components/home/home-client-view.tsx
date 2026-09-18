@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import {
@@ -22,7 +22,7 @@ import { AppImage } from "@/components/ui/app-image";
 import { imageFor } from "@/data/site";
 import { useLanguage } from "@/components/i18n-provider";
 import type { Place } from "@/data/places";
-import type { PlaceRecord } from "@/lib/server-store";
+import type { PlaceRecord, SiteSettings } from "@/lib/server-store";
 import {
   homestayTranslations,
   productTranslations,
@@ -32,6 +32,7 @@ import {
 
 interface HomeClientViewProps {
   activeHeroImage: string;
+  settings?: SiteSettings;
   featuredPlaces: (Place | PlaceRecord)[];
   homestays: any[];
   products: any[];
@@ -76,6 +77,7 @@ const aluoiGallery = [
 
 export function HomeClientView({
   activeHeroImage,
+  settings,
   featuredPlaces,
   homestays,
   products,
@@ -85,76 +87,130 @@ export function HomeClientView({
   const { t, language } = useLanguage();
   const isEn = language === "en";
 
+  // Dynamic Hero Content & Translations
+  const heroBadge = isEn
+    ? (settings?.heroBadgeEn || "Community-Based Tourism in Hue")
+    : (settings?.heroBadge || t.home.heroTag);
+
+  const heroTitle1 = isEn
+    ? (settings?.heroTitleLine1En || "Highland Adventure &")
+    : (settings?.heroTitleLine1 || "Chạm A Lưới");
+
+  const heroTitle2 = isEn
+    ? (settings?.heroTitleLine2En || "Nature Retreat")
+    : (settings?.heroTitleLine2 || "Du lịch cộng đồng");
+
+  const heroDesc = isEn
+    ? (settings?.heroDescriptionEn || "Discover verified community homestays, traditional craft villages, authentic cuisine, and pristine waterfalls in A Luoi, Thua Thien Hue.")
+    : (settings?.heroDescription || t.home.heroDesc);
+
+  const heroPrimaryText = isEn
+    ? (settings?.heroPrimaryBtnTextEn || t.home.heroExploreBtn)
+    : (settings?.heroPrimaryBtnText || t.home.heroExploreBtn);
+
+  const heroPrimaryLink = settings?.heroPrimaryBtnLink || "/places";
+
+  const heroSecondaryText = isEn
+    ? (settings?.heroSecondaryBtnTextEn || t.home.heroBookTourBtn)
+    : (settings?.heroSecondaryBtnText || t.home.heroBookTourBtn);
+
+  const heroSecondaryLink = settings?.heroSecondaryBtnLink || "/book-tour";
+
+  const overlayOpacity = Math.min(Math.max(settings?.heroOverlayOpacity ?? 60, 20), 95) / 100;
+
   return (
     <main className="space-y-0">
       {/* 1. HERO BANNER */}
-      <section className="relative min-h-[92vh] flex items-center justify-center overflow-hidden bg-forest pt-20 text-white">
+      <section className="relative min-h-[94vh] flex items-center justify-center overflow-hidden bg-forest pt-24 pb-16 text-white">
         <figure className="absolute inset-0">
           <AppImage
             src={activeHeroImage}
             alt="Phong cảnh núi rừng A Lưới"
             fill
             priority
-            className="object-cover object-center brightness-[0.72] contrast-[1.05]"
+            className="object-cover object-center brightness-[0.78] contrast-[1.05]"
           />
           <figcaption className="sr-only">Hình ảnh đại diện phong cảnh thiên nhiên A Lưới</figcaption>
-          <div className="absolute inset-0 bg-gradient-to-t from-forest-dark via-forest/40 to-black/30" />
-          <div className="absolute inset-0 bg-radial-vignette opacity-60" />
+          {/* Enhanced Dark Overlay Scrim with dynamic opacity */}
+          <div
+            className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/50 transition-opacity duration-300"
+            style={{ opacity: overlayOpacity }}
+          />
+          <div className="absolute inset-0 bg-radial-vignette opacity-70" />
         </figure>
 
-        <header className="relative z-10 mx-auto max-w-5xl px-4 py-24 text-center sm:px-6 lg:px-8">
-          <MotionReveal>
-            <p className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.22em] text-white backdrop-blur-md">
-              <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
-              {t.home.heroTag}
-            </p>
-          </MotionReveal>
+        <header className="relative z-10 mx-auto max-w-5xl px-4 py-8 text-center sm:px-6 lg:px-8">
+          {/* Glassmorphism Frosted Backdrop Card (Layer mờ dưới chữ để làm nổi bật nội dung) */}
+          <div className="relative mx-auto max-w-3xl sm:max-w-4xl rounded-3xl border border-white/20 bg-black/45 px-6 py-8 sm:px-12 sm:py-12 shadow-2xl backdrop-blur-md">
+            {/* Ambient top border glow */}
+            <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
 
-          <MotionReveal delay={0.1}>
-            <h1 className="mt-6 text-4xl font-extrabold tracking-tight sm:text-6xl lg:text-7xl leading-[1.15]">
-              {isEn ? (
-                <>
-                  Highland Adventure &amp; <br />
-                  <span className="text-emerald-300">Nature Retreat</span>
-                </>
-              ) : (
-                <>
-                  Chạm A Lưới <br />
-                  <span className="text-emerald-300">Du lịch cộng đồng</span>
-                </>
-              )}
-            </h1>
-          </MotionReveal>
+            <MotionReveal>
+              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/35 bg-emerald-950/70 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.2em] text-emerald-300 shadow-md backdrop-blur-sm">
+                <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+                {heroBadge}
+              </div>
+            </MotionReveal>
 
-          <MotionReveal delay={0.2}>
-            <p className="mx-auto mt-6 max-w-2xl text-lg font-normal leading-relaxed text-white/90 sm:text-xl">
-              {t.home.heroDesc}
-            </p>
-          </MotionReveal>
+            <MotionReveal delay={0.1}>
+              <h1 className="mt-5 text-3xl font-black tracking-tight sm:text-5xl lg:text-6xl leading-[1.18] drop-shadow-[0_4px_16px_rgba(0,0,0,0.85)]">
+                <span className="text-white drop-shadow-sm">{heroTitle1}</span>
+                <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-200 to-emerald-400 drop-shadow-[0_2px_16px_rgba(16,185,129,0.4)]">
+                  {heroTitle2}
+                </span>
+              </h1>
+            </MotionReveal>
 
-          <MotionReveal delay={0.3}>
-            <nav className="mt-10 flex flex-wrap items-center justify-center gap-4" aria-label="Điều hướng chính Hero">
-              <Button asChild size="lg" className="rounded-full px-8 text-base shadow-lg shadow-forest/20">
-                <Link href="/places">
-                  {t.home.heroExploreBtn}
-                  <ArrowRight className="size-5" />
-                </Link>
-              </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="rounded-full border-white/30 bg-white/10 px-8 text-base text-white backdrop-blur hover:bg-white/20 hover:text-white"
-              >
-                <Link href="/book-tour">{t.home.heroBookTourBtn}</Link>
-              </Button>
-            </nav>
-          </MotionReveal>
+            <MotionReveal delay={0.2}>
+              <p className="mx-auto mt-5 max-w-2xl text-sm sm:text-base md:text-lg font-normal leading-relaxed text-white/95 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                {heroDesc}
+              </p>
+            </MotionReveal>
+
+            <MotionReveal delay={0.3}>
+              <nav className="mt-8 flex flex-wrap items-center justify-center gap-4" aria-label="Điều hướng chính Hero">
+                <Button
+                  asChild
+                  size="lg"
+                  className="rounded-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-8 text-base shadow-xl shadow-emerald-950/50 hover:scale-105 active:scale-95 transition-all duration-200"
+                >
+                  <Link href={heroPrimaryLink}>
+                    {heroPrimaryText}
+                    <ArrowRight className="size-5 ml-1" />
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  size="lg"
+                  variant="outline"
+                  className="rounded-full border-white/30 bg-white/10 hover:bg-white/20 text-white font-semibold px-8 text-base backdrop-blur-sm hover:scale-105 active:scale-95 transition-all duration-200"
+                >
+                  <Link href={heroSecondaryLink}>{heroSecondaryText}</Link>
+                </Button>
+              </nav>
+            </MotionReveal>
+
+            {/* Micro Trust badges */}
+            <div className="mt-8 pt-6 border-t border-white/10 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] sm:text-xs text-white/80 font-medium">
+              <span className="flex items-center gap-1.5">
+                <span className="text-emerald-400 font-bold">✓</span> {isEn ? "100% Verified Local Homestays" : "100% Homestay bản địa"}
+              </span>
+              <span className="hidden sm:inline text-white/30">•</span>
+              <span className="flex items-center gap-1.5">
+                <span className="text-emerald-400 font-bold">✓</span> {isEn ? "Exclusive Direct Vouchers" : "Nhận voucher ưu đãi trực tiếp"}
+              </span>
+              <span className="hidden sm:inline text-white/30">•</span>
+              <span className="flex items-center gap-1.5">
+                <span className="text-emerald-400 font-bold">✓</span> {isEn ? "Mountain Pass Weather Advice" : "Cố vấn đèo QL49 an toàn"}
+              </span>
+            </div>
+          </div>
         </header>
 
-        <aside className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/70 text-xs font-medium tracking-widest uppercase">
+        <aside className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 text-white/70 text-xs font-medium tracking-widest uppercase">
           <span>{isEn ? "Scroll to Explore" : "Cuộn để khám phá"}</span>
-          <ArrowDown className="size-4 animate-bounce" />
+          <ArrowDown className="size-4 animate-bounce text-emerald-300" />
         </aside>
       </section>
 

@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateHighlandItinerary, ItineraryPlan, TripDuration, TransportType, TravelCompanion, DepartureTime } from "@/lib/highland-itinerary-engine";
+import {
+  generateHighlandItinerary,
+  enrichPlanWithPlaces,
+  ItineraryPlan,
+  TripDuration,
+  TransportType,
+  TravelCompanion,
+  DepartureTime
+} from "@/lib/highland-itinerary-engine";
 import { getActivePlaces } from "@/lib/places";
 
 export async function POST(req: NextRequest) {
@@ -55,7 +63,8 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Thuật toán AI tạo khung lịch trình thích ứng theo thời tiết, ngày đi & phương tiện
-    const basePlan = generateHighlandItinerary({
+    const activePlaces = getActivePlaces();
+    const rawPlan = generateHighlandItinerary({
       duration: duration as TripDuration,
       transport: transport as TransportType,
       companion: companion as TravelCompanion,
@@ -66,13 +75,14 @@ export async function POST(req: NextRequest) {
       isRainy,
       weatherForecast
     });
+    // Đồng bộ ảnh thực tế từ kho Điểm đến do Admin quản lý
+    const basePlan = enrichPlanWithPlaces(rawPlan, activePlaces);
 
     const apiKey = process.env.GEMINI_API_KEY;
 
     // 3. Nếu có Gemini API Key: Kích hoạt Gemini 2.5 Flash làm Chuyên Gia Cố Vấn Khí Hậu & Lịch Trình
     if (apiKey) {
       try {
-        const activePlaces = getActivePlaces();
         const placesCatalog = activePlaces
           .slice(0, 25)
           .map(

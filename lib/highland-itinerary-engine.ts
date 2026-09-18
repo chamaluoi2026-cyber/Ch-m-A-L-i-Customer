@@ -334,7 +334,7 @@ export function generateHighlandItinerary(params: {
     enName: "Departure from Hue City -> Scenic QL49 Pass to A Luoi",
     slug: "dich-vu-xe-dua-don-hue-a-luoi",
     category: "Di chuyển",
-    image: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1200&q=80",
+    image: "/images/aluoi/di-chuyen-hue-a-luoi.jpg",
     duration: travelDurationFromHue,
     distanceFromPrev: travelDistanceText,
     travelTimeFromPrev: travelDurationFromHue,
@@ -376,7 +376,7 @@ export function generateHighlandItinerary(params: {
       enName: "A Roang Geothermal Springs & Co Tu Lunch",
       slug: "rung-nguyen-sinh-a-roang",
       category: "Hoạt động ngoài trời",
-      image: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1200&q=80",
+      image: "/images/aluoi/ho-sinh-thai-a-luoi.jpg",
       duration: "3.5h",
       distanceFromPrev: "28km từ ngã ba thị trấn dọc đường mòn Hồ Chí Minh",
       summary: "Ngâm mình trong dòng khoáng nóng 60-70°C tự nhiên phun trào bên vách đá rừng già. Tắm khoáng nóng giúp tan biến hoàn toàn mỏi mệt sau chặng đường đèo từ Huế.",
@@ -395,7 +395,7 @@ export function generateHighlandItinerary(params: {
       enName: "National Heritage Zèng Weaving Village (A Dot)",
       slug: "trai-nghiem-det-zeng-ta-oi",
       category: "Văn hóa",
-      image: "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=1200&q=80",
+      image: "/images/aluoi/det-zeng-artisan.jpg",
       duration: "2.25h",
       distanceFromPrev: "12km từ chân đèo A Co",
       summary: "Ghé thăm cái nôi dệt thổ cẩm Zèng đính cườm nổi tiếng. Giao lưu cùng các nghệ nhân già làng Tà Ôi, lắng nghe câu chuyện về từng họa tiết rồng, chim muông và tự tay xâu hạt cườm may mắn.",
@@ -414,7 +414,7 @@ export function generateHighlandItinerary(params: {
       enName: "Pâr Le Natural Stream & Emerald Pools",
       slug: "suoi-par-le",
       category: "Thác và suối",
-      image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80",
+      image: "/images/aluoi/ho-sinh-thai-a-luoi.jpg",
       duration: "2.5h",
       distanceFromPrev: "45km từ Huế (nằm ngay chân đèo Hồng Hạ)",
       travelTimeFromPrev: "1h15m từ Huế",
@@ -438,7 +438,7 @@ export function generateHighlandItinerary(params: {
     enName: "Highland Feast: Bamboo Rice & Roast Mountain Chicken",
     slug: "quan-com-ban-pa-co",
     category: "Ăn uống",
-    image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=1200&q=80",
+    image: "/images/aluoi/am-thuc-nha-san.jpg",
     duration: "1.5h",
     distanceFromPrev: "8km - 15km",
     summary:
@@ -478,7 +478,7 @@ export function generateHighlandItinerary(params: {
       enName: "A Nor 3-Tier Waterfall Exploration",
       slug: "thac-a-nor",
       category: "Thác và suối",
-      image: "https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?auto=format&fit=crop&w=1200&q=80",
+      image: "/images/aluoi/ho-sinh-thai-a-luoi.jpg",
       duration: "2.75h",
       distanceFromPrev: "6km từ trung tâm thị trấn",
       summary:
@@ -499,7 +499,7 @@ export function generateHighlandItinerary(params: {
       enName: "A Luoi Airfield Relic & A Shau Valley Panorama",
       slug: "doi-a-bia",
       category: "Tham quan",
-      image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80",
+      image: "/images/aluoi/giao-luu-ban-dia.jpg",
       duration: "2.25h",
       distanceFromPrev: "4km",
       summary: "Chứng tích lịch sử huyền thoại trên tuyến đường mòn Hồ Chí Minh. Lắng nghe người cựu chiến binh bản địa kể về những năm tháng chiến tranh và ngắm toàn cảnh thung lũng A Shau thanh bình hôm nay.",
@@ -518,7 +518,7 @@ export function generateHighlandItinerary(params: {
       enName: "Pi Lung Suspension Bridge & Village Sunset Stroll",
       slug: "cau-treo-pi-lung-va-check-in",
       category: "Tham quan",
-      image: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200&q=80",
+      image: "/images/aluoi/checkin-nong-trai.jpg",
       duration: "2.25h",
       distanceFromPrev: "5km",
       summary: "Cây cầu treo thanh bình bắc qua dòng sông Đakrông. Khung cảnh hoàng hôn êm ả với những nếp nhà sàn khói lam chiều và đàn trâu gặm cỏ bên nương ngô.",
@@ -540,7 +540,7 @@ export function generateHighlandItinerary(params: {
       enName: "Scenic Mountain Descent Along QL49 Back to Hue",
       slug: "dich-vu-xe-dua-don-hue-a-luoi",
       category: "Di chuyển",
-      image: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1200&q=80",
+      image: "/images/aluoi/di-chuyen-hue-a-luoi.jpg",
       duration: travelDurationFromHue,
       distanceFromPrev: "70km xuống đèo về Huế",
       travelTimeFromPrev: travelDurationFromHue,
@@ -564,7 +564,7 @@ export function generateHighlandItinerary(params: {
       enName: companion === "couple" ? "✅ Riverside Log Bungalow Check-In \u0026 Afternoon Rest" : "✅ Stilt House Homestay Check-In",
       slug: "lua-trai-va-van-nghe-dia-phuong",
       category: "Lưu trú",
-      image: "https://images.unsplash.com/photo-1510312305653-8ed496efae75?auto=format&fit=crop&w=1200&q=80",
+      image: "/images/aluoi/homestay-bungalow.jpg",
       duration: "2.0h",
       distanceFromPrev: "2km - 4km",
       summary: "Nhận phòng homestay từ 14:00 theo giờ chuẩn (check-out trước 12:00 hôm sau). Thả ba lô xuống, tắm gội sảng khoái bằng nước suối mát lạnh, nghỉ ngơi lấy sức giữa tiếng gió rừng và suối reo. Homestay Hương Danh (A Roàng) và Anôr House (Hồng Kim) được đánh giá cao nhất với không gian nhà sàn truyền thống Pa Cô.",
@@ -603,7 +603,7 @@ export function generateHighlandItinerary(params: {
       enName: likesCampfire ? "🔥 Sacred Gongs \u0026 Campfire Night Under The Stars" : "🌙 Romantic BBQ Dinner \u0026 Creekside Sunset",
       slug: "lua-trai-va-van-nghe-dia-phuong",
       category: likesCampfire ? "Lửa trại" : "Ăn uống",
-      image: "https://images.unsplash.com/photo-1510312305653-8ed496efae75?auto=format&fit=crop&w=1200&q=80",
+      image: "/images/aluoi/cong-chieng-giao-luu.jpg",
       duration: "3.5h",
       distanceFromPrev: "Ngay tại homestay",
       summary:
@@ -676,7 +676,7 @@ export function generateHighlandItinerary(params: {
         : "🌅 Village Sunrise Walk \u0026 Pi Lung Suspension Bridge",
       slug: "cau-treo-pi-lung-va-check-in",
       category: "Tham quan",
-      image: "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1200&q=80",
+      image: "/images/aluoi/homestay-swing.jpg",
       duration: "1.5h",
       distanceFromPrev: "4km từ homestay",
       summary: likesClouds || companion === "couple"
@@ -716,7 +716,7 @@ export function generateHighlandItinerary(params: {
       enName: "🍚 Authentic Highland Breakfast at A Luoi Market",
       slug: "quan-com-ban-pa-co",
       category: "Ăn uống",
-      image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=1200&q=80",
+      image: "/images/aluoi/am-thuc-nha-san.jpg",
       duration: "1.25h",
       distanceFromPrev: "3km - trung tâm thị trấn",
       summary: "Chợ A Lưới sáng sớm là nơi tụ họp của bà con người Pa Cô, Cơ Tu, Tà Ôi. Từ 06:00 đến 08:00, các gian hàng bày đầy đặc sản tươi nguyên: bánh A Quát (sừng trâu) nóng hổi, cháo gà kiến, xôi nếp than tím, rau rừng tươi và cơm lam sáng. Đây là trải nghiệm ẩm thực xác thực nhất của vùng cao A Lưới, không có tour du lịch nào có thể tái hiện.",
@@ -750,7 +750,7 @@ export function generateHighlandItinerary(params: {
       enName: "☕ A Luoi Arabica Coffee — Taste of the Truong Son Mountains",
       slug: "dac-san-thit-bo-gac-bep-va-ruou-can",
       category: "Cà phê",
-      image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=80",
+      image: "/images/aluoi/homestay-relax.jpg",
       duration: "0.75h",
       distanceFromPrev: "Trung tâm thị trấn",
       summary: "A Lưới là vùng trồng cà phê Arabica đặc sản của Thừa Thiên Huế (3.5 ha canh tác). Các quán cà phê trong thị trấn như Trần Coffee (204 Hồ Chí Minh), Đường Hầm Cafe (Abiah) hoặc Cafe Du Lịch phục vụ cà phê rang xay nguyên chất địa phương — đậm đà, ít chua, hương thơm cao nguyên. Không gian mộc mạc, view nhìn ra dãy núi Trường Sơn.",
@@ -784,7 +784,7 @@ export function generateHighlandItinerary(params: {
         enName: "A Roang Geothermal Springs Thermal Relaxation",
         slug: "rung-nguyen-sinh-a-roang",
         category: "Hoạt động ngoài trời",
-        image: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1200&q=80",
+        image: "/images/aluoi/ho-sinh-thai-a-luoi.jpg",
         duration: "3.0h",
         distanceFromPrev: "25km theo đường Hồ Chí Minh Tây",
         summary: "Mạch khoáng nóng 60-70°C tự nhiên giữa rừng già A Roàng. Ngâm mình trong bể khoáng ấm giúp kích thích tuần hoàn máu và phục hồi năng lượng tối đa.",
@@ -803,7 +803,7 @@ export function generateHighlandItinerary(params: {
         enName: "A Dot Zèng Weaving Village & Loom Workshop",
         slug: "trai-nghiem-det-zeng-ta-oi",
         category: "Văn hóa",
-        image: "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=1200&q=80",
+        image: "/images/aluoi/det-zeng-artisan.jpg",
         duration: "2.5h",
         distanceFromPrev: "12km",
         summary: "Gặp gỡ các nghệ nhân dệt Zèng Tà Ôi, tự tay trải nghiệm dệt tấm vải cườm truyền thống và tìm hiểu những bộ trang phục lễ hội độc nhất vô nhị.",
@@ -822,7 +822,7 @@ export function generateHighlandItinerary(params: {
         enName: "A Lin Serene Stream & Bamboo Pavilions",
         slug: "suoi-a-lin",
         category: "Thác và suối",
-        image: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200&q=80",
+        image: "/images/aluoi/ho-sinh-thai-a-luoi.jpg",
         duration: "2.75h",
         distanceFromPrev: "10km đường bằng phẳng",
         summary: "Cung đường đi êm dịu không uốn dốc. Suối A Lin có dòng chảy êm đềm, nước trong vắt đến tận đáy, chòi tre mát rượi để ngả lưng đọc sách hoặc bơi lội nhẹ nhàng.",
@@ -842,7 +842,7 @@ export function generateHighlandItinerary(params: {
       enName: "Local Lunch & Highland OCOP Gift Shopping",
       slug: "dac-san-thit-bo-gac-bep-va-ruou-can",
       category: "Đặc sản",
-      image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=1200&q=80",
+      image: "/images/aluoi/am-thuc-nha-san.jpg",
       duration: "2.0h",
       distanceFromPrev: "6km",
       summary: "Thưởng thức bữa trưa ấm cúng. Ghé chợ phiên trung tâm chọn mua mật ong rừng nguyên chất có tem OCOP, thịt bò cỏ gác bếp sấy củi thơm lừng, chuối rừng sấy dẻo và tiêu rừng A Lưới mang về làm quà.",
@@ -863,7 +863,7 @@ export function generateHighlandItinerary(params: {
         enName: "Scenic Mountain Descent Along QL49 Back to Hue",
         slug: "dich-vu-xe-dua-don-hue-a-luoi",
         category: "Di chuyển",
-        image: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1200&q=80",
+        image: "/images/aluoi/di-chuyen-hue-a-luoi.jpg",
         duration: travelDurationFromHue,
         distanceFromPrev: "70km đường đèo",
         travelTimeFromPrev: travelDurationFromHue,
@@ -911,7 +911,7 @@ export function generateHighlandItinerary(params: {
         enName: "Trek to Historic Hill 937 (Hamburger Hill Peak)",
         slug: "doi-a-bia",
         category: "Tham quan",
-        image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80",
+        image: "/images/aluoi/giao-luu-ban-dia.jpg",
         duration: "3.5h",
         distanceFromPrev: "15km từ trung tâm",
         summary: "Leo qua các bậc thang đá giữa tán rừng nguyên sinh rợp bóng lên đỉnh đồi A Bia cao 937m. Lắng nghe người dẫn đường bản địa thuyết minh câu chuyện chiến đấu kiên cường và chiêm ngưỡng toàn cảnh thung lũng A Shau bao la.",
@@ -929,7 +929,7 @@ export function generateHighlandItinerary(params: {
         enName: "Truong Son Rainforest Discovery & Khe Me Cascade",
         slug: "rung-nguyen-sinh-a-roang",
         category: "Hoạt động ngoài trời",
-        image: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1200&q=80",
+        image: "/images/aluoi/ho-sinh-thai-a-luoi.jpg",
         duration: "3.0h",
         distanceFromPrev: "20km",
         summary: "Dạo bước dưới tán cây cổ thụ hàng trăm năm tuổi, ngắm nhìn thảm thực vật phong lan rừng nhiệt đới và hít thở bầu không khí tinh khiết tuyệt đối của rừng già biên giới.",
@@ -949,7 +949,7 @@ export function generateHighlandItinerary(params: {
       enName: "Farewell Highland Lunch Feast",
       slug: "quan-com-ban-pa-co",
       category: "Ăn uống",
-      image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=1200&q=80",
+      image: "/images/aluoi/am-thuc-nha-san.jpg",
       duration: "2.0h",
       distanceFromPrev: "8km",
       summary: "Thưởng thức mâm cơm đầm ấm với các món đặc sản tinh túy nhất của A Lưới. Giao lưu chia tay cùng bà con và hướng dẫn viên bản địa.",
@@ -968,7 +968,7 @@ export function generateHighlandItinerary(params: {
       enName: "Final Scenic Mountain Descent Back to Hue (70km)",
       slug: "dich-vu-xe-dua-don-hue-a-luoi",
       category: "Di chuyển",
-      image: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1200&q=80",
+      image: "/images/aluoi/di-chuyen-hue-a-luoi.jpg",
       duration: travelDurationFromHue,
       distanceFromPrev: "70km đường đèo QL49",
       travelTimeFromPrev: travelDurationFromHue,
@@ -1160,5 +1160,37 @@ export function generateHighlandItinerary(params: {
       "Light windbreaker for evening mist and insect repellent spray.",
       "Modest cash in VND as mountain homestays might not take foreign credit cards."
     ]
+  };
+}
+
+/**
+ * Làm giàu dữ liệu ảnh lịch trình từ kho dữ liệu Điểm Đến (do Quản trị viên cập nhật)
+ * Nếu điểm đến có ảnh tùy chỉnh trên hệ thống (/admin/places), AI sẽ ưu tiên hiển thị ảnh đó!
+ */
+export function enrichPlanWithPlaces(
+  plan: ItineraryPlan,
+  places?: Array<{ slug?: string; image?: string; coverImage?: string }>
+): ItineraryPlan {
+  if (!places || places.length === 0) return plan;
+  const placeMap = new Map<string, string>();
+  for (const p of places) {
+    if (p.slug && (p.image || p.coverImage)) {
+      placeMap.set(p.slug, (p.image || p.coverImage) as string);
+    }
+  }
+
+  const enrichedDays = plan.days.map((day) => ({
+    ...day,
+    stops: day.stops.map((stop) => {
+      if (stop.slug && placeMap.has(stop.slug)) {
+        return { ...stop, image: placeMap.get(stop.slug)! };
+      }
+      return stop;
+    })
+  }));
+
+  return {
+    ...plan,
+    days: enrichedDays
   };
 }

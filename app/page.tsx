@@ -17,6 +17,7 @@ export default async function HomePage() {
   return (
     <HomeClientView
       activeHeroImage={activeHeroImage}
+      settings={siteSettings}
       featuredPlaces={featuredPlaces}
       homestays={homestays}
       products={products}
