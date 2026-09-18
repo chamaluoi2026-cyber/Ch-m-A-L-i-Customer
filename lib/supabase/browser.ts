@@ -184,26 +184,111 @@ export function clearLocalSession() {
   window.localStorage.removeItem(USER_CACHE_KEY);
   window.localStorage.removeItem("cham_a_luoi_demo_user");
   window.localStorage.removeItem("cham_a_luoi_demo_otp");
+  window.localStorage.removeItem("cham_current_customer");
+  window.localStorage.removeItem("cham_customer_profile");
+}
+
+export function saveCustomerSession(customer: {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  avatarUrl?: string;
+  provider?: string;
+  role?: string;
+}) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem("cham_current_customer", JSON.stringify(customer));
+  const authUser: AuthUser = {
+    id: customer.id,
+    email: customer.email,
+    phone: customer.phone,
+    user_metadata: {
+      full_name: customer.name,
+      avatar_url: customer.avatarUrl,
+      provider: customer.provider || "email",
+      role: customer.role || "customer",
+    }
+  };
+  window.localStorage.setItem(USER_CACHE_KEY, JSON.stringify(authUser));
 }
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
+  // 1. Kiểm tra session khách hàng đã lưu trong localStorage (hiển thị tức thì không độ trễ)
+  if (typeof window !== "undefined") {
+    try {
+      const localCust = window.localStorage.getItem("cham_current_customer");
+      if (localCust) {
+        const parsed = JSON.parse(localCust);
+        if (parsed && (parsed.id || parsed.email)) {
+          return {
+            id: parsed.id || `usr-cust-${Date.now()}`,
+            email: parsed.email,
+            phone: parsed.phone,
+            user_metadata: {
+              full_name: parsed.name || parsed.fullName,
+              avatar_url: parsed.avatarUrl,
+              provider: parsed.provider,
+              role: parsed.role || "customer",
+            }
+          };
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  // 2. Đồng bộ với Server Session qua Cookie (/api/auth/me)
+  try {
+    const res = await fetch("/api/auth/me", { cache: "no-store" });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.authenticated && data.user) {
+        const user: AuthUser = {
+          id: data.user.id,
+          email: data.user.email,
+          phone: data.user.phone,
+          user_metadata: {
+            full_name: data.user.name,
+            avatar_url: data.user.avatarUrl,
+            provider: data.user.provider,
+            role: data.user.role,
+          }
+        };
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem("cham_current_customer", JSON.stringify(data.user));
+          window.localStorage.setItem(USER_CACHE_KEY, JSON.stringify(user));
+        }
+        return user;
+      }
+    }
+  } catch {
+    // ignore fetch error in offline/SSR
+  }
+
+  // 3. Fallback sang Supabase token nếu có cấu hình
   const token = getAccessToken();
   const config = getOptionalSupabasePublicConfig();
   if (!token || !config) return null;
 
-  const response = await fetch(`${config.url}/auth/v1/user`, {
-    headers: {
-      apikey: config.anonKey,
-      Authorization: `Bearer ${token}`
-    }
-  });
+  try {
+    const response = await fetch(`${config.url}/auth/v1/user`, {
+      headers: {
+        apikey: config.anonKey,
+        Authorization: `Bearer ${token}`
+      }
+    });
 
-  if (!response.ok) {
-    clearLocalSession();
+    if (!response.ok) {
+      clearLocalSession();
+      return null;
+    }
+
+    const user = (await response.json()) as AuthUser;
+    window.localStorage.setItem(USER_CACHE_KEY, JSON.stringify(user));
+    return user;
+  } catch {
     return null;
   }
-
-  const user = (await response.json()) as AuthUser;
-  window.localStorage.setItem(USER_CACHE_KEY, JSON.stringify(user));
-  return user;
 }

@@ -186,18 +186,12 @@ export function Navbar({ initialLogo, initialMobileLogo }: NavbarProps = {}) {
             <li className="pt-1 pb-1">
               <WeatherNavBadge variant="drawer" />
             </li>
-            <li className="border-t border-forest/10 pt-2.5 flex items-center gap-2">
-              <Link
-                href="/login"
-                onClick={() => setOpen(false)}
-                className="focus-ring flex-1 rounded-xl px-4 py-2.5 text-center text-sm font-semibold text-forest border border-forest/20 hover:bg-beige"
-              >
-                {t.nav.login}
-              </Link>
+            <li className="border-t border-forest/10 pt-2.5 flex flex-col gap-2">
+              <AuthNavLink variant="drawer" onItemClick={() => setOpen(false)} />
               <Link
                 href="/book-tour"
                 onClick={() => setOpen(false)}
-                className="focus-ring flex-1 rounded-xl px-4 py-2.5 text-center text-sm font-bold bg-forest text-white hover:bg-forest-light"
+                className="focus-ring w-full rounded-xl px-4 py-2.5 text-center text-sm font-bold bg-forest text-white hover:bg-forest-light"
               >
                 {t.nav.bookTour}
               </Link>

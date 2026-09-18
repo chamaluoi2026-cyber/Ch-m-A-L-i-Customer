@@ -88,6 +88,9 @@ export type AuthSession = {
   id: string; // User ID / Customer ID
   email: string;
   name: string;
+  phone?: string;
+  avatarUrl?: string;
+  provider?: "google" | "facebook" | "email" | "phone" | string;
   role: SystemRole;
   businessId?: string; // Bắt buộc đối với role BUSINESS
   issuedAt: number;

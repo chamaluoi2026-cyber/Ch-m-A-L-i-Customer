@@ -43,6 +43,9 @@ export async function loginCustomerAction(data: {
       id: targetUser.id,
       email: targetUser.email,
       name: targetUser.name,
+      phone: targetUser.phone,
+      avatarUrl: targetUser.avatarUrl,
+      provider: targetUser.provider || "email",
       role: targetUser.role as SystemRole,
       businessId: targetUser.businessId
     });
@@ -118,6 +121,7 @@ export async function registerCustomerAction(data: {
         email: email || `${phone.replace(/[^0-9]/g, "")}@dukhach.chamaluoi.vn`,
         phone: phone || undefined,
         role: "customer",
+        provider: "email",
         actor: { id: "cust-self", name: fullName, role: "customer" }
       });
     }
@@ -126,6 +130,9 @@ export async function registerCustomerAction(data: {
       id: targetUser.id,
       email: targetUser.email,
       name: targetUser.name,
+      phone: targetUser.phone,
+      avatarUrl: targetUser.avatarUrl,
+      provider: targetUser.provider || "email",
       role: targetUser.role as SystemRole,
       businessId: targetUser.businessId
     });
@@ -162,6 +169,100 @@ export async function registerCustomerAction(data: {
     return {
       success: false,
       error: err.message || "Đăng ký tài khoản thất bại. Vui lòng thử lại."
+    };
+  }
+}
+
+/**
+ * Đăng nhập / Đăng ký nhanh qua Google hoặc Facebook
+ * Thu thập đầy đủ thông tin: Họ tên, Email, Ảnh đại diện, SĐT (nếu có)
+ */
+export async function socialAuthCustomerAction(data: {
+  fullName: string;
+  email: string;
+  phone?: string;
+  avatarUrl?: string;
+  provider: "google" | "facebook";
+  nextPath?: string;
+}) {
+  try {
+    const fullName = (data.fullName || "").trim();
+    const email = (data.email || "").trim().toLowerCase();
+    const phone = (data.phone || "").trim();
+    const avatarUrl = data.avatarUrl;
+    const provider = data.provider;
+
+    if (!email) {
+      return { success: false, error: "Thiếu thông tin email từ nhà cung cấp đăng nhập." };
+    }
+
+    const users = getAllUsers();
+    let targetUser = users.find(
+      (u) => u.email && u.email.toLowerCase() === email
+    );
+
+    if (targetUser) {
+      // Cập nhật thông tin mới nhất từ Google / Facebook
+      targetUser.name = fullName || targetUser.name;
+      if (avatarUrl) targetUser.avatarUrl = avatarUrl;
+      if (phone && !targetUser.phone) targetUser.phone = phone;
+      targetUser.provider = provider;
+    } else {
+      // Tạo hồ sơ khách hàng mới thu thập được
+      targetUser = createUser({
+        name: fullName || email.split("@")[0],
+        email,
+        phone: phone || undefined,
+        avatarUrl,
+        provider,
+        role: "customer",
+        actor: { id: `cust-${provider}`, name: fullName || email, role: "customer" }
+      });
+    }
+
+    const token = signSession({
+      id: targetUser.id,
+      email: targetUser.email,
+      name: targetUser.name,
+      phone: targetUser.phone,
+      avatarUrl: targetUser.avatarUrl,
+      provider: targetUser.provider,
+      role: targetUser.role as SystemRole,
+      businessId: targetUser.businessId
+    });
+
+    const cookieStore = await cookies();
+    cookieStore.set(AUTH_COOKIE_NAME, token, {
+      path: "/",
+      httpOnly: false,
+      sameSite: "lax",
+      maxAge: 86400 * 30
+    });
+
+    cookieStore.set("user_role", "customer", {
+      path: "/",
+      sameSite: "lax",
+      maxAge: 86400 * 30
+    });
+
+    cookieStore.set("auth_session", "active", {
+      path: "/",
+      sameSite: "lax",
+      maxAge: 86400 * 30
+    });
+
+    revalidatePath("/account");
+    revalidatePath("/");
+
+    return {
+      success: true,
+      user: targetUser,
+      redirectUrl: data.nextPath && data.nextPath.startsWith("/") ? data.nextPath : "/account"
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message || "Đăng nhập mạng xã hội thất bại. Vui lòng thử lại."
     };
   }
 }

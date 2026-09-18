@@ -18,11 +18,15 @@ import {
   Sparkles,
   TicketCheck,
   User,
-  Users
+  Users,
+  Phone,
+  Edit3,
+  Save,
+  ShieldCheck as ShieldCheckIcon,
 } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { Button } from "@/components/ui/button";
-import { getCurrentUser, type AuthUser } from "@/lib/supabase/browser";
+import { getCurrentUser, saveCustomerSession, type AuthUser } from "@/lib/supabase/browser";
 import { fetchAllLeadsAction } from "@/app/actions/leads";
 import { fetchAllBookingsAction, fetchCustomerBookingsAction } from "@/app/actions/bookings";
 import { fetchReviewByBookingIdAction } from "@/app/actions/reviews";
@@ -40,6 +44,11 @@ export default function AccountPage() {
   const [bookings, setBookings] = useState<BookingRecord[]>([]);
   const [bookingReviews, setBookingReviews] = useState<Record<string, ReviewRecord | null>>({});
   const [reviewingBooking, setReviewingBooking] = useState<BookingRecord | null>(null);
+
+  // Phone edit state
+  const [isEditingPhone, setIsEditingPhone] = useState(false);
+  const [phoneInput, setPhoneInput] = useState("");
+  const [savingPhone, setSavingPhone] = useState(false);
 
   useEffect(() => {
     getCurrentUser().then((currentUser) => {
@@ -98,9 +107,50 @@ export default function AccountPage() {
     }
   }, []);
 
-  const fullName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Du khách Chạm A Lưới";
-  const userEmail = user?.email || "dukhach@chamaluoi.vn";
+  const fullName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || (user ? "Du khách Chạm A Lưới" : "Khách tham quan");
+  const userEmail = user?.email || (user ? "" : "Chưa đăng nhập");
   const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
+  const provider = (user?.user_metadata?.provider as string) || "email";
+  const userPhone = user?.phone || (user?.user_metadata?.phone as string);
+
+  const handleSavePhone = async () => {
+    if (!phoneInput.trim()) return;
+    setSavingPhone(true);
+    try {
+      const res = await fetch("/api/auth/me", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: phoneInput.trim() }),
+      });
+      if (res.ok) {
+        if (user) {
+          const updatedUser: AuthUser = {
+            ...user,
+            phone: phoneInput.trim(),
+            user_metadata: {
+              ...user.user_metadata,
+              phone: phoneInput.trim(),
+            },
+          };
+          setUser(updatedUser);
+          saveCustomerSession({
+            id: user.id,
+            name: fullName,
+            email: userEmail,
+            phone: phoneInput.trim(),
+            avatarUrl,
+            provider,
+            role: (user.user_metadata?.role as string) || "customer",
+          });
+        }
+        setIsEditingPhone(false);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setSavingPhone(false);
+    }
+  };
 
   const userVouchers = leads.map((l) => ({
     voucherCode: l.voucherCode,
@@ -116,6 +166,28 @@ export default function AccountPage() {
   return (
     <main className="pt-24 bg-beige/30 min-h-screen">
       <section className="section-shell py-10">
+        {/* Banner dành cho khách chưa đăng nhập */}
+        {!user && !loading && (
+          <div className="mb-6 rounded-3xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="size-11 rounded-2xl bg-amber-500/10 text-amber-700 flex items-center justify-center shrink-0">
+                <Sparkles className="size-6 text-amber-600" />
+              </div>
+              <div>
+                <p className="font-extrabold text-sm text-amber-950">
+                  Bạn đang ở chế độ xem Khách tham quan tạm thời
+                </p>
+                <p className="text-xs text-amber-800/90 mt-0.5">
+                  Đăng nhập bằng <b>Google</b>, <b>Facebook</b> hoặc <b>SĐT</b> để lưu trữ vĩnh viễn voucher 10% và lịch trình du lịch A Lưới của bạn!
+                </p>
+              </div>
+            </div>
+            <Button asChild className="bg-forest hover:bg-forest-light text-white rounded-2xl shrink-0 text-xs font-bold px-5 py-2.5">
+              <Link href="/login">Đăng nhập / Đăng ký ngay →</Link>
+            </Button>
+          </div>
+        )}
+
         {/* Profile Header */}
         <div className="grid gap-6 rounded-3xl bg-white p-6 md:p-8 shadow-card border border-forest/10 lg:grid-cols-[1fr_auto] items-center">
           <div className="flex flex-wrap items-center gap-5">
@@ -125,7 +197,7 @@ export default function AccountPage() {
                 alt={fullName}
                 width={80}
                 height={80}
-                className="size-20 rounded-full object-cover border-2 border-forest"
+                className="size-20 rounded-full object-cover border-2 border-forest ring-2 ring-forest/20 shadow-md"
               />
             ) : (
               <span className="grid size-20 place-items-center rounded-full bg-forest text-2xl font-black text-white shadow-md">
@@ -133,13 +205,80 @@ export default function AccountPage() {
               </span>
             )}
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-2xl md:text-3xl font-extrabold text-ink">{fullName}</h1>
                 <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-800">
                   Thành viên
                 </span>
+                {provider === "google" && (
+                  <span className="rounded-full bg-blue-50 border border-blue-200 px-2.5 py-0.5 text-[10px] font-bold text-blue-700 flex items-center gap-1">
+                    Google Verified
+                  </span>
+                )}
+                {provider === "facebook" && (
+                  <span className="rounded-full bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 text-[10px] font-bold text-indigo-700 flex items-center gap-1">
+                    Facebook Connected
+                  </span>
+                )}
               </div>
-              <p className="mt-1 text-sm text-ink/60">{userEmail}</p>
+
+              <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink/60">
+                {userEmail && <span>{userEmail}</span>}
+
+                {/* SĐT khách hàng & Nút chỉnh sửa */}
+                {user && (
+                  <div className="flex items-center gap-1.5">
+                    {isEditingPhone ? (
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <input
+                          type="tel"
+                          value={phoneInput}
+                          onChange={(e) => setPhoneInput(e.target.value)}
+                          placeholder="Nhập SĐT / Zalo..."
+                          className="rounded-lg border border-forest/30 px-2 py-0.5 text-xs font-semibold text-ink focus:outline-none focus:border-forest"
+                          autoFocus
+                        />
+                        <button
+                          type="button"
+                          onClick={handleSavePhone}
+                          disabled={savingPhone}
+                          className="px-2 py-0.5 rounded-lg bg-forest text-white text-xs font-bold hover:bg-forest-light"
+                        >
+                          {savingPhone ? "Lưu..." : "Lưu"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIsEditingPhone(false)}
+                          className="px-2 py-0.5 rounded-lg text-gray-500 hover:text-ink text-xs"
+                        >
+                          Hủy
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <Phone className="size-3.5 text-forest" />
+                        {userPhone ? (
+                          <span className="font-semibold text-ink">{userPhone}</span>
+                        ) : (
+                          <span className="text-xs text-forest/70 italic">Chưa có SĐT</span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPhoneInput(userPhone || "");
+                            setIsEditingPhone(true);
+                          }}
+                          className="ml-1 text-[11px] text-forest font-bold hover:underline"
+                          title="Cập nhật số điện thoại"
+                        >
+                          [Sửa SĐT]
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
               <p className="mt-2 text-xs text-forest font-semibold flex items-center gap-1.5">
                 <Sparkles className="size-3.5" />
                 Chào mừng bạn đến với hệ sinh thái kết nối du lịch cộng đồng A Lưới
@@ -154,7 +293,13 @@ export default function AccountPage() {
                 Khám phá địa điểm
               </Link>
             </Button>
-            {user ? <SignOutButton /> : null}
+            {user ? (
+              <SignOutButton />
+            ) : (
+              <Button asChild size="sm" className="bg-forest text-white hover:bg-forest-light">
+                <Link href="/login">Đăng nhập tài khoản</Link>
+              </Button>
+            )}
           </div>
         </div>
 

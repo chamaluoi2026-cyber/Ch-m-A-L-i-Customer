@@ -1,8 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { Facebook, Instagram, Mail, MapPin, Phone, ShieldCheck, Heart } from "lucide-react";
 import { AppImage } from "@/components/ui/app-image";
 import { navItems, siteConfig } from "@/data/site";
-
+import { useLanguage } from "@/components/i18n-provider";
 import type { SiteSettings } from "@/lib/server-store";
 
 interface FooterProps {
@@ -11,14 +13,30 @@ interface FooterProps {
 }
 
 export function Footer({ logo, settings }: FooterProps = {}) {
+  const { language, t } = useLanguage();
+  const isEn = language === "en";
+
   const activeLogo = logo || settings?.logoDark || settings?.logo || siteConfig.logoDark || siteConfig.logo;
-  const address = settings?.contactAddress || "Huyện A Lưới, Thừa Thiên Huế";
+  const address = settings?.contactAddress || (isEn ? "A Luoi District, Thua Thien Hue, Vietnam" : "Huyện A Lưới, Thừa Thiên Huế");
   const phone = settings?.contactPhone || "0905 000 118";
   const email = settings?.contactEmail || "hotro@chamaluoi.vn";
   const facebookUrl = settings?.facebookUrl || "https://facebook.com/chamaluoi";
   const instagramUrl = settings?.instagramUrl || "https://instagram.com/chamaluoi";
   const zaloUrl = settings?.zaloUrl || "";
-  const description = settings?.footerDescription || "Nền tảng du lịch cộng đồng kết nối du khách với các homestay, làng nghề truyền thống, ẩm thực bản địa và những điểm đến sinh thái nguyên sơ tại A Lưới, Thừa Thiên Huế.";
+  const description = isEn
+    ? "A community-based tourism platform connecting travelers with verified local homestays, traditional craft villages, authentic cuisine, and pristine mountain wonders in A Luoi, Thua Thien Hue."
+    : (settings?.footerDescription || "Nền tảng du lịch cộng đồng kết nối du khách với các homestay, làng nghề truyền thống, ẩm thực bản địa và những điểm đến sinh thái nguyên sơ tại A Lưới, Thừa Thiên Huế.");
+
+  const getNavLabel = (href: string, fallback: string) => {
+    if (href === "/") return t.nav.home;
+    if (href === "/places") return t.nav.places;
+    if (href === "/itinerary") return t.nav.itineraryAI;
+    if (href === "/blog") return t.nav.blog;
+    if (href === "/products") return t.nav.products;
+    if (href === "/book-tour") return t.nav.bookTour;
+    if (href === "/about") return t.nav.about;
+    return fallback;
+  };
 
   return (
     <footer className="bg-ink text-white">
@@ -36,17 +54,22 @@ export function Footer({ logo, settings }: FooterProps = {}) {
             {description}
           </p>
           <p className="mt-4 text-xs text-emerald-300 flex items-center gap-1.5">
-            <Heart className="size-3.5 fill-current" /> Du lịch xanh • Tôn trọng bản sắc • Đồng hành cùng bà con
+            <Heart className="size-3.5 fill-current" />
+            {isEn
+              ? "Green Tourism • Cultural Respect • Empowering Communities"
+              : "Du lịch xanh • Tôn trọng bản sắc • Đồng hành cùng bà con"}
           </p>
         </article>
 
-        <nav aria-label="Điều hướng du khách">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-emerald-400">Khám phá A Lưới</h2>
+        <nav aria-label={isEn ? "Visitor navigation" : "Điều hướng du khách"}>
+          <h2 className="text-xs font-bold uppercase tracking-widest text-emerald-400">
+            {isEn ? "Explore A Luoi" : "Khám phá A Lưới"}
+          </h2>
           <ul className="mt-4 grid gap-2.5">
             {navItems.map((item) => (
               <li key={item.href}>
                 <Link className="text-xs text-white/75 hover:text-white transition" href={item.href}>
-                  {item.label}
+                  {getNavLabel(item.href, item.label)}
                 </Link>
               </li>
             ))}
@@ -54,7 +77,9 @@ export function Footer({ logo, settings }: FooterProps = {}) {
         </nav>
 
         <address className="not-italic">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-emerald-400">Hỗ trợ & Liên hệ</h2>
+          <h2 className="text-xs font-bold uppercase tracking-widest text-emerald-400">
+            {isEn ? "Support & Contact" : "Hỗ trợ & Liên hệ"}
+          </h2>
           <ul className="mt-4 grid gap-2.5 text-xs text-white/75">
             <li className="flex gap-2.5 items-center">
               <MapPin className="size-4 shrink-0 text-clay" aria-hidden="true" />
@@ -111,9 +136,18 @@ export function Footer({ logo, settings }: FooterProps = {}) {
         </address>
       </section>
       <div className="border-t border-white/10 py-5 text-center text-xs text-white/50 section-shell flex flex-wrap items-center justify-between gap-2">
-        <p>© 2026 Chạm A Lưới. Nền tảng kết nối du lịch cộng đồng.</p>
-        <p className="text-white/40 text-[11px]">Bảo tồn văn hóa Pa Cô, Tà Ôi, Cơ Tu • Phát triển bền vững</p>
+        <p>
+          {isEn
+            ? "© 2026 Cham A Luoi. Community-based tourism network."
+            : "© 2026 Chạm A Lưới. Nền tảng kết nối du lịch cộng đồng."}
+        </p>
+        <p className="text-white/40 text-[11px]">
+          {isEn
+            ? "Preserving Pa Co, Ta Oi, Co Tu cultural heritage • Sustainable development"
+            : "Bảo tồn văn hóa Pa Cô, Tà Ôi, Cơ Tu • Phát triển bền vững"}
+        </p>
       </div>
     </footer>
   );
 }
+

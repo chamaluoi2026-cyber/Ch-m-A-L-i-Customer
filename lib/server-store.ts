@@ -35,6 +35,8 @@ export type SystemUser = {
   name: string;
   email: string;
   phone?: string;
+  avatarUrl?: string;
+  provider?: "google" | "facebook" | "email" | "phone" | string;
   role: "SUPER_ADMIN" | "ADMIN" | "CONTENT_MANAGER" | "SALES" | "FINANCE" | "SUPPORT" | "BUSINESS" | "CUSTOMER" | "customer" | "business" | "admin";
   businessId?: string;
   createdAt: string;
@@ -3746,6 +3748,8 @@ export function createUser(payload: {
   name: string;
   email: string;
   phone?: string;
+  avatarUrl?: string;
+  provider?: "google" | "facebook" | "email" | "phone" | string;
   role: "customer" | "business" | "admin";
   businessId?: string;
   actor?: { id: string; name: string; role: string };
@@ -3759,6 +3763,8 @@ export function createUser(payload: {
     name: payload.name,
     email: payload.email,
     phone: payload.phone,
+    avatarUrl: payload.avatarUrl,
+    provider: payload.provider || "email",
     role: payload.role,
     businessId: payload.businessId,
     createdAt: new Date().toISOString().split("T")[0]

@@ -85,7 +85,62 @@ export interface Translations {
     packingTitle: string;
     startOver: string;
   };
+  // Home Page
+  home: {
+    heroTag: string;
+    heroTitle: string;
+    heroDesc: string;
+    heroExploreBtn: string;
+    heroBookTourBtn: string;
+    featuredEyebrow: string;
+    featuredTitle: string;
+    featuredDesc: string;
+    step1Title: string;
+    step1Desc: string;
+    step2Title: string;
+    step2Desc: string;
+    step3Title: string;
+    step3Desc: string;
+    viewAllPlaces: string;
+    bookingEyebrow: string;
+    bookingTitle: string;
+    bookingDesc: string;
+    packageTourTitle: string;
+    packageTourDesc: string;
+    packageTourBtn: string;
+    selfGuidedTitle: string;
+    selfGuidedDesc: string;
+    selfGuidedBtn: string;
+    galleryEyebrow: string;
+    galleryTitle: string;
+    galleryDesc: string;
+    homestayEyebrow: string;
+    homestayTitle: string;
+    specialtiesEyebrow: string;
+    specialtiesTitle: string;
+    blogEyebrow: string;
+    blogTitle: string;
+    readArticle: string;
+    testimonialsEyebrow: string;
+    testimonialsTitle: string;
+  };
 }
+
+export const categoryTranslations: Record<string, { vi: string; en: string }> = {
+  all: { vi: "Tất cả", en: "All" },
+  food: { vi: "Ăn uống", en: "Food & Dining" },
+  stay: { vi: "Lưu trú", en: "Homestays & Stays" },
+  play: { vi: "Vui chơi", en: "Recreation" },
+  experience: { vi: "Trải nghiệm", en: "Experiences" },
+  "waterfall-stream": { vi: "Thác và suối", en: "Waterfalls & Streams" },
+  outdoor: { vi: "Hoạt động ngoài trời", en: "Outdoor Activities" },
+  campfire: { vi: "Lửa trại", en: "Campfire & Gongs" },
+  "community-tourism": { vi: "Khu du lịch cộng đồng", en: "Community Tourism" },
+  visit: { vi: "Tham quan", en: "Sightseeing" },
+  culture: { vi: "Văn hóa", en: "Culture & Crafts" },
+  specialty: { vi: "Đặc sản", en: "Highland Specialties" },
+  service: { vi: "Dịch vụ khác", en: "Local Services" }
+};
 
 export const translations: Record<Language, Translations> = {
   vi: {
@@ -169,6 +224,44 @@ export const translations: Record<Language, Translations> = {
       cultureTitle: "Phong tục & Quy tắc ứng xử bản làng",
       packingTitle: "Hành lý khuyên mang theo",
       startOver: "Thiết kế lại lịch trình khác"
+    },
+    home: {
+      heroTag: "Du lịch cộng đồng tại Huế",
+      heroTitle: "Chạm A Lưới",
+      heroDesc: "Nơi du khách tìm địa điểm đáng tin cậy, nhận voucher trước khi tư vấn và kết nối trực tiếp với doanh nghiệp địa phương.",
+      heroExploreBtn: "Khám phá địa điểm",
+      heroBookTourBtn: "Đặt tour",
+      featuredEyebrow: "Khám phá địa điểm",
+      featuredTitle: "Chọn nơi muốn đến, nhận ưu đãi rồi được tư vấn",
+      featuredDesc: "Chạm A Lưới giúp bạn tìm địa điểm ăn uống, lưu trú, vui chơi và trải nghiệm cộng đồng phù hợp trước khi lên lịch.",
+      step1Title: "1. Chọn địa điểm",
+      step1Desc: "Khách xem ăn uống, lưu trú, vui chơi, trải nghiệm, đặc sản và dịch vụ tại A Lưới.",
+      step2Title: "2. Nhận voucher",
+      step2Desc: "Khách để lại thông tin, hệ thống tạo mã voucher trước khi mở nút chat Zalo.",
+      step3Title: "3. Được tư vấn",
+      step3Desc: "Đội ngũ địa phương hỗ trợ lịch trình, thời gian phù hợp, dịch vụ đi kèm và cách sử dụng voucher.",
+      viewAllPlaces: "Xem tất cả địa điểm",
+      bookingEyebrow: "Đặt chuyến đi",
+      bookingTitle: "Tour và tự túc vẫn là nhánh dịch vụ riêng",
+      bookingDesc: "Khách muốn lịch trình hoàn chỉnh có thể đặt tour trọn gói. Khách muốn tự chọn homestay và trải nghiệm có thể đi theo luồng tự túc.",
+      packageTourTitle: "Đặt tour trọn gói",
+      packageTourDesc: "Phù hợp với khách muốn lịch trình hoàn chỉnh do công ty lữ hành tổ chức.",
+      packageTourBtn: "Khám phá tour",
+      selfGuidedTitle: "Du lịch tự túc",
+      selfGuidedDesc: "Tự chọn homestay và các trải nghiệm theo nhu cầu của bạn.",
+      selfGuidedBtn: "Bắt đầu lên kế hoạch",
+      galleryEyebrow: "Khung ảnh A Lưới",
+      galleryTitle: "Xem A Lưới qua những khung hình rộng mở",
+      galleryDesc: "Một góc thị giác dành riêng cho núi rừng, thác nước, bình minh và bản làng trước khi du khách chọn hành trình.",
+      homestayEyebrow: "Homestay nổi bật",
+      homestayTitle: "Lưu trú giữa núi rừng và sự ấm áp cộng đồng",
+      specialtiesEyebrow: "Sản phẩm địa phương",
+      specialtiesTitle: "Thủ công, hương vị và ký ức từ vùng cao",
+      blogEyebrow: "Blog mới nhất",
+      blogTitle: "Những câu chuyện trước hành trình",
+      readArticle: "Đọc bài viết",
+      testimonialsEyebrow: "Cảm nhận",
+      testimonialsTitle: "Du khách nhớ nhất những chi tiết con người"
     }
   },
   en: {
@@ -252,6 +345,44 @@ export const translations: Record<Language, Translations> = {
       cultureTitle: "Village Etiquette & Sacred Customs",
       packingTitle: "Recommended Packing Checklist",
       startOver: "Start Over With New Choices"
+    },
+    home: {
+      heroTag: "Community-Based Tourism in Hue",
+      heroTitle: "Cham A Luoi",
+      heroDesc: "Discover verified highland destinations, claim exclusive vouchers, and connect directly with local community hosts.",
+      heroExploreBtn: "Explore Destinations",
+      heroBookTourBtn: "Book Tours",
+      featuredEyebrow: "Explore Destinations",
+      featuredTitle: "Choose your destination, claim offers, and get local advice",
+      featuredDesc: "Cham A Luoi helps you discover dining, stays, attractions, and community experiences before planning your trip.",
+      step1Title: "1. Choose Destination",
+      step1Desc: "Explore dining, homestays, waterfalls, cultural workshops, and highland specialties.",
+      step2Title: "2. Claim Voucher",
+      step2Desc: "Enter your information to generate an instant voucher code before connecting via chat.",
+      step3Title: "3. Get Local Advice",
+      step3Desc: "Our local highland team assists with custom timing, transport, and redeeming your vouchers.",
+      viewAllPlaces: "View All Destinations",
+      bookingEyebrow: "Plan Your Journey",
+      bookingTitle: "All-inclusive guided tours or self-guided exploration",
+      bookingDesc: "Choose all-inclusive packages for stress-free guided tours, or curate your own stays and experiences independently.",
+      packageTourTitle: "All-Inclusive Tour Packages",
+      packageTourDesc: "Ideal for travelers seeking fully-guided itineraries curated by local tour operators.",
+      packageTourBtn: "Explore Tours",
+      selfGuidedTitle: "Self-Guided Travel",
+      selfGuidedDesc: "Handpick your own homestays, waterfalls, and cultural workshops at your own pace.",
+      selfGuidedBtn: "Start Planning",
+      galleryEyebrow: "A Luoi Gallery",
+      galleryTitle: "Experience A Luoi Through Scenic Panoramas",
+      galleryDesc: "A visual glimpse of ancient rainforests, white waterfalls, misty sunrises, and indigenous villages.",
+      homestayEyebrow: "Featured Homestays",
+      homestayTitle: "Rest Amidst Mountains and Warm Community Hospitality",
+      specialtiesEyebrow: "Highland Specialties",
+      specialtiesTitle: "Crafts, flavors, and authentic memories from the highlands",
+      blogEyebrow: "Latest Stories",
+      blogTitle: "Stories Before Your Journey",
+      readArticle: "Read Story",
+      testimonialsEyebrow: "Testimonials",
+      testimonialsTitle: "What travelers remember most is the warmth of the people"
     }
   }
 };
