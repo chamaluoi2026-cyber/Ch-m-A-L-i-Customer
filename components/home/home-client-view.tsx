@@ -75,6 +75,21 @@ const aluoiGallery = [
   }
 ];
 
+function hexToRgba(hex?: string, opacity = 30): string {
+  if (!hex) return `rgba(15, 56, 46, ${opacity / 100})`;
+  let clean = hex.replace("#", "").trim();
+  if (clean.length === 3) {
+    clean = clean.split("").map((c) => c + c).join("");
+  }
+  if (clean.length !== 6) {
+    return `rgba(15, 56, 46, ${opacity / 100})`;
+  }
+  const r = parseInt(clean.substring(0, 2), 16) || 0;
+  const g = parseInt(clean.substring(2, 4), 16) || 0;
+  const b = parseInt(clean.substring(4, 6), 16) || 0;
+  return `rgba(${r}, ${g}, ${b}, ${Math.min(Math.max(opacity, 0), 100) / 100})`;
+}
+
 export function HomeClientView({
   activeHeroImage,
   settings,
@@ -118,6 +133,43 @@ export function HomeClientView({
 
   const overlayOpacity = Math.min(Math.max(settings?.heroOverlayOpacity ?? 60, 20), 95) / 100;
 
+  // Cấu hình Layer Giữa (Khung chữ / Middle card layer)
+  const cardStyle = settings?.heroCardStyle || "frosted";
+  const cardColor = settings?.heroCardColor || "#0f382e";
+  const cardOpacity = settings?.heroCardOpacity ?? 28;
+  const cardBlur = settings?.heroCardBlur || "lg";
+
+  const blurClass = {
+    none: "backdrop-blur-none",
+    sm: "backdrop-blur-sm",
+    md: "backdrop-blur-md",
+    lg: "backdrop-blur-lg",
+    xl: "backdrop-blur-xl"
+  }[cardBlur] || "backdrop-blur-md";
+
+  let containerBgStyle: React.CSSProperties = {};
+  let containerClasses = `relative mx-auto max-w-3xl sm:max-w-4xl px-6 py-8 sm:px-12 sm:py-12 transition-all duration-300 `;
+
+  if (cardStyle === "none") {
+    containerClasses += "bg-transparent border-0 shadow-none";
+  } else if (cardStyle === "radial") {
+    containerClasses += `rounded-3xl border-0 shadow-none ${blurClass}`;
+    containerBgStyle = {
+      background: `radial-gradient(ellipse at center, ${hexToRgba(cardColor, cardOpacity)} 0%, ${hexToRgba(cardColor, Math.round(cardOpacity * 0.4))} 55%, transparent 75%)`
+    };
+  } else if (cardStyle === "gradient") {
+    containerClasses += `rounded-3xl border border-white/20 shadow-2xl ${blurClass}`;
+    containerBgStyle = {
+      background: `linear-gradient(180deg, ${hexToRgba(cardColor, Math.min(cardOpacity + 15, 95))} 0%, ${hexToRgba(cardColor, cardOpacity)} 50%, ${hexToRgba(cardColor, Math.min(cardOpacity + 20, 95))} 100%)`
+    };
+  } else {
+    // "frosted" or "custom"
+    containerClasses += `rounded-3xl border border-white/20 shadow-2xl ${blurClass}`;
+    containerBgStyle = {
+      backgroundColor: hexToRgba(cardColor, cardOpacity)
+    };
+  }
+
   return (
     <main className="space-y-0">
       {/* 1. HERO BANNER */}
@@ -141,9 +193,11 @@ export function HomeClientView({
 
         <header className="relative z-10 mx-auto max-w-5xl px-4 py-8 text-center sm:px-6 lg:px-8">
           {/* Glassmorphism Frosted Backdrop Card (Layer mờ dưới chữ để làm nổi bật nội dung) */}
-          <div className="relative mx-auto max-w-3xl sm:max-w-4xl rounded-3xl border border-white/20 bg-black/45 px-6 py-8 sm:px-12 sm:py-12 shadow-2xl backdrop-blur-md">
+          <div className={containerClasses} style={containerBgStyle}>
             {/* Ambient top border glow */}
-            <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+            {cardStyle !== "none" && cardStyle !== "radial" && (
+              <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+            )}
 
             <MotionReveal>
               <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/35 bg-emerald-950/70 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.2em] text-emerald-300 shadow-md backdrop-blur-sm">
