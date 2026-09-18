@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -238,14 +238,22 @@ export function HighlandItineraryView({ plan, onReset }: HighlandItineraryViewPr
                   const isEatery = stop.category === "Ăn uống";
                   const isHomestay = stop.category === "Lưu trú" || stop.category === "Lửa trại";
 
+                  const isTravelLeg = stop.isTravelLeg || stop.category === "Di chuyển";
+
                   return (
                     <article
                       key={stop.id}
-                      className="relative flex flex-col gap-4 rounded-2xl border border-forest/10 bg-[#FAF9F5] p-4 transition-all hover:border-forest/30 hover:bg-white hover:shadow-md md:ml-12 md:p-5"
+                      className={`relative flex flex-col gap-4 rounded-2xl border p-4 transition-all md:ml-12 md:p-5 ${
+                        isTravelLeg
+                          ? "border-emerald-300 bg-gradient-to-br from-emerald-50/90 via-teal-50/50 to-white shadow-sm"
+                          : "border-forest/10 bg-[#FAF9F5] hover:border-forest/30 hover:bg-white hover:shadow-md"
+                      }`}
                     >
                       {/* Stepper Dot on the River Line */}
                       <div
-                        className="absolute -left-[3.25rem] top-6 hidden h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-forest text-xs font-bold text-white shadow-xs md:flex"
+                        className={`absolute -left-[3.25rem] top-6 hidden h-6 w-6 items-center justify-center rounded-full border-2 border-white text-xs font-bold shadow-xs md:flex ${
+                          isTravelLeg ? "bg-emerald-600 text-white" : "bg-forest text-white"
+                        }`}
                         aria-hidden="true"
                       >
                         {sIdx + 1}
@@ -260,8 +268,10 @@ export function HighlandItineraryView({ plan, onReset }: HighlandItineraryViewPr
                             fill
                             className="object-cover transition duration-300 hover:scale-105"
                           />
-                          <div className="absolute left-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-xs font-medium text-white backdrop-blur-xs">
-                            {stop.category}
+                          <div className={`absolute left-2 top-2 rounded-full px-2.5 py-0.5 text-xs font-bold text-white backdrop-blur-xs ${
+                            isTravelLeg ? "bg-emerald-700/80" : "bg-black/60"
+                          }`}>
+                            {isTravelLeg ? "🚗 Di chuyển" : stop.category}
                           </div>
                         </div>
 
