@@ -50,6 +50,59 @@ import {
   DEPARTURE_TIME_OPTIONS
 } from "@/lib/highland-itinerary-engine";
 
+export const HOMESTAYS_LIST = [
+  {
+    id: "anor-riverside",
+    name: "Homestay ven suối A Nôr",
+    village: "Bản A Nôr, xã Hồng Kim",
+    tag: "🌊 Bên triền suối reo",
+    image: "/images/aluoi/homestay-bungalow.jpg",
+    rating: 4.9,
+    reviews: 128,
+    desc: "Nhà sàn gỗ thoáng mát sát bờ suối, gần cụm thác A Nôr 3 tầng. Ngủ đêm nghe suối róc rách, thưởng thức cá nướng."
+  },
+  {
+    id: "pa-co-heritage",
+    name: "Nhà di sản Pa Cô (Làng truyền thống)",
+    village: "Bản Pa Cô, xã Hồng Bắc",
+    tag: "🔥 Lửa trại & Cồng chiêng",
+    image: "/images/aluoi/homestay-relax.jpg",
+    rating: 4.8,
+    reviews: 95,
+    desc: "Không gian nhà sàn Pa Cô nguyên bản, tham gia bếp lửa, học giã gạo, giao lưu điệu múa Ra Zooc đêm."
+  },
+  {
+    id: "ta-oi-lodge",
+    name: "Nhà nghỉ sinh thái núi Tà Ôi",
+    village: "Bản A Đớt, gần làng dệt Zèng",
+    tag: "🧵 Gần Làng nghề Dệt Zèng",
+    image: "/images/aluoi/homestay-swing.jpg",
+    rating: 4.8,
+    reviews: 84,
+    desc: "Nằm giữa thung lũng A Đớt, tiện workshop dệt thổ cẩm Zèng di sản, view ngắm núi đồi điệp trùng."
+  },
+  {
+    id: "cloud-hill-retreat",
+    name: "Cloud Hill Retreat (Đồi mây Hồng Vân)",
+    village: "Đồi thông Hồng Vân",
+    tag: "☁️ Săn mây đồi thông se lạnh",
+    image: "/images/aluoi/ho-sinh-thai-a-luoi.jpg",
+    rating: 4.9,
+    reviews: 110,
+    desc: "Nằm trên triền đồi thông cao mát mẻ như Đà Lạt, thích hợp săn mây sáng sớm và ngắm hoàng hôn đỏ rực."
+  },
+  {
+    id: "auto-assign",
+    name: "Hợp tác xã tự sắp xếp Homestay tối ưu nhất",
+    village: "Theo vị trí gần cung đường di chuyển",
+    tag: "✨ Điều phối viên chọn phòng tốt",
+    image: "/images/aluoi/homestay-bungalow.jpg",
+    rating: 5.0,
+    reviews: 200,
+    desc: "Để đội ngũ bản địa tự kiểm tra phòng trống sạch sẽ, tiện nghi và thuận đường di chuyển nhất cho đoàn."
+  }
+];
+
 export default function CustomItineraryBookingPage() {
   const router = useRouter();
   const { language, t } = useLanguage();
@@ -63,6 +116,7 @@ export default function CustomItineraryBookingPage() {
   // Form custom state
   const [guestsCount, setGuestsCount] = useState<number>(4);
   const [transportChoice, setTransportChoice] = useState<"car" | "self">("car");
+  const [selectedHomestayId, setSelectedHomestayId] = useState<string>("anor-riverside");
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -198,6 +252,11 @@ export default function CustomItineraryBookingPage() {
     };
   }, [guestsCount, numDays, numNights, transportChoice]);
 
+  // Selected Homestay
+  const selectedHomestay = useMemo(() => {
+    return HOMESTAYS_LIST.find((h) => h.id === selectedHomestayId) || HOMESTAYS_LIST[0];
+  }, [selectedHomestayId]);
+
   // Extract major stops from all days
   const allStops = useMemo(() => {
     if (!plan?.days) return [];
@@ -225,6 +284,7 @@ export default function CustomItineraryBookingPage() {
           `Lịch trình AI: ${plan?.id || "custom"}`,
           `Số khách: ${guestsCount} người`,
           `Phương tiện: ${transportChoice === "car" ? "Xe riêng đưa đón từ TP. Huế" : "Tự túc xe cá nhân/xe máy"}`,
+          numNights > 0 ? `Homestay lựa chọn: ${selectedHomestay.name} (${selectedHomestay.village})` : "Tour 1 ngày không ở đêm",
           pickupAddress ? `Điểm đón: ${pickupAddress}` : "",
           specialNotes ? `Ghi chú: ${specialNotes}` : "",
           `Hình thức: ${paymentChoice === "vietqr_deposit" ? "Đặt cọc 30% VietQR" : "Tư vấn & xác nhận qua Zalo (0đ trả trước)"}`
@@ -630,6 +690,88 @@ export default function CustomItineraryBookingPage() {
               </div>
             </div>
 
+            {/* 2. CHỌN HOMESTAY NGHỈ ĐÊM (KHI ĐI 2N1Đ HOẶC 3N2Đ) */}
+            {numNights > 0 && (
+              <div className="rounded-3xl bg-white p-5 sm:p-7 shadow-card border border-black/5 space-y-4">
+                <div className="flex items-center justify-between border-b border-black/5 pb-3">
+                  <div>
+                    <h3 className="font-extrabold text-ink text-base flex items-center gap-2">
+                      <Home className="size-4 text-forest" />
+                      <span>{isEn ? "2. Choose Your Preferred Homestay" : "2. Tùy Chọn Homestay Bản Địa Nghỉ Đêm"}</span>
+                    </h3>
+                    <p className="text-[11px] text-ink/60 mt-0.5">
+                      {isEn
+                        ? `Select your preferred community homestay for ${numNights} night(s)`
+                        : `Bạn được tự do chọn homestay ưng ý nhất trong mạng lưới du lịch cộng đồng A Lưới (${numNights} đêm)`}
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-clay/10 text-clay text-[11px] font-bold px-3 py-1 shrink-0">
+                    {numNights} đêm nghỉ
+                  </span>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-1">
+                  {HOMESTAYS_LIST.map((h) => {
+                    const isSelected = selectedHomestayId === h.id;
+                    return (
+                      <div
+                        key={h.id}
+                        onClick={() => setSelectedHomestayId(h.id)}
+                        className={cn(
+                          "p-3.5 sm:p-4 rounded-2xl border cursor-pointer transition-all flex flex-col sm:flex-row gap-3 sm:items-center justify-between",
+                          isSelected
+                            ? "border-forest bg-forest/5 ring-2 ring-forest/30 shadow-sm"
+                            : "border-black/10 bg-white hover:bg-beige/40"
+                        )}
+                      >
+                        <div className="flex items-center gap-3.5 flex-1 min-w-0">
+                          <div className="relative size-16 sm:size-20 rounded-xl overflow-hidden shrink-0 border border-black/10 bg-forest/10">
+                            <AppImage src={h.image} alt={h.name} fill className="object-cover" />
+                          </div>
+                          <div className="flex-1 min-w-0 space-y-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-[11px] font-extrabold text-forest bg-forest/10 px-2.5 py-0.5 rounded-full">
+                                {h.tag}
+                              </span>
+                              <span className="text-[10px] text-ink/50 flex items-center gap-1 font-semibold">
+                                ⭐ {h.rating} ({h.reviews} đánh giá)
+                              </span>
+                            </div>
+                            <h4 className="font-bold text-ink text-sm sm:text-base leading-snug truncate">
+                              {h.name}
+                            </h4>
+                            <p className="text-[11px] text-ink/60 flex items-center gap-1">
+                              <MapPin className="size-3 text-clay shrink-0" />
+                              <span>{h.village}</span>
+                            </p>
+                            <p className="text-[11px] text-ink/75 line-clamp-2 leading-relaxed font-normal">
+                              {h.desc}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 pt-2 sm:pt-0 shrink-0">
+                          <div
+                            className={cn(
+                              "size-6 rounded-full border flex items-center justify-center transition",
+                              isSelected
+                                ? "border-forest bg-forest text-white shadow"
+                                : "border-black/20 bg-white"
+                            )}
+                          >
+                            {isSelected && <Check className="size-3.5 stroke-[3]" />}
+                          </div>
+                          <span className="text-[11px] font-bold text-forest mt-1">
+                            {isSelected ? "Đang chọn" : "Bấm để chọn"}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* 3. Mini Timeline: Destinations in this Route */}
             <div className="rounded-3xl bg-white p-5 sm:p-7 shadow-card border border-black/5 space-y-4">
               <div className="flex items-center justify-between border-b border-black/5 pb-3">
@@ -681,12 +823,15 @@ export default function CustomItineraryBookingPage() {
               <div className="space-y-2.5 text-xs">
                 {/* Homestay */}
                 {numNights > 0 && (
-                  <div className="flex items-center justify-between text-ink/80">
-                    <span className="flex items-center gap-1.5">
-                      <Home className="size-3.5 text-clay" />
-                      Homestay nhà sàn ({numNights} đêm x {guestsCount} khách):
-                    </span>
-                    <span className="font-semibold text-ink">{formatCurrency(pricing.totalHomestay)}</span>
+                  <div className="flex items-start justify-between text-ink/80 gap-2">
+                    <div className="flex items-start gap-1.5 max-w-[68%]">
+                      <Home className="size-3.5 text-clay shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-semibold text-ink block truncate">{selectedHomestay.name}</span>
+                        <span className="text-[10px] text-ink/50">({numNights} đêm x {guestsCount} khách)</span>
+                      </div>
+                    </div>
+                    <span className="font-semibold text-ink shrink-0">{formatCurrency(pricing.totalHomestay)}</span>
                   </div>
                 )}
 

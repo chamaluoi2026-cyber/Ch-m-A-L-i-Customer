@@ -24,12 +24,16 @@ import {
 } from "lucide-react";
 import { loginCustomerAction, registerCustomerAction, socialAuthCustomerAction } from "@/app/actions/auth";
 import { saveCustomerSession, getProviderOAuthUrl } from "@/lib/supabase/browser";
+import { useLanguage } from "@/components/i18n-provider";
 
 interface CustomerAuthViewProps {
   nextUrl?: string;
 }
 
 export function CustomerAuthView({ nextUrl = "/account" }: CustomerAuthViewProps) {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [tab, setTab] = useState<"login" | "register">("login");
 
   // Login form state
@@ -217,15 +221,21 @@ export function CustomerAuthView({ nextUrl = "/account" }: CustomerAuthViewProps
       <div className="bg-gradient-to-br from-[#0F382E] via-[#0F5C4A] to-[#16423C] p-6 md:p-8 text-white relative overflow-hidden">
         <div className="relative z-10 space-y-2">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-amber-300 text-xs font-bold backdrop-blur-sm">
-            <Sparkles className="size-3.5" /> Du Lịch Bản Địa Chạm A Lưới
+            <Sparkles className="size-3.5" /> {isEn ? "Cham A Luoi Indigenous Travel" : "Du Lịch Bản Địa Chạm A Lưới"}
           </div>
           <h2 className="text-2xl md:text-3xl font-black tracking-tight">
-            {tab === "login" ? "Chào mừng bạn trở lại!" : "Đăng ký thành viên mới"}
+            {tab === "login"
+              ? (isEn ? "Welcome Back!" : "Chào mừng bạn trở lại!")
+              : (isEn ? "Create New Account" : "Đăng ký thành viên mới")}
           </h2>
           <p className="text-xs md:text-sm text-white/80 leading-relaxed max-w-md">
             {tab === "login"
-              ? "Đăng nhập để xem lại lịch sử đặt phòng, quản lý voucher ưu đãi và cập nhật tin đèo QL49 sương mù."
-              : "Tạo tài khoản du khách trong 10 giây để nhận ngay mã ưu đãi 10% cho chuyến đi khám phá A Lưới!"}
+              ? (isEn
+                  ? "Sign in to view your bookings, manage vouchers, and receive highland weather notifications."
+                  : "Đăng nhập để xem lại lịch sử đặt phòng, quản lý voucher ưu đãi và cập nhật tin đèo QL49 sương mù.")
+              : (isEn
+                  ? "Create a guest account in 10 seconds to receive an exclusive 10% voucher for your A Luoi trip!"
+                  : "Tạo tài khoản du khách trong 10 giây để nhận ngay mã ưu đãi 10% cho chuyến đi khám phá A Lưới!")}
           </p>
         </div>
       </div>
@@ -243,7 +253,7 @@ export function CustomerAuthView({ nextUrl = "/account" }: CustomerAuthViewProps
           }`}
         >
           <User className="size-4" />
-          Đăng Nhập
+          {isEn ? "Sign In" : "Đăng Nhập"}
         </button>
         <button
           type="button"
@@ -256,7 +266,7 @@ export function CustomerAuthView({ nextUrl = "/account" }: CustomerAuthViewProps
           }`}
         >
           <Sparkles className="size-4 text-amber-500" />
-          Đăng Ký Khách Mới
+          {isEn ? "New Member Register" : "Đăng Ký Khách Mới"}
         </button>
       </div>
 
@@ -301,7 +311,11 @@ export function CustomerAuthView({ nextUrl = "/account" }: CustomerAuthViewProps
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
               />
             </svg>
-            <span>{tab === "login" ? "Tiếp tục với Google" : "Đăng ký nhanh bằng Google"}</span>
+            <span>
+              {tab === "login"
+                ? (isEn ? "Continue with Google" : "Tiếp tục với Google")
+                : (isEn ? "Fast Sign Up with Google" : "Đăng ký nhanh bằng Google")}
+            </span>
           </button>
 
           <button
@@ -313,7 +327,11 @@ export function CustomerAuthView({ nextUrl = "/account" }: CustomerAuthViewProps
             <svg className="w-5 h-5 fill-current text-[#1877F2]" viewBox="0 0 24 24">
               <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
             </svg>
-            <span>{tab === "login" ? "Tiếp tục với Facebook" : "Đăng ký nhanh bằng Facebook"}</span>
+            <span>
+              {tab === "login"
+                ? (isEn ? "Continue with Facebook" : "Tiếp tục với Facebook")
+                : (isEn ? "Fast Sign Up with Facebook" : "Đăng ký nhanh bằng Facebook")}
+            </span>
           </button>
         </div>
 
@@ -321,7 +339,7 @@ export function CustomerAuthView({ nextUrl = "/account" }: CustomerAuthViewProps
         <div className="relative flex py-1 items-center">
           <div className="flex-grow border-t border-black/10"></div>
           <span className="flex-shrink mx-3 text-[11px] text-ink/40 font-semibold uppercase">
-            Hoặc sử dụng SĐT / Email
+            {isEn ? "Or use phone / email" : "Hoặc sử dụng SĐT / Email"}
           </span>
           <div className="flex-grow border-t border-black/10"></div>
         </div>
@@ -329,13 +347,15 @@ export function CustomerAuthView({ nextUrl = "/account" }: CustomerAuthViewProps
         {tab === "login" ? (
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-ink mb-1.5">Số điện thoại Zalo hoặc Email</label>
+              <label className="block text-xs font-bold text-ink mb-1.5">
+                {isEn ? "Phone number or Email" : "Số điện thoại Zalo hoặc Email"}
+              </label>
               <div className="relative">
                 <input
                   type="text"
                   value={loginIdentifier}
                   onChange={(e) => setLoginIdentifier(e.target.value)}
-                  placeholder="Ví dụ: 0912345678 hoặc email@gmail.com"
+                  placeholder={isEn ? "e.g., 0912345678 or your@email.com" : "Ví dụ: 0912345678 hoặc email@gmail.com"}
                   className="w-full rounded-2xl border border-black/10 bg-[#FBFBFB] pl-10 pr-4 py-3 text-xs md:text-sm text-ink focus:border-forest focus:bg-white focus:outline-none transition"
                   required
                 />
@@ -346,10 +366,10 @@ export function CustomerAuthView({ nextUrl = "/account" }: CustomerAuthViewProps
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="block text-xs font-bold text-ink">
-                  Mật khẩu <span className="text-[11px] font-normal text-ink/50">(Tùy chọn)</span>
+                  {isEn ? "Password" : "Mật khẩu"} <span className="text-[11px] font-normal text-ink/50">({isEn ? "Optional" : "Tùy chọn"})</span>
                 </label>
                 <span className="text-[11px] text-forest font-semibold cursor-pointer hover:underline">
-                  Đăng nhập không cần mật khẩu
+                  {isEn ? "Sign in without password" : "Đăng nhập không cần mật khẩu"}
                 </span>
               </div>
               <div className="relative">
@@ -357,7 +377,7 @@ export function CustomerAuthView({ nextUrl = "/account" }: CustomerAuthViewProps
                   type={showLoginPassword ? "text" : "password"}
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
-                  placeholder="Nhập mật khẩu (nếu đã đặt)"
+                  placeholder={isEn ? "Enter password (if set)" : "Nhập mật khẩu (nếu đã đặt)"}
                   className="w-full rounded-2xl border border-black/10 bg-[#FBFBFB] pl-10 pr-11 py-3 text-xs md:text-sm text-ink focus:border-forest focus:bg-white focus:outline-none transition"
                 />
                 <Lock className="absolute left-3.5 top-3.5 size-4 text-ink/40 pointer-events-none" />
@@ -377,7 +397,9 @@ export function CustomerAuthView({ nextUrl = "/account" }: CustomerAuthViewProps
               className="w-full py-3.5 rounded-2xl bg-forest text-white text-xs md:text-sm font-bold hover:bg-forest/90 transition shadow flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {loading ? <Loader2 className="size-4 animate-spin" /> : <ArrowRight className="size-4" />}
-              {loading ? "Đang xử lý đăng nhập..." : "Đăng Nhập Vào Hệ Thống"}
+              {loading
+                ? (isEn ? "Signing in..." : "Đang xử lý đăng nhập...")
+                : (isEn ? "Sign In to Account" : "Đăng Nhập Vào Hệ Thống")}
             </button>
           </form>
         ) : (
@@ -385,18 +407,23 @@ export function CustomerAuthView({ nextUrl = "/account" }: CustomerAuthViewProps
             <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2">
               <TicketCheck className="size-4 shrink-0 text-amber-600" />
               <span>
-                <b>Ưu đãi thành viên:</b> Tự động nhận ngay voucher giảm 10% áp dụng cho homestay và tour A Lưới!
+                <b>{isEn ? "Member Perk:" : "Ưu đãi thành viên:"}</b>{" "}
+                {isEn
+                  ? "Automatically receive an instant 10% voucher for A Luoi homestays & tours!"
+                  : "Tự động nhận ngay voucher giảm 10% áp dụng cho homestay và tour A Lưới!"}
               </span>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-ink mb-1.5">Họ và tên quý khách *</label>
+              <label className="block text-xs font-bold text-ink mb-1.5">
+                {isEn ? "Your Full Name *" : "Họ và tên quý khách *"}
+              </label>
               <div className="relative">
                 <input
                   type="text"
                   value={registerName}
                   onChange={(e) => setRegisterName(e.target.value)}
-                  placeholder="Ví dụ: Nguyễn Văn A"
+                  placeholder={isEn ? "e.g., Alex Johnson" : "Ví dụ: Nguyễn Văn A"}
                   className="w-full rounded-2xl border border-black/10 bg-[#FBFBFB] pl-10 pr-4 py-3 text-xs md:text-sm text-ink focus:border-forest focus:bg-white focus:outline-none transition"
                   required
                 />
@@ -406,7 +433,9 @@ export function CustomerAuthView({ nextUrl = "/account" }: CustomerAuthViewProps
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label className="block text-xs font-bold text-ink mb-1.5">Số điện thoại / Zalo *</label>
+                <label className="block text-xs font-bold text-ink mb-1.5">
+                  {isEn ? "Phone / WhatsApp *" : "Số điện thoại / Zalo *"}
+                </label>
                 <div className="relative">
                   <input
                     type="tel"
@@ -420,7 +449,9 @@ export function CustomerAuthView({ nextUrl = "/account" }: CustomerAuthViewProps
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-ink mb-1.5">Email</label>
+                <label className="block text-xs font-bold text-ink mb-1.5">
+                  {isEn ? "Email address" : "Email"}
+                </label>
                 <div className="relative">
                   <input
                     type="email"
@@ -435,13 +466,15 @@ export function CustomerAuthView({ nextUrl = "/account" }: CustomerAuthViewProps
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-ink mb-1.5">Tạo mật khẩu</label>
+              <label className="block text-xs font-bold text-ink mb-1.5">
+                {isEn ? "Create Password" : "Tạo mật khẩu"}
+              </label>
               <div className="relative">
                 <input
                   type={showRegisterPassword ? "text" : "password"}
                   value={registerPassword}
                   onChange={(e) => setRegisterPassword(e.target.value)}
-                  placeholder="Tối thiểu 6 ký tự"
+                  placeholder={isEn ? "Minimum 6 characters" : "Tối thiểu 6 ký tự"}
                   className="w-full rounded-2xl border border-black/10 bg-[#FBFBFB] pl-10 pr-11 py-3 text-xs md:text-sm text-ink focus:border-forest focus:bg-white focus:outline-none transition"
                 />
                 <Lock className="absolute left-3.5 top-3.5 size-4 text-ink/40 pointer-events-none" />
@@ -461,7 +494,9 @@ export function CustomerAuthView({ nextUrl = "/account" }: CustomerAuthViewProps
               className="w-full py-3.5 rounded-2xl bg-forest text-white text-xs md:text-sm font-bold hover:bg-forest/90 transition shadow flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {loading ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4 text-amber-300" />}
-              {loading ? "Đang tạo tài khoản..." : "Hoàn Tất Đăng Ký & Nhận Ưu Đãi"}
+              {loading
+                ? (isEn ? "Creating account..." : "Đang tạo tài khoản...")
+                : (isEn ? "Complete Registration & Get Voucher" : "Hoàn Tất Đăng Ký & Nhận Ưu Đãi")}
             </button>
           </form>
         )}
@@ -475,16 +510,19 @@ export function CustomerAuthView({ nextUrl = "/account" }: CustomerAuthViewProps
             className="w-full py-2.5 rounded-2xl border border-forest/20 bg-forest/5 text-forest text-xs font-bold hover:bg-forest/10 transition flex items-center justify-center gap-2"
           >
             <Sparkles className="size-3.5 text-amber-500" />
-            Đăng Nhập Nhanh (Khách Thử Nghiệm)
+            {isEn ? "Quick Demo Login (Trial Guest)" : "Đăng Nhập Nhanh (Khách Thử Nghiệm)"}
           </button>
         </div>
 
         {/* Chuyển hướng Cổng Quản Trị */}
         <div className="pt-3 border-t border-black/5 text-center space-y-2">
           <p className="text-[11px] text-ink/50">
-            Bạn là Ban Quản Trị hoặc Chủ Homestay đối tác?{" "}
-            <Link href="http://localhost:3001/login" className="font-bold text-forest hover:underline">
-              Đăng nhập Cổng Quản Trị tại đây →
+            {isEn ? "Are you an Administrator or Homestay Partner? " : "Bạn là Ban Quản Trị hoặc Chủ Homestay đối tác? "}
+            <Link
+              href="/login?portal=admin"
+              className="font-bold text-forest hover:underline"
+            >
+              {isEn ? "Sign in to Admin Portal →" : "Đăng nhập Cổng Quản Trị tại đây →"}
             </Link>
           </p>
         </div>
