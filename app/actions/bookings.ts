@@ -345,6 +345,7 @@ export async function fetchCustomerBookingsAction(
     finalAmount: b.finalAmount,
     paymentStatus: b.paymentStatus,
     paymentMethod: b.paymentMethod,
+    status: b.status || b.bookingStatus,
     bookingStatus: b.bookingStatus || b.status,
     customerNote: b.customerNote || b.notes,
     createdAt: b.createdAt

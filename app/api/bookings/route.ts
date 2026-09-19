@@ -61,12 +61,28 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("userId");
+    const phone = searchParams.get("phone");
+    const email = searchParams.get("email");
+    const idsParam = searchParams.get("ids");
     const customerView = searchParams.get("customerView");
 
     const all = await fetchBookingsFromCloud();
 
-    if (userId || customerView) {
-      const filtered = userId ? all.filter(b => b.customerId === userId || b.userId === userId) : all;
+    if (userId || customerView || idsParam || phone || email) {
+      let filtered = all;
+      if (idsParam) {
+        const idList = idsParam.split(",").map((s) => s.trim()).filter(Boolean);
+        filtered = filtered.filter((b) => idList.includes(b.id));
+      } else if (userId) {
+        filtered = filtered.filter((b) => b.customerId === userId || b.userId === userId);
+      } else if (phone) {
+        const cleanPhone = phone.replace(/\s+/g, "");
+        filtered = filtered.filter((b) => b.phone && b.phone.replace(/\s+/g, "") === cleanPhone);
+      } else if (email) {
+        const cleanEmail = email.trim().toLowerCase();
+        filtered = filtered.filter((b) => b.email && b.email.trim().toLowerCase() === cleanEmail);
+      }
+
       const sanitized = filtered.map(b => ({
         id: b.id,
         leadId: b.leadId,
@@ -86,6 +102,7 @@ export async function GET(req: NextRequest) {
         finalAmount: b.finalAmount,
         paymentStatus: b.paymentStatus,
         paymentMethod: b.paymentMethod,
+        status: b.status || b.bookingStatus,
         bookingStatus: b.bookingStatus || b.status,
         customerNote: b.customerNote || b.notes,
         createdAt: b.createdAt

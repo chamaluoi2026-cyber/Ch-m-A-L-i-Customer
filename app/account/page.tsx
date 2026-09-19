@@ -51,13 +51,47 @@ export default function AccountPage() {
   const [savingPhone, setSavingPhone] = useState(false);
 
   useEffect(() => {
+    // Tự động chuyển tab nếu có query param ?tab= (ví dụ từ trang book tour)
+    if (typeof window !== "undefined") {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const tabParam = urlParams.get("tab") as TabKey | null;
+        if (tabParam && ["vouchers", "leads", "bookings", "favorites"].includes(tabParam)) {
+          setActiveTab(tabParam);
+        }
+      } catch {}
+    }
+
     getCurrentUser().then((currentUser) => {
       setUser(currentUser);
       setLoading(false);
       if (currentUser?.id) {
-        fetchCustomerBookingsAction(currentUser.id).then((bks) => {
-          setBookings(bks as BookingRecord[]);
-          bks.forEach((b) => {
+        const uPhone = currentUser.phone || (currentUser.user_metadata?.phone as string | undefined);
+        const uEmail = currentUser.email;
+
+        fetchCustomerBookingsAction(currentUser.id, uPhone, uEmail).then(async (bks) => {
+          let mergedList = [...(bks as BookingRecord[])];
+
+          // Kiểm tra và gộp thêm đơn từ localStorage nếu có (đơn vừa đặt chưa kịp map user)
+          try {
+            const localBookingIds: string[] = JSON.parse(localStorage.getItem("cal_my_bookings") || "[]");
+            if (Array.isArray(localBookingIds) && localBookingIds.length > 0) {
+              const missingIds = localBookingIds.filter((id) => !mergedList.some((b) => b.id === id));
+              if (missingIds.length > 0) {
+                const res = await fetch(`/api/bookings?customerView=true&ids=${encodeURIComponent(missingIds.join(","))}`);
+                if (res.ok) {
+                  const data = await res.json();
+                  const additional = data.bookings || [];
+                  if (Array.isArray(additional) && additional.length > 0) {
+                    mergedList = [...additional, ...mergedList];
+                  }
+                }
+              }
+            }
+          } catch {}
+
+          setBookings(mergedList);
+          mergedList.forEach((b) => {
             if (b.id) {
               fetchReviewByBookingIdAction(b.id).then((rev) => {
                 setBookingReviews((prev) => ({ ...prev, [b.id!]: rev }));
@@ -66,17 +100,15 @@ export default function AccountPage() {
           });
         });
       } else {
-        // Khách vãng lai: Chỉ tải đơn từ lịch sử thiết bị (localStorage) để bảo mật thông tin du khách
+        // Khách vãng lai: Tải đơn từ lịch sử thiết bị (localStorage)
         try {
           const localBookingIds = JSON.parse(localStorage.getItem("cal_my_bookings") || "[]");
           if (Array.isArray(localBookingIds) && localBookingIds.length > 0) {
-            fetch("/api/bookings")
+            fetch(`/api/bookings?customerView=true&ids=${encodeURIComponent(localBookingIds.join(","))}`)
               .then((res) => res.json())
               .then((data) => {
-                const all = data.bookings || data;
-                if (Array.isArray(all)) {
-                  setBookings(all.filter((b: any) => localBookingIds.includes(b.id)));
-                }
+                const bks = data.bookings || [];
+                setBookings(Array.isArray(bks) ? bks : []);
               })
               .catch(() => setBookings([]));
           } else {

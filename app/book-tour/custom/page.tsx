@@ -372,6 +372,8 @@ export default function CustomItineraryBookingPage() {
 
         const res = await submitBookingAction({
           type: "tour",
+          userId: currentUser?.id,
+          customerId: currentUser?.id,
           customerName: customerName.trim(),
           phone: phone.trim(),
           email: email.trim() || undefined,
@@ -393,6 +395,14 @@ export default function CustomItineraryBookingPage() {
         });
 
         if (res.success && res.booking) {
+          try {
+            const cur = JSON.parse(localStorage.getItem("cal_my_bookings") || "[]");
+            if (!cur.includes(res.booking.id)) {
+              cur.unshift(res.booking.id);
+              localStorage.setItem("cal_my_bookings", JSON.stringify(cur));
+            }
+          } catch {}
+
           setBookingSuccess({
             id: res.booking.id,
             finalAmount: pricing.finalAmount,
@@ -588,7 +598,7 @@ export default function CustomItineraryBookingPage() {
               </a>
 
               <Link
-                href="/account/bookings"
+                href="/account?tab=bookings"
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-forest/30 bg-white hover:bg-forest/5 px-6 py-3 text-xs font-bold text-forest transition"
               >
                 <User className="size-4" />
