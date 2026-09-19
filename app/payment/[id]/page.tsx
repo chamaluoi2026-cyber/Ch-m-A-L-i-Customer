@@ -234,7 +234,7 @@ export default function PaymentCheckoutPage() {
 
   return (
     <main className="min-h-screen pt-24 pb-20 bg-beige/30">
-      <div className="max-w-3xl mx-auto px-4 space-y-6">
+      <div className="max-w-5xl mx-auto px-4 space-y-6">
         {/* Navigation back */}
         <div className="flex items-center justify-between">
           <Link href="/account" className="inline-flex items-center gap-1.5 text-xs font-bold text-ink/70 hover:text-forest">
@@ -286,7 +286,7 @@ export default function PaymentCheckoutPage() {
           </div>
         ) : (
           /* Payment Processing State */
-          <div className="grid md:grid-cols-[1fr_320px] gap-6">
+          <div className="grid lg:grid-cols-[1fr_360px] gap-6">
             {/* Left: Payment Method & Details */}
             <div className="bg-white rounded-3xl p-6 md:p-8 shadow-card border border-forest/10 space-y-6">
               <div>
@@ -416,7 +416,61 @@ export default function PaymentCheckoutPage() {
                     )}
                   </div>
 
-                  {/* Nếu đã có ảnh biên lai trên hệ thống */}
+                  {/* ---- THÔNG TIN CHUYỂN KHOẢN: Luôn hiển thị để khách không phải cuộn lên ---- */}
+                  {paymentDetails?.bankAccount && (
+                    <div className="rounded-xl bg-white border border-forest/20 p-4 space-y-2 text-xs">
+                      <p className="text-[11px] font-extrabold text-forest uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <Building2 className="size-3.5" /> Thông tin chuyển khoản
+                      </p>
+                      <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2">
+                        <div className="flex justify-between items-center border-b border-forest/10 pb-1.5">
+                          <span className="text-ink/60">Ngân hàng:</span>
+                          <span className="font-bold text-ink">{paymentDetails.bankAccount.bankName}</span>
+                        </div>
+                        <div className="flex justify-between items-center border-b border-forest/10 pb-1.5">
+                          <span className="text-ink/60">Số tài khoản:</span>
+                          <div className="flex items-center gap-1 font-mono font-black text-sm text-forest">
+                            <span>{paymentDetails.bankAccount.accountNumber}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleCopy(paymentDetails.bankAccount.accountNumber)}
+                              className="p-0.5 text-ink/40 hover:text-forest transition"
+                              title="Sao chép STK"
+                            >
+                              <Copy className="size-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center border-b border-forest/10 pb-1.5">
+                          <span className="text-ink/60">Chủ tài khoản:</span>
+                          <span className="font-bold text-ink uppercase">{paymentDetails.bankAccount.accountName}</span>
+                        </div>
+                        <div className="flex justify-between items-center border-b border-forest/10 pb-1.5">
+                          <span className="text-ink/60">Số tiền:</span>
+                          <span className="font-black text-sm text-ink">{booking.finalAmount.toLocaleString("vi-VN")} đ</span>
+                        </div>
+                        <div className="sm:col-span-2 flex justify-between items-center pt-0.5">
+                          <span className="text-ink/60 shrink-0 mr-2">Nội dung CK <span className="text-rose-600 font-bold">(bắt buộc)</span>:</span>
+                          <div className="flex items-center gap-1.5 font-mono font-black text-xs text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-lg">
+                            <span>{payment?.paymentCode}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleCopy(payment?.paymentCode || "")}
+                              className="p-0.5 text-rose-500 hover:text-rose-900 transition"
+                              title="Sao chép nội dung"
+                            >
+                              <Copy className="size-3" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      {copied && (
+                        <p className="text-[11px] text-emerald-700 font-bold flex items-center gap-1 pt-1">
+                          <CheckCircle2 className="size-3.5" /> Đã sao chép!
+                        </p>
+                      )}
+                    </div>
+                  )}
                   {booking.paymentReceiptUrl && !receiptPreview && (
                     <div className="rounded-xl bg-white border border-forest/10 p-3 space-y-2">
                       <div className="flex items-center justify-between">
