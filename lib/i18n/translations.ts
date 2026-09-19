@@ -85,6 +85,27 @@ export interface Translations {
     packingTitle: string;
     startOver: string;
   };
+  // About Page
+  about: {
+    badge: string;
+    title: string;
+    subtitle: string;
+    commitment1: string;
+    commitment2: string;
+    teamEyebrow: string;
+    teamTitle: string;
+    teamDesc: string;
+    impactTitle: string;
+    partnersTitle: string;
+    partnersText: string;
+    defaultMission: string;
+    defaultVision: string;
+    defaultValues: string;
+    defaultImpact1: string;
+    defaultImpact2: string;
+    defaultImpact3: string;
+    defaultImpact4: string;
+  };
   // Home Page
   home: {
     heroTag: string;
@@ -225,6 +246,26 @@ export const translations: Record<Language, Translations> = {
       packingTitle: "Hành lý khuyên mang theo",
       startOver: "Thiết kế lại lịch trình khác"
     },
+    about: {
+      badge: "Về chúng tôi",
+      title: "Cầu nối số cho du lịch cộng đồng",
+      subtitle: "Chạm A Lưới là nền tảng du lịch trung gian giúp kết nối du khách với nét đẹp văn hóa bản địa, các chủ nhà homestay ấm áp, đơn vị dịch vụ trách nhiệm và những nghệ nhân vùng cao kiên trì gìn giữ nghề truyền thống.",
+      commitment1: "Minh bạch đối soát",
+      commitment2: "Đồng hành cùng bà con",
+      teamEyebrow: "Con người đằng sau dự án",
+      teamTitle: "Đội ngũ sáng lập & Nghệ nhân A Lưới",
+      teamDesc: "Sự kết hợp giữa nhiệt huyết của những người trẻ yêu du lịch trải nghiệm và kinh nghiệm, sự chân thành của đồng bào địa phương tại thung lũng A Lưới.",
+      impactTitle: "Tác động cộng đồng",
+      partnersTitle: "Mạng lưới Đối tác",
+      partnersText: "Các gia đình homestay địa phương, hợp tác xã dệt thổ cẩm Zèng A Đớt, các đội trekking rừng nguyên sinh, đơn vị lữ hành Huế và các giảng viên cố vấn phát triển cộng đồng.",
+      defaultMission: "Sứ mệnh",
+      defaultVision: "Tầm nhìn",
+      defaultValues: "Giá trị cốt lõi",
+      defaultImpact1: "Tạo thu nhập trực tiếp cho chủ nhà và nghệ nhân địa phương",
+      defaultImpact2: "Bảo tồn văn hóa thông qua trải nghiệm có hướng dẫn",
+      defaultImpact3: "Giáo dục du lịch có trách nhiệm cho du khách",
+      defaultImpact4: "Tăng khả năng tiếp cận thị trường cho sản phẩm vùng cao"
+    },
     home: {
       heroTag: "Du lịch cộng đồng tại Huế",
       heroTitle: "Chạm A Lưới",
@@ -345,6 +386,26 @@ export const translations: Record<Language, Translations> = {
       cultureTitle: "Village Etiquette & Sacred Customs",
       packingTitle: "Recommended Packing Checklist",
       startOver: "Start Over With New Choices"
+    },
+    about: {
+      badge: "About Us",
+      title: "The Digital Bridge for Community Tourism",
+      subtitle: "Cham A Luoi is a community tourism platform connecting travelers with authentic highland culture, warm local homestays, responsible service providers, and skilled indigenous artisans preserving traditional crafts.",
+      commitment1: "Transparent & Accountable",
+      commitment2: "Uplifting Local Communities",
+      teamEyebrow: "The People Behind the Project",
+      teamTitle: "Founding Team & A Luoi Artisans",
+      teamDesc: "A unique blend of passionate young travel enthusiasts and the genuine wisdom of indigenous community members from the A Luoi valley.",
+      impactTitle: "Community Impact",
+      partnersTitle: "Our Partner Network",
+      partnersText: "Local homestay families, the Zèng A Đớt traditional weaving cooperative, old-growth forest trekking teams, Hue travel agencies, and community development advisors.",
+      defaultMission: "Mission",
+      defaultVision: "Vision",
+      defaultValues: "Core Values",
+      defaultImpact1: "Creating direct income for local hosts and artisans",
+      defaultImpact2: "Preserving culture through guided immersive experiences",
+      defaultImpact3: "Educating travelers in responsible, sustainable tourism",
+      defaultImpact4: "Expanding market access for highland community products"
     },
     home: {
       heroTag: "Community-Based Tourism in Hue",
