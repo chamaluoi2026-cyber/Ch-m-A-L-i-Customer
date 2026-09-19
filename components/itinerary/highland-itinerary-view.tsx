@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Compass,
   MapPin,
@@ -39,11 +40,23 @@ interface HighlandItineraryViewProps {
 }
 
 export function HighlandItineraryView({ plan, onReset }: HighlandItineraryViewProps) {
+  const router = useRouter();
   const { language, t } = useLanguage();
   const [activeTab, setActiveTab] = useState<"timeline" | "safety">("timeline");
   const [copied, setCopied] = useState(false);
 
   const isEn = language === "en";
+
+  const handleBookCustomTour = () => {
+    try {
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("chamaluoi_custom_tour_plan", JSON.stringify(plan));
+      }
+    } catch (e) {
+      console.warn("sessionStorage save error:", e);
+    }
+    router.push("/book-tour/custom");
+  };
 
   const handleShare = () => {
     if (navigator.clipboard) {
@@ -637,11 +650,14 @@ export function HighlandItineraryView({ plan, onReset }: HighlandItineraryViewPr
           </div>
 
           <div className="shrink-0">
-            <Button asChild size="lg" className="rounded-full bg-amber-400 font-extrabold text-ink shadow-md hover:bg-amber-300">
-              <Link href="/book-tour">
-                <span>{isEn ? "Book This Custom Tour Now" : "Đặt Tour Theo Lịch Trình Này"}</span>
-                <ChevronRight className="ml-1.5 h-4 w-4" />
-              </Link>
+            <Button
+              type="button"
+              onClick={handleBookCustomTour}
+              size="lg"
+              className="rounded-full bg-amber-400 font-extrabold text-ink shadow-md hover:bg-amber-300 transition-all hover:scale-105"
+            >
+              <span>{isEn ? "Book This Custom Tour Now" : "Đặt Tour Theo Lịch Trình Này"}</span>
+              <ChevronRight className="ml-1.5 h-4 w-4" />
             </Button>
           </div>
         </div>

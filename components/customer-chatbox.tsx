@@ -18,6 +18,7 @@ import {
   sendGuestMessageAction
 } from "@/app/actions/chat";
 import { extractVietnamesePhone } from "@/lib/ai/indigenous-chat-bot";
+import { useLanguage } from "@/components/i18n-provider";
 
 type Message = {
   id: string;
@@ -60,6 +61,9 @@ function getOrCreateSessionId(): string {
 }
 
 export function CustomerChatbox() {
+  const { language } = useLanguage();
+  const isEn = language === "en";
+
   const [open, setOpen] = useState(false);
   const [sessionId, setSessionId] = useState<string>("");
   const [guestName, setGuestName] = useState("");
@@ -305,20 +309,20 @@ export function CustomerChatbox() {
               </div>
               <div>
                 <strong className="block text-sm font-bold flex items-center gap-1.5">
-                  Tư vấn Chạm A Lưới
+                  {isEn ? "Cham A Luoi Assistant" : "Tư vấn Chạm A Lưới"}
                   <span className="rounded-full bg-emerald-500/30 text-emerald-200 px-2 py-0.5 text-[9px] font-extrabold tracking-wider border border-emerald-400/30 flex items-center gap-0.5">
                     <Sparkles className="size-2.5" /> AI 24/7
                   </span>
                 </strong>
                 <p className="flex items-center gap-1.5 text-[11px] text-white/80">
                   <span className="size-1.5 rounded-full bg-emerald-300 animate-pulse" />
-                  Trợ lý AI Bản Địa • Trả lời tức thì trong 3s
+                  {isEn ? "Indigenous AI Assistant • Instant reply" : "Trợ lý AI Bản Địa • Trả lời tức thì trong 3s"}
                 </p>
               </div>
             </div>
             <button
               type="button"
-              aria-label="Đóng chat"
+              aria-label={isEn ? "Close chat" : "Đóng chat"}
               onClick={() => handleToggleOpen(false)}
               className="rounded-full p-2 text-white/80 hover:bg-white/15 hover:text-white transition"
             >
@@ -326,7 +330,7 @@ export function CustomerChatbox() {
             </button>
           </header>
 
-          {/* Guest info banner (hiển thị SĐT hoặc toggle nhập) */}
+          {/* Guest info banner */}
           <div className="border-b border-black/5 bg-emerald-50/70 px-4 py-2">
             <button
               type="button"
@@ -337,12 +341,10 @@ export function CustomerChatbox() {
                 {guestPhone ? (
                   <>
                     <span className="size-2 rounded-full bg-emerald-600" />
-                    <span>SĐT nhận ưu đãi: <strong className="font-mono text-emerald-800">{guestPhone}</strong></span>
+                    <span>{isEn ? "Contact phone:" : "SĐT nhận ưu đãi:"} <strong className="font-mono text-emerald-800">{guestPhone}</strong></span>
                   </>
                 ) : (
-                  <>
-                    <span>🎁 Để lại SĐT/Zalo nhận ảnh thực tế & Voucher 10%</span>
-                  </>
+                  <span>{isEn ? "🎁 Leave your phone/WhatsApp for 10% voucher" : "🎁 Để lại SĐT/Zalo nhận ảnh thực tế & Voucher 10%"}</span>
                 )}
               </span>
               {showInfoInputs ? <ChevronUp className="size-3.5 shrink-0" /> : <ChevronDown className="size-3.5 shrink-0" />}
@@ -354,7 +356,7 @@ export function CustomerChatbox() {
                   <User className="absolute left-2.5 top-2.5 size-3.5 text-ink/40" />
                   <input
                     type="text"
-                    placeholder="Tên của bạn"
+                    placeholder={isEn ? "Your Name" : "Tên của bạn"}
                     value={guestName}
                     onChange={(e) => setGuestName(e.target.value)}
                     className="w-full rounded-xl bg-white pl-8 pr-2 py-1.5 text-xs text-ink border border-black/10 focus:outline-none focus:border-forest"
@@ -364,7 +366,7 @@ export function CustomerChatbox() {
                   <Phone className="absolute left-2.5 top-2.5 size-3.5 text-ink/40" />
                   <input
                     type="tel"
-                    placeholder="Số điện thoại / Zalo"
+                    placeholder={isEn ? "Phone / WhatsApp" : "Số điện thoại / Zalo"}
                     value={guestPhone}
                     onChange={(e) => setGuestPhone(e.target.value)}
                     className="w-full rounded-xl bg-white pl-8 pr-2 py-1.5 text-xs text-ink border border-black/10 focus:outline-none focus:border-forest"
@@ -378,8 +380,13 @@ export function CustomerChatbox() {
           <div className="flex-1 space-y-3 overflow-y-auto bg-[#F7F8F7] p-4 text-xs">
             {messages.map((item, index) => {
               const isGuest = item.role === "guest";
+              const isInitialWelcome = item.id === "welcome-1";
+              const messageText = isInitialWelcome && isEn
+                ? "Hello! 🌿 I am the Indigenous AI Assistant of Cham A Luoi. Feel free to ask about homestay rates, local bamboo-tube rice, waterfalls, or 2D1N tour itineraries!"
+                : item.text;
+
               const timeStr = item.createdAt
-                ? new Date(item.createdAt).toLocaleTimeString("vi-VN", {
+                ? new Date(item.createdAt).toLocaleTimeString(isEn ? "en-US" : "vi-VN", {
                     hour: "2-digit",
                     minute: "2-digit"
                   })
@@ -397,16 +404,16 @@ export function CustomerChatbox() {
                         : "max-w-[88%] rounded-2xl rounded-tl-xs bg-white border border-black/5 px-4 py-3 text-xs leading-relaxed text-ink shadow-sm whitespace-pre-line"
                     }
                   >
-                    {item.text}
+                    {messageText}
                   </div>
                   {timeStr && (
                     <span className="mt-1 text-[10px] text-ink/40 px-1 flex items-center gap-1">
                       {isGuest ? (
-                        "Bạn • " + timeStr
+                        (isEn ? "You • " : "Bạn • ") + timeStr
                       ) : (
                         <>
                           <Sparkles className="size-2.5 text-emerald-600" />
-                          <span>Trợ lý AI Bản Địa • {timeStr}</span>
+                          <span>{(isEn ? "AI Assistant • " : "Trợ lý AI Bản Địa • ") + timeStr}</span>
                         </>
                       )}
                     </span>
@@ -425,7 +432,7 @@ export function CustomerChatbox() {
                     <span className="size-1.5 rounded-full bg-forest animate-bounce" />
                   </div>
                   <span className="text-[11px] font-medium text-ink/70">
-                    Trợ lý Chạm A Lưới đang soạn câu trả lời...
+                    {isEn ? "AI Assistant is typing..." : "Trợ lý Chạm A Lưới đang soạn câu trả lời..."}
                   </span>
                 </div>
               </div>
@@ -434,16 +441,24 @@ export function CustomerChatbox() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* 4 Phím tắt 1 chạm hỏi nhanh (1-Click Quick Prompts) */}
+          {/* 4 Quick Prompts */}
           <div className="bg-white px-3 py-2 border-t border-black/5">
             <div className="flex items-center justify-between pb-1.5">
               <span className="text-[10px] font-bold text-ink/50 uppercase tracking-wider flex items-center gap-1">
-                <Sparkles className="size-3 text-amber-500" /> Câu hỏi nhanh 1 chạm:
+                <Sparkles className="size-3 text-amber-500" /> {isEn ? "1-Click Quick Prompts:" : "Câu hỏi nhanh 1 chạm:"}
               </span>
-              <span className="text-[10px] text-forest font-semibold">Tự động trả lời &lt; 3s</span>
+              <span className="text-[10px] text-forest font-semibold">{isEn ? "Instant AI < 3s" : "Tự động trả lời < 3s"}</span>
             </div>
             <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
-              {QUICK_PROMPTS.map((q) => (
+              {(isEn
+                ? [
+                    { label: "🏡 Homestay Rates?", prompt: "What are the homestay room rates per night and available room types?" },
+                    { label: "🍗 Local Food Menu?", prompt: "What are the must-try highland specialties and dining options in A Luoi?" },
+                    { label: "🌿 2D1N Tour Plan?", prompt: "Can you recommend an all-inclusive 2 Days 1 Night tour itinerary?" },
+                    { label: "🎁 10% Off Voucher", prompt: "How can I claim the 10% discount voucher for my trip?" }
+                  ]
+                : QUICK_PROMPTS
+              ).map((q) => (
                 <button
                   key={q.label}
                   type="button"
@@ -463,13 +478,13 @@ export function CustomerChatbox() {
               type="text"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Hỏi giá phòng, đặc sản hoặc gửi SĐT/Zalo..."
+              placeholder={isEn ? "Ask about homestays, waterfalls, food, or leave phone..." : "Hỏi giá phòng, đặc sản hoặc gửi SĐT/Zalo..."}
               className="min-w-0 flex-1 rounded-full bg-beige/60 px-4 py-2.5 text-xs text-ink placeholder:text-ink/50 focus:outline-none focus:ring-2 focus:ring-forest/30"
             />
             <button
               type="submit"
               disabled={isSending || !message.trim()}
-              aria-label="Gửi tin nhắn"
+              aria-label={isEn ? "Send message" : "Gửi tin nhắn"}
               className="grid size-10 place-items-center rounded-full bg-forest text-white hover:bg-ink transition disabled:opacity-50 shrink-0 shadow-sm"
             >
               {isSending ? (
@@ -487,14 +502,14 @@ export function CustomerChatbox() {
         type="button"
         onClick={() => handleToggleOpen(!open)}
         className="group relative ml-auto flex items-center gap-3 rounded-full bg-forest px-5 py-3.5 font-bold text-white shadow-soft transition hover:-translate-y-0.5 hover:bg-ink hover:shadow-xl active:scale-95"
-        aria-label="Mở chat hỗ trợ khách hàng"
+        aria-label={isEn ? "Open live support chat" : "Mở chat hỗ trợ khách hàng"}
       >
         <span className="relative">
           <MessageCircle className="size-5 transition group-hover:scale-110" aria-hidden="true" />
           <span className="absolute -top-1 -right-1 size-2.5 rounded-full bg-emerald-400 ring-2 ring-forest" />
         </span>
         <span className="text-sm flex items-center gap-1.5">
-          <span>Tư vấn trực tuyến</span>
+          <span>{isEn ? "Live Chat Assistant" : "Tư vấn trực tuyến"}</span>
           <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[10px] font-extrabold uppercase">AI</span>
         </span>
       </button>

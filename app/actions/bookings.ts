@@ -45,6 +45,8 @@ export interface CreateBookingInput {
   customerNote?: string;
   businessNote?: string;
   unitPrice?: number;
+  finalAmount?: number;
+  totalAmount?: number;
   voucherCode?: string;
   voucher?: string;
   paymentMethod?: PaymentMethod;
