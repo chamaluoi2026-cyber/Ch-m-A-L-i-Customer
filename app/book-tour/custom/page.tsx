@@ -42,6 +42,7 @@ import { AppImage } from "@/components/ui/app-image";
 import { formatCurrency, cn } from "@/lib/utils";
 import { getCurrentUser, type AuthUser } from "@/lib/supabase/browser";
 import { submitBookingAction } from "@/app/actions/bookings";
+import { fetchAllPlacesAction } from "@/app/actions/places";
 import {
   ItineraryPlan,
   LIKE_CHOICES,
@@ -117,6 +118,7 @@ export default function CustomItineraryBookingPage() {
   const [guestsCount, setGuestsCount] = useState<number>(4);
   const [transportChoice, setTransportChoice] = useState<"car" | "self">("car");
   const [selectedHomestayId, setSelectedHomestayId] = useState<string>("anor-riverside");
+  const [homestayList, setHomestayList] = useState(HOMESTAYS_LIST);
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -149,7 +151,36 @@ export default function CustomItineraryBookingPage() {
       }
     });
 
-    // 2. Load plan from sessionStorage
+    // 2. Load dynamic homestays from database (places with category === "stay")
+    fetchAllPlacesAction().then((places) => {
+      if (places && places.length > 0) {
+        const stayPlaces = places.filter(
+          (p: any) =>
+            (p.category === "stay" || p.name?.toLowerCase().includes("homestay")) &&
+            p.status !== "hidden" &&
+            !p.isDeleted
+        );
+        if (stayPlaces.length > 0) {
+          const dynamicStays = stayPlaces.map((p: any) => ({
+            id: p.slug,
+            name: p.name,
+            village: p.address || p.businessName || "Huyện A Lưới, Thừa Thiên Huế",
+            tag: p.highlights?.[0] ? `🏡 ${p.highlights[0]}` : "🏡 Homestay bản địa",
+            image: p.image || "/images/aluoi/homestay-bungalow.jpg",
+            rating: Number(p.rating) || 4.8,
+            reviews: Number(p.reviewCount) || 12,
+            desc: p.summary || p.description || `Homestay ${p.name} tại A Lưới.`
+          }));
+
+          const autoOption = HOMESTAYS_LIST.find((h) => h.id === "auto-assign");
+          setHomestayList([...dynamicStays, ...(autoOption ? [autoOption] : [])]);
+        }
+      }
+    }).catch((err) => {
+      console.warn("Could not load dynamic stays, using fallback list:", err);
+    });
+
+    // 3. Load plan from sessionStorage
     try {
       if (typeof window !== "undefined") {
         const stored = sessionStorage.getItem("chamaluoi_custom_tour_plan");
@@ -254,8 +285,8 @@ export default function CustomItineraryBookingPage() {
 
   // Selected Homestay
   const selectedHomestay = useMemo(() => {
-    return HOMESTAYS_LIST.find((h) => h.id === selectedHomestayId) || HOMESTAYS_LIST[0];
-  }, [selectedHomestayId]);
+    return homestayList.find((h) => h.id === selectedHomestayId) || homestayList[0] || HOMESTAYS_LIST[0];
+  }, [homestayList, selectedHomestayId]);
 
   // Extract major stops from all days
   const allStops = useMemo(() => {
@@ -711,7 +742,7 @@ export default function CustomItineraryBookingPage() {
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-1">
-                  {HOMESTAYS_LIST.map((h) => {
+                  {homestayList.map((h) => {
                     const isSelected = selectedHomestayId === h.id;
                     return (
                       <div
