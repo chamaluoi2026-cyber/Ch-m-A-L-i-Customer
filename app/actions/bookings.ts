@@ -52,6 +52,8 @@ export interface CreateBookingInput {
   voucher?: string;
   paymentMethod?: PaymentMethod;
   idempotencyKey?: string;
+  itineraryDetails?: any;
+  metadata?: Record<string, any>;
 }
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://hcunfovtwbzfatudejfs.supabase.co';
@@ -256,19 +258,38 @@ export async function updateBookingPaymentAction(
   }
 }
 
+async function fetchBookingsFromCloud(): Promise<BookingRecord[]> {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/system_store?id=eq.bookings_store&select=data`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+      cache: "no-store"
+    });
+    if (res.ok) {
+      const rows = await res.json();
+      if (Array.isArray(rows[0]?.data)) {
+        return rows[0].data as BookingRecord[];
+      }
+    }
+  } catch (e) {
+    console.error("[FETCH_BOOKINGS_CLOUD_ERR]", e);
+  }
+  return getAllBookings();
+}
+
 export async function fetchAllBookingsAction(): Promise<BookingRecord[]> {
   try {
     const session = await getSession();
+    const all = await fetchBookingsFromCloud();
 
     // Data Isolation:
     // - Business chỉ xem đơn của cơ sở mình
     if (session && session.role === "BUSINESS" && session.businessId) {
-      return getAllBookings().filter((b) => b.businessId === session.businessId);
+      return all.filter((b) => b.businessId === session.businessId);
     }
 
     // - Customer chỉ xem đơn của mình
     if (session && session.role === "CUSTOMER") {
-      return getAllBookings().filter((b) => b.customerId === session.id || b.userId === session.id);
+      return all.filter((b) => b.customerId === session.id || b.userId === session.id);
     }
 
     // - Content Manager không có quyền xem booking khách
@@ -276,26 +297,36 @@ export async function fetchAllBookingsAction(): Promise<BookingRecord[]> {
       return [];
     }
 
-    return getAllBookings();
+    return all;
   } catch {
     return [];
   }
 }
 
-// ANTI-IDOR: Lấy danh sách booking của khách hàng từ Authenticated Session
-export async function fetchCustomerBookingsAction(clientUserId?: string): Promise<Partial<BookingRecord>[]> {
+// ANTI-IDOR: Lấy danh sách booking của khách hàng từ Supabase Cloud & Authenticated Session
+export async function fetchCustomerBookingsAction(
+  clientUserId?: string,
+  userPhone?: string,
+  userEmail?: string
+): Promise<Partial<BookingRecord>[]> {
   const session = await getSession();
   
   // Ưu tiên session ID để chống IDOR
   const targetId = session?.role === "CUSTOMER" ? session.id : (clientUserId || session?.id);
-  if (!targetId) return [];
 
-  // Nếu khách A truyền ID của khách B -> Chặn ngay
-  if (session && session.role === "CUSTOMER" && clientUserId && clientUserId !== session.id) {
-    return [];
-  }
+  // Tải danh sách đơn đặt theo thời gian thực từ Supabase Cloud
+  const allCloudBookings = await fetchBookingsFromCloud();
 
-  const userBookings = getBookingsByUser(targetId);
+  const userBookings = allCloudBookings.filter((b) => {
+    // 1. Khớp ID tài khoản
+    if (targetId && (b.userId === targetId || b.customerId === targetId)) return true;
+    // 2. Khớp số điện thoại đăng ký (loại bỏ khoảng trắng)
+    if (userPhone && b.phone && b.phone.replace(/\s+/g, "") === userPhone.replace(/\s+/g, "")) return true;
+    // 3. Khớp email tài khoản
+    if (userEmail && b.email && b.email.trim().toLowerCase() === userEmail.trim().toLowerCase()) return true;
+    return false;
+  });
+
   return userBookings.map((b) => ({
     id: b.id,
     leadId: b.leadId,
@@ -323,7 +354,8 @@ export async function fetchCustomerBookingsAction(clientUserId?: string): Promis
 export async function fetchBookingByIdAction(id: string): Promise<BookingRecord | null> {
   try {
     const session = await getSession();
-    const b = getBookingById(id);
+    const all = await fetchBookingsFromCloud();
+    const b = all.find((item) => item.id === id) || getBookingById(id);
     if (!b) return null;
 
     // Data Isolation:

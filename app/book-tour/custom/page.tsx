@@ -319,17 +319,56 @@ export default function CustomItineraryBookingPage() {
     startTransition(async () => {
       try {
         const itemTitle = `Tour riêng theo lịch trình AI (${numDays} ngày ${numNights} đêm) - ${plan?.title || "Chạm A Lưới"}`;
-        const notes = [
-          `Lịch trình AI: ${plan?.id || "custom"}`,
-          `Số khách: ${guestsCount} người`,
-          `Phương tiện: ${transportChoice === "car" ? "Xe riêng đưa đón từ TP. Huế" : "Tự túc xe cá nhân/xe máy"}`,
-          numNights > 0 ? `Homestay lựa chọn: ${selectedHomestay.name} (${selectedHomestay.village})` : "Tour 1 ngày không ở đêm",
+        const daysSummary = plan?.days?.map((d) => {
+          const stopsSummary = d.stops.map((s) => `  • [${s.timeSlot}] ${s.name}`).join("\n");
+          return `Ngày ${d.dayNumber} - ${d.title}:\n${stopsSummary}`;
+        }).join("\n\n");
+
+        const fullNotes = [
+          `Lịch trình AI: ${plan?.id || "custom"} - ${plan?.title || "Tour Chạm A Lưới"}`,
+          `Số khách: ${guestsCount} người | Phương tiện: ${transportChoice === "car" ? "Xe riêng đưa đón từ TP. Huế" : "Tự túc xe cá nhân/xe máy"}`,
+          numNights > 0 ? `Lưu trú: ${selectedHomestay.name} (${selectedHomestay.village})` : "Tour 1 ngày (không ở đêm)",
           pickupAddress ? `Điểm đón: ${pickupAddress}` : "",
-          specialNotes ? `Ghi chú: ${specialNotes}` : "",
-          `Hình thức: ${paymentChoice === "vietqr_deposit" ? "Đặt cọc 30% VietQR" : "Tư vấn & xác nhận qua Zalo (0đ trả trước)"}`
+          specialNotes ? `Yêu cầu riêng: ${specialNotes}` : "",
+          `Hình thức: ${paymentChoice === "vietqr_deposit" ? "Đặt cọc 30% VietQR" : "Tư vấn & xác nhận qua Zalo (0đ trả trước)"}`,
+          daysSummary ? `\n--- CHI TIẾT CÁC ĐIỂM DỪNG ---\n${daysSummary}` : ""
         ]
           .filter(Boolean)
-          .join(" | ");
+          .join("\n");
+
+        const itineraryDetails = plan ? {
+          planId: plan.id,
+          title: plan.title,
+          enTitle: plan.enTitle,
+          duration: plan.duration,
+          departureDate: plan.departureDate,
+          departureTime: plan.departureTime || "07:30",
+          transport: transportChoice === "car" ? "Xe riêng đưa đón từ TP. Huế" : "Tự túc xe cá nhân/xe máy",
+          companion: plan.companion,
+          homestayName: numNights > 0 ? selectedHomestay.name : undefined,
+          homestayVillage: numNights > 0 ? selectedHomestay.village : undefined,
+          pickupAddress: pickupAddress || undefined,
+          specialNotes: specialNotes || undefined,
+          likes: plan.likes || [],
+          dislikes: plan.dislikes || [],
+          days: plan.days?.map((d) => ({
+            dayNumber: d.dayNumber,
+            title: d.title,
+            enTitle: d.enTitle,
+            theme: d.theme,
+            stops: d.stops?.map((s) => ({
+              id: s.id,
+              timeSlot: s.timeSlot,
+              name: s.name,
+              enName: s.enName,
+              category: s.category,
+              summary: s.summary,
+              wisdomTip: s.wisdomTip,
+              duration: s.duration,
+              googleMapsQuery: s.googleMapsQuery
+            }))
+          }))
+        } : undefined;
 
         const res = await submitBookingAction({
           type: "tour",
@@ -345,7 +384,10 @@ export default function CustomItineraryBookingPage() {
           unitPrice: pricing.perPersonAvg,
           finalAmount: pricing.finalAmount,
           paymentMethod: paymentChoice === "vietqr_deposit" ? "vietqr" : "cash_on_delivery",
-          customerNote: notes,
+          customerNote: fullNotes,
+          notes: fullNotes,
+          itineraryDetails,
+          metadata: { itinerary: itineraryDetails },
           businessName: "Hợp tác xã Du lịch Cộng đồng A Lưới",
           source: "ai_itinerary_fast_track"
         });

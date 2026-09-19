@@ -354,6 +354,8 @@ export type BookingRecord = {
   campaign?: string;
   idempotencyKey?: string; // Chống duplicate
   timeline?: BookingTimelineEvent[];
+  itineraryDetails?: any; // Chi tiết lịch trình AI/tour riêng (ngày, điểm dừng, homestay)
+  metadata?: Record<string, any>;
 
   createdAt: string;
   updatedAt: string;
@@ -2280,6 +2282,8 @@ export function createBooking(payload: {
   voucher?: string;
   paymentMethod?: PaymentMethod;
   idempotencyKey?: string;
+  itineraryDetails?: any;
+  metadata?: Record<string, any>;
   actor?: { id: string; name: string; role: string };
 }): BookingRecord {
   const store = loadStore();
@@ -2389,6 +2393,8 @@ export function createBooking(payload: {
     campaign: payload.campaign,
     idempotencyKey: payload.idempotencyKey,
     timeline: initialTimeline,
+    itineraryDetails: payload.itineraryDetails || (payload as any).metadata?.itinerary,
+    metadata: payload.metadata,
 
     createdAt: now,
     updatedAt: now
