@@ -51,7 +51,7 @@ import {
   DEPARTURE_TIME_OPTIONS
 } from "@/lib/highland-itinerary-engine";
 
-export const HOMESTAYS_LIST = [
+const HOMESTAYS_LIST = [
   {
     id: "anor-riverside",
     name: "Homestay ven suối A Nôr",
@@ -119,6 +119,7 @@ export default function CustomItineraryBookingPage() {
   const [transportChoice, setTransportChoice] = useState<"car" | "self">("car");
   const [selectedHomestayId, setSelectedHomestayId] = useState<string>("anor-riverside");
   const [homestayList, setHomestayList] = useState(HOMESTAYS_LIST);
+  const [oneDayAddHomestay, setOneDayAddHomestay] = useState<boolean>(false);
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -135,6 +136,13 @@ export default function CustomItineraryBookingPage() {
     depositAmount: number;
     customerName: string;
     phone: string;
+    homestayName: string;
+    homestayVillage?: string;
+    numDays: number;
+    numNights: number;
+    guestsCount: number;
+    transportLabel: string;
+    departureDate: string;
   } | null>(null);
 
   // Load plan from sessionStorage & check user session
@@ -235,7 +243,7 @@ export default function CustomItineraryBookingPage() {
 
   // Number of days and nights
   const numDays = plan?.duration === "3-days" ? 3 : plan?.duration === "1-day" ? 1 : 2;
-  const numNights = numDays > 1 ? numDays - 1 : 0;
+  const numNights = numDays > 1 ? numDays - 1 : (oneDayAddHomestay ? 1 : 0);
 
   // Pricing Calculation Breakdown
   const pricing = useMemo(() => {
@@ -348,7 +356,14 @@ export default function CustomItineraryBookingPage() {
             finalAmount: pricing.finalAmount,
             depositAmount: pricing.depositAmount,
             customerName: customerName.trim(),
-            phone: phone.trim()
+            phone: phone.trim(),
+            homestayName: numNights > 0 ? selectedHomestay.name : (isEn ? "Day trip (No overnight stay)" : "Đi về trong ngày (Không ở đêm)"),
+            homestayVillage: numNights > 0 ? selectedHomestay.village : undefined,
+            numDays,
+            numNights,
+            guestsCount,
+            transportLabel: transportChoice === "car" ? (isEn ? "Private car roundtrip from Hue" : "Xe riêng đưa đón từ TP. Huế") : (isEn ? "Self-guided (motorbike/car)" : "Tự túc xe cá nhân/xe máy"),
+            departureDate: plan?.departureDate || (isEn ? "This Saturday" : "Thứ Bảy tuần này")
           });
           window.scrollTo({ top: 0, behavior: "smooth" });
         } else {
@@ -408,6 +423,71 @@ export default function CustomItineraryBookingPage() {
                 <strong className="block text-forest mt-1 text-base font-bold">Mã đơn: {bookingSuccess.id}</strong>
               )}
             </p>
+
+            {/* TOUR BOOKING SUMMARY DETAILS CARD */}
+            <div className="rounded-2xl border border-forest/20 bg-[#F8F7F2] p-4 sm:p-5 text-left space-y-3 shadow-sm">
+              <div className="flex items-center justify-between border-b border-black/5 pb-2.5">
+                <span className="font-extrabold text-xs uppercase tracking-wider text-forest flex items-center gap-1.5">
+                  <Sparkles className="size-3.5 text-amber-600" />
+                  <span>Chi tiết hành trình bạn vừa đặt</span>
+                </span>
+                <span className="rounded-full bg-forest/10 text-forest text-[11px] font-bold px-2.5 py-0.5">
+                  {bookingSuccess.numDays} ngày {bookingSuccess.numNights > 0 ? `${bookingSuccess.numNights} đêm` : ""}
+                </span>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2 text-xs">
+                <div className="space-y-0.5">
+                  <span className="text-[11px] text-ink/50 flex items-center gap-1 font-medium">
+                    <Home className="size-3.5 text-clay" />
+                    Lưu trú Homestay:
+                  </span>
+                  <p className="font-bold text-ink text-sm">
+                    {bookingSuccess.homestayName}
+                  </p>
+                  {bookingSuccess.homestayVillage && (
+                    <p className="text-[10px] text-ink/50">{bookingSuccess.homestayVillage}</p>
+                  )}
+                </div>
+
+                <div className="space-y-0.5">
+                  <span className="text-[11px] text-ink/50 flex items-center gap-1 font-medium">
+                    <Calendar className="size-3.5 text-forest" />
+                    Ngày khởi hành:
+                  </span>
+                  <p className="font-bold text-ink text-sm">
+                    {bookingSuccess.departureDate}
+                  </p>
+                </div>
+
+                <div className="space-y-0.5">
+                  <span className="text-[11px] text-ink/50 flex items-center gap-1 font-medium">
+                    <Users className="size-3.5 text-forest" />
+                    Số lượng khách:
+                  </span>
+                  <p className="font-bold text-ink text-sm">
+                    {bookingSuccess.guestsCount} khách
+                  </p>
+                </div>
+
+                <div className="space-y-0.5">
+                  <span className="text-[11px] text-ink/50 flex items-center gap-1 font-medium">
+                    <Car className="size-3.5 text-blue-600" />
+                    Phương tiện di chuyển:
+                  </span>
+                  <p className="font-bold text-ink text-sm">
+                    {bookingSuccess.transportLabel}
+                  </p>
+                </div>
+              </div>
+
+              <div className="border-t border-dashed border-black/10 pt-2.5 flex items-center justify-between text-xs">
+                <span className="text-ink/60 font-medium">Tổng chi phí dự kiến:</span>
+                <span className="text-base sm:text-lg font-black text-forest">
+                  {formatCurrency(bookingSuccess.finalAmount)}
+                </span>
+              </div>
+            </div>
 
             {/* AUTO ACCOUNT NOTIFICATION */}
             <div className="rounded-2xl bg-amber-50/80 border border-amber-200 p-4 text-left flex items-start gap-3 text-xs text-amber-900">
@@ -722,25 +802,48 @@ export default function CustomItineraryBookingPage() {
             </div>
 
             {/* 2. CHỌN HOMESTAY NGHỈ ĐÊM (KHI ĐI 2N1Đ HOẶC 3N2Đ) */}
-            {numNights > 0 && (
-              <div className="rounded-3xl bg-white p-5 sm:p-7 shadow-card border border-black/5 space-y-4">
-                <div className="flex items-center justify-between border-b border-black/5 pb-3">
-                  <div>
-                    <h3 className="font-extrabold text-ink text-base flex items-center gap-2">
-                      <Home className="size-4 text-forest" />
-                      <span>{isEn ? "2. Choose Your Preferred Homestay" : "2. Tùy Chọn Homestay Bản Địa Nghỉ Đêm"}</span>
-                    </h3>
-                    <p className="text-[11px] text-ink/60 mt-0.5">
-                      {isEn
-                        ? `Select your preferred community homestay for ${numNights} night(s)`
-                        : `Bạn được tự do chọn homestay ưng ý nhất trong mạng lưới du lịch cộng đồng A Lưới (${numNights} đêm)`}
-                    </p>
-                  </div>
-                  <span className="rounded-full bg-clay/10 text-clay text-[11px] font-bold px-3 py-1 shrink-0">
-                    {numNights} đêm nghỉ
-                  </span>
+            {/* 2. CHỌN HOMESTAY NGHỈ ĐÊM */}
+            <div className="rounded-3xl bg-white p-5 sm:p-7 shadow-card border border-black/5 space-y-4">
+              <div className="flex items-center justify-between border-b border-black/5 pb-3">
+                <div>
+                  <h3 className="font-extrabold text-ink text-base flex items-center gap-2">
+                    <Home className="size-4 text-forest" />
+                    <span>{isEn ? "2. Choose Your Preferred Homestay" : "2. Tùy Chọn Homestay Bản Địa Nghỉ Đêm"}</span>
+                  </h3>
+                  <p className="text-[11px] text-ink/60 mt-0.5">
+                    {numDays === 1
+                      ? isEn
+                        ? "1-day trips typically return the same day. You can optionally add an overnight stay below."
+                        : "Chuyến đi 1 ngày thường đi về trong ngày. Bạn có thể chọn thêm đêm nghỉ tại homestay nếu muốn."
+                      : isEn
+                      ? `Select your preferred community homestay for ${numNights} night(s)`
+                      : `Bạn được tự do chọn homestay ưng ý nhất trong mạng lưới du lịch cộng đồng A Lưới (${numNights} đêm)`}
+                  </p>
                 </div>
+                <span className="rounded-full bg-clay/10 text-clay text-[11px] font-bold px-3 py-1 shrink-0">
+                  {numNights > 0 ? `${numNights} đêm nghỉ` : isEn ? "Day trip" : "Không ở đêm"}
+                </span>
+              </div>
 
+              {/* Nếu là tour 1 ngày: Cho phép tích chọn thêm đêm nghỉ */}
+              {numDays === 1 && (
+                <label className="flex items-center gap-3 p-3.5 rounded-2xl border border-forest/20 bg-forest/5 cursor-pointer text-xs font-semibold text-forest">
+                  <input
+                    type="checkbox"
+                    checked={oneDayAddHomestay}
+                    onChange={(e) => setOneDayAddHomestay(e.target.checked)}
+                    className="size-4 accent-forest rounded"
+                  />
+                  <span>
+                    {isEn
+                      ? "I want to add 1 overnight stay at a local homestay (+250,000 VND / guest)"
+                      : "Tôi muốn ở lại thêm 1 đêm tại Homestay bản địa (+250.000đ / khách)"}
+                  </span>
+                </label>
+              )}
+
+              {/* Danh sách Homestay để chọn */}
+              {(numDays > 1 || oneDayAddHomestay) ? (
                 <div className="grid gap-3 sm:grid-cols-1">
                   {homestayList.map((h) => {
                     const isSelected = selectedHomestayId === h.id;
@@ -793,15 +896,23 @@ export default function CustomItineraryBookingPage() {
                             {isSelected && <Check className="size-3.5 stroke-[3]" />}
                           </div>
                           <span className="text-[11px] font-bold text-forest mt-1">
-                            {isSelected ? "Đang chọn" : "Bấm để chọn"}
+                            {isSelected ? (isEn ? "Selected" : "Đang chọn") : (isEn ? "Select" : "Bấm để chọn")}
                           </span>
                         </div>
                       </div>
                     );
                   })}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="rounded-2xl border border-dashed border-black/15 p-4 text-center text-xs text-ink/60">
+                  <p>
+                    {isEn
+                      ? "Your current itinerary is for 1 day without overnight stay. Check the box above if you wish to reserve a homestay."
+                      : "Lịch trình hiện tại của bạn là 1 ngày đi về trong ngày. Hãy tích chọn ô phía trên nếu bạn muốn giữ phòng nghỉ đêm tại homestay."}
+                  </p>
+                </div>
+              )}
+            </div>
 
             {/* 3. Mini Timeline: Destinations in this Route */}
             <div className="rounded-3xl bg-white p-5 sm:p-7 shadow-card border border-black/5 space-y-4">
