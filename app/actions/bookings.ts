@@ -16,6 +16,7 @@ import {
 } from "@/lib/server-store";
 import { revalidatePath } from "next/cache";
 import { getSession, requireRole, assertBusinessAccess, assertCustomerAccess, sanitizeErrorMessage } from "@/lib/auth/roles";
+import { sendTelegramNotification } from "@/lib/notification/telegram";
 
 export interface CreateBookingInput {
   leadId?: string;
@@ -53,6 +54,40 @@ export interface CreateBookingInput {
   idempotencyKey?: string;
 }
 
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://hcunfovtwbzfatudejfs.supabase.co';
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjdW5mb3Z0d2J6ZmF0dWRlamZzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4OTM5NTM5OSwiZXhwIjoyMTA0OTcxMzk5fQ.7QwyRHqGXa6UwgbUNAhlWdmGZqpuS8Cxall2v8j7lMU';
+
+async function syncBookingToCloud(booking: BookingRecord) {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/system_store?id=eq.bookings_store&select=data`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+      cache: "no-store"
+    });
+    let list: BookingRecord[] = [];
+    if (res.ok) {
+      const rows = await res.json();
+      if (Array.isArray(rows[0]?.data)) list = rows[0].data;
+    }
+    const updated = [booking, ...list.filter(b => b.id !== booking.id)];
+    await fetch(`${SUPABASE_URL}/rest/v1/system_store`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": "application/json",
+        Prefer: "resolution=merge-duplicates"
+      },
+      body: JSON.stringify({
+        id: "bookings_store",
+        data: updated,
+        updated_at: new Date().toISOString()
+      })
+    });
+  } catch (e) {
+    console.error("[SYNC_BOOKING_CLOUD_ERR]", e);
+  }
+}
+
 export async function submitBookingAction(input: CreateBookingInput) {
   try {
     if (!input.customerName || !input.phone) {
@@ -77,6 +112,28 @@ export async function submitBookingAction(input: CreateBookingInput) {
         role: session?.role || "customer"
       }
     });
+
+    // Đồng bộ lập tức lên Supabase Cloud (bookings_store) để Admin Portal nhận đơn theo thời gian thực
+    await syncBookingToCloud(booking);
+
+    // Bắn thông báo tức thì về Telegram của Ban quản trị / Điều phối viên
+    try {
+      const typeLabel = booking.type === "product" ? "ĐƠN ĐẶT ĐẶC SẢN MỚI" : "ĐƠN ĐẶT TOUR / HOMESTAY MỚI";
+      const tgMsg = `🔔 <b>${typeLabel} - CHẠM A LƯỚI</b>\n` +
+        `🆔 <b>Mã đơn:</b> <code>${booking.id}</code>\n` +
+        `👤 <b>Khách hàng:</b> ${booking.customerName}\n` +
+        `📞 <b>Điện thoại:</b> ${booking.phone}\n` +
+        (booking.email ? `📧 <b>Email:</b> ${booking.email}\n` : '') +
+        `📦 <b>Dịch vụ:</b> ${booking.itemTitle}\n` +
+        `💰 <b>Tổng tiền:</b> ${booking.finalAmount.toLocaleString("vi-VN")} đ\n` +
+        `📅 <b>Ngày:</b> ${booking.experienceDate || booking.startDate || booking.bookingDate}\n` +
+        `👥 <b>Số người:</b> ${booking.numberOfPeople || 1} người\n` +
+        `💬 <b>Ghi chú:</b> ${booking.customerNote || "Không có"}\n` +
+        `👉 <a href="https://chamaluoiadmin.netlify.app/admin/bookings">Xem trên Trang Quản Trị</a>`;
+      await sendTelegramNotification(tgMsg);
+    } catch (tgErr) {
+      console.warn("Telegram notification error in submitBookingAction:", tgErr);
+    }
 
     revalidatePath("/account");
     revalidatePath("/admin/bookings");
