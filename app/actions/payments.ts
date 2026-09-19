@@ -15,6 +15,7 @@ import {
 import { PaymentProviderFactory } from "@/lib/payment/provider";
 import { revalidatePath } from "next/cache";
 import { getSession, requireRole, assertCustomerAccess, sanitizeErrorMessage } from "@/lib/auth/roles";
+import { sendTelegramNotification } from "@/lib/notification/telegram";
 
 // 1. Tạo yêu cầu thanh toán (Payment Request)
 export async function initiatePaymentAction(params: {
@@ -179,5 +180,114 @@ export async function fetchPaymentByIdAction(id: string): Promise<PaymentRecord 
     return p;
   } catch {
     return null;
+  }
+}
+
+// 6. Khách hàng nộp ảnh biên lai / bill chuyển khoản thành công
+export async function submitPaymentProofAction(params: {
+  bookingId: string;
+  paymentId?: string;
+  receiptUrl: string;
+  bankRefCode?: string;
+  transactionNote?: string;
+}) {
+  try {
+    const { bookingId, paymentId, receiptUrl, bankRefCode, transactionNote } = params;
+    if (!bookingId || !receiptUrl) {
+      return { success: false, error: "Thiếu thông tin mã đơn hoặc ảnh biên lai." };
+    }
+
+    const now = new Date().toISOString();
+    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://hcunfovtwbzfatudejfs.supabase.co';
+    const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjdW5mb3Z0d2J6ZmF0dWRlamZzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4OTM5NTM5OSwiZXhwIjoyMTA0OTcxMzk5fQ.7QwyRHqGXa6UwgbUNAhlWdmGZqpuS8Cxall2v8j7lMU';
+
+    let updatedBooking: any = null;
+
+    // 1. Đồng bộ lên Supabase Cloud (bookings_store)
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/system_store?id=eq.bookings_store&select=data`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+        cache: "no-store"
+      });
+      if (res.ok) {
+        const rows = await res.json();
+        const list = rows[0]?.data || [];
+        const b = list.find((x: any) => x.id === bookingId);
+        if (b) {
+          b.paymentReceiptUrl = receiptUrl;
+          b.paymentProofUploadedAt = now;
+          if (bankRefCode) b.bankRefCode = bankRefCode;
+          b.paymentStatus = "partially_paid"; // Đã nộp ảnh biên lai, chờ duyệt
+          b.updatedAt = now;
+          if (!b.timeline) b.timeline = [];
+          b.timeline.push({
+            id: `btl-${Date.now()}`,
+            stage: "paid",
+            title: "Khách hàng đã gửi ảnh biên lai chuyển khoản",
+            description: `Khách đã tải lên bằng chứng chuyển khoản qua VietQR / Ngân hàng.${bankRefCode ? ` Mã GD: ${bankRefCode}.` : ""}${transactionNote ? ` Ghi chú: ${transactionNote}` : ""}`,
+            actor: { id: b.customerId || "guest", name: b.customerName, role: "customer" },
+            timestamp: now,
+            metadata: { receiptUrl, bankRefCode }
+          });
+          updatedBooking = b;
+
+          await fetch(`${SUPABASE_URL}/rest/v1/system_store`, {
+            method: "POST",
+            headers: {
+              apikey: SUPABASE_KEY,
+              Authorization: `Bearer ${SUPABASE_KEY}`,
+              "Content-Type": "application/json",
+              Prefer: "resolution=merge-duplicates"
+            },
+            body: JSON.stringify({ id: "bookings_store", data: list, updated_at: now })
+          });
+        }
+      }
+    } catch (cloudErr) {
+      console.error("[SUBMIT_PAYMENT_PROOF_CLOUD_ERR]", cloudErr);
+    }
+
+    // 2. Cập nhật local server-store nếu có
+    const localBk = getBookingById(bookingId);
+    if (localBk) {
+      localBk.paymentReceiptUrl = receiptUrl;
+      localBk.paymentProofUploadedAt = now;
+      if (bankRefCode) localBk.bankRefCode = bankRefCode;
+      localBk.paymentStatus = "partially_paid";
+      localBk.updatedAt = now;
+      if (!updatedBooking) updatedBooking = localBk;
+    }
+
+    // 3. Bắn thông báo Telegram cho Ban điều phối
+    try {
+      const b = updatedBooking || localBk;
+      const tgMsg = `📸 <b>BIÊN LAI CHUYỂN KHOẢN MỚI - CHẠM A LƯỚI</b>\n` +
+        `🆔 <b>Mã đơn:</b> <code>${bookingId}</code>\n` +
+        (b ? `👤 <b>Khách hàng:</b> ${b.customerName} (${b.phone})\n` : '') +
+        (b ? `💰 <b>Số tiền:</b> ${b.finalAmount?.toLocaleString("vi-VN")} đ\n` : '') +
+        (bankRefCode ? `🔢 <b>Mã GD Ngân hàng:</b> <code>${bankRefCode}</code>\n` : '') +
+        (transactionNote ? `💬 <b>Ghi chú:</b> ${transactionNote}\n` : '') +
+        `🖼️ <b>Ảnh biên lai:</b> <a href="${receiptUrl}">Xem ảnh bill</a>\n` +
+        `👉 <a href="https://chamaluoiadmin.netlify.app/admin/bookings">Xem trên Trang Quản Trị</a>`;
+      await sendTelegramNotification(tgMsg);
+    } catch (tgErr) {
+      console.warn("Telegram alert error:", tgErr);
+    }
+
+    revalidatePath("/payment/" + (paymentId || bookingId));
+    revalidatePath("/admin/bookings");
+    revalidatePath("/admin/orders");
+    revalidatePath("/account");
+
+    return {
+      success: true,
+      booking: updatedBooking || localBk,
+      receiptUrl
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: sanitizeErrorMessage(err, "Lỗi gửi biên lai chuyển khoản.")
+    };
   }
 }

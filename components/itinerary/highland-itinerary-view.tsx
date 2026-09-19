@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -26,17 +26,58 @@ import {
   Ticket,
   CloudSun,
   Thermometer,
-  Eye
+  Eye,
+  ArrowLeftRight,
+  Trash2,
+  PlusCircle,
+  Undo2
 } from "lucide-react";
-import { ItineraryPlan } from "@/lib/highland-itinerary-engine";
+import { ItineraryPlan, ItineraryStop } from "@/lib/highland-itinerary-engine";
 import { useLanguage } from "@/components/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { AppImage } from "@/components/ui/app-image";
 import { formatCurrency } from "@/lib/utils";
+import { places as staticPlaces, type Place } from "@/data/places";
+import { fetchAllPlacesAction } from "@/app/actions/places";
+import { PlaceSelectorModal } from "./place-selector-modal";
 
 interface HighlandItineraryViewProps {
   plan: ItineraryPlan;
   onReset: () => void;
+}
+
+function placeToItineraryStop(place: Place, defaultTimeSlot: string, isEn: boolean): ItineraryStop {
+  const catLabelMap: Record<string, string> = {
+    food: isEn ? "Dining" : "Ăn uống",
+    stay: isEn ? "Homestay" : "Lưu trú",
+    "waterfall-stream": isEn ? "Waterfalls & Streams" : "Thác & Suối",
+    culture: isEn ? "Heritage & Craft" : "Văn hóa",
+    visit: isEn ? "Sightseeing" : "Tham quan",
+    outdoor: isEn ? "Outdoors & Eco" : "Dã ngoại",
+    experience: isEn ? "Local Experience" : "Trải nghiệm",
+    campfire: isEn ? "Campfire Night" : "Lửa trại",
+    play: isEn ? "Recreation" : "Vui chơi"
+  };
+
+  return {
+    id: `custom-stop-${place.slug}-${Date.now()}`,
+    timeSlot: defaultTimeSlot,
+    name: place.name,
+    enName: place.name,
+    slug: place.slug,
+    category: catLabelMap[place.category] || (isEn ? "Sightseeing" : "Tham quan"),
+    image: place.image || "/images/aluoi/thac-a-nor.jpg",
+    duration: "1.5 - 2 giờ",
+    distanceFromPrev: "~3-5 km",
+    summary: place.summary || place.description?.slice(0, 150) || (isEn ? "Authentic highland destination in A Luoi." : "Điểm đến trải nghiệm đặc sắc tại A Lưới."),
+    enSummary: place.summary || (isEn ? "Authentic highland destination in A Luoi." : "Điểm đến trải nghiệm đặc sắc tại A Lưới."),
+    wisdomTip: place.highlights?.[0] || "Khuyên mang theo giày chống trượt và đồ dùng cá nhân gọn nhẹ.",
+    enWisdomTip: place.highlights?.[0] || "Bring non-slip shoes and light travel gear.",
+    energyLevel: "easy",
+    googleMapsQuery: `${place.name} A Lưới Thừa Thiên Huế`,
+    stopType: place.category === "stay" ? "checkin" : place.category === "food" ? "meal" : "visit",
+    mustTry: place.highlights?.slice(0, 2)
+  };
 }
 
 export function HighlandItineraryView({ plan, onReset }: HighlandItineraryViewProps) {
@@ -45,12 +86,55 @@ export function HighlandItineraryView({ plan, onReset }: HighlandItineraryViewPr
   const [activeTab, setActiveTab] = useState<"timeline" | "safety">("timeline");
   const [copied, setCopied] = useState(false);
 
+  // Interactive Itinerary State
+  const [currentPlan, setCurrentPlan] = useState<ItineraryPlan>(plan);
+  const [originalPlan] = useState<ItineraryPlan>(plan);
+  const [isCustomized, setIsCustomized] = useState<boolean>(false);
+  const [availablePlaces, setAvailablePlaces] = useState<Place[]>(staticPlaces);
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean;
+    mode: "swap" | "add";
+    dayIndex: number;
+    stopIndex?: number;
+    currentStopName?: string;
+  }>({
+    isOpen: false,
+    mode: "swap",
+    dayIndex: 0
+  });
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+
   const isEn = language === "en";
+
+  // Sync state if initial prop changes
+  useEffect(() => {
+    setCurrentPlan(plan);
+    setIsCustomized(false);
+  }, [plan]);
+
+  // Load dynamic places from DB
+  useEffect(() => {
+    fetchAllPlacesAction()
+      .then((places) => {
+        if (places && places.length > 0) {
+          setAvailablePlaces(places);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Auto-hide toast
+  useEffect(() => {
+    if (toastMsg) {
+      const timer = setTimeout(() => setToastMsg(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMsg]);
 
   const handleBookCustomTour = () => {
     try {
       if (typeof window !== "undefined") {
-        sessionStorage.setItem("chamaluoi_custom_tour_plan", JSON.stringify(plan));
+        sessionStorage.setItem("chamaluoi_custom_tour_plan", JSON.stringify(currentPlan));
       }
     } catch (e) {
       console.warn("sessionStorage save error:", e);
@@ -68,6 +152,102 @@ export function HighlandItineraryView({ plan, onReset }: HighlandItineraryViewPr
 
   const handlePrint = () => {
     window.print();
+  };
+
+  // Stop Action Handlers
+  const openSwapModal = (dayIndex: number, stopIndex: number, stop: ItineraryStop) => {
+    setModalState({
+      isOpen: true,
+      mode: "swap",
+      dayIndex,
+      stopIndex,
+      currentStopName: isEn ? stop.enName : stop.name
+    });
+  };
+
+  const openAddModal = (dayIndex: number) => {
+    setModalState({
+      isOpen: true,
+      mode: "add",
+      dayIndex
+    });
+  };
+
+  const handleSelectPlace = (place: Place) => {
+    const dayIdx = modalState.dayIndex;
+    if (modalState.mode === "swap" && typeof modalState.stopIndex === "number") {
+      const stopIdx = modalState.stopIndex;
+      const newPlan = { ...currentPlan };
+      const targetDay = { ...newPlan.days[dayIdx] };
+      const oldStop = targetDay.stops[stopIdx];
+      const newStop = placeToItineraryStop(place, oldStop.timeSlot, isEn);
+      newStop.timeSlot = oldStop.timeSlot;
+      targetDay.stops = [
+        ...targetDay.stops.slice(0, stopIdx),
+        newStop,
+        ...targetDay.stops.slice(stopIdx + 1)
+      ];
+      newPlan.days = [
+        ...newPlan.days.slice(0, dayIdx),
+        targetDay,
+        ...newPlan.days.slice(dayIdx + 1)
+      ];
+      setCurrentPlan(newPlan);
+      setIsCustomized(true);
+      try {
+        sessionStorage.setItem("chamaluoi_custom_tour_plan", JSON.stringify(newPlan));
+      } catch {}
+      setToastMsg(isEn ? `Swapped to "${place.name}"!` : `Đã đổi thành "${place.name}"!`);
+      setModalState((prev) => ({ ...prev, isOpen: false }));
+    } else if (modalState.mode === "add") {
+      const newPlan = { ...currentPlan };
+      const targetDay = { ...newPlan.days[dayIdx] };
+      const stopCount = targetDay.stops.length;
+      const defaultSlots = ["08:00 - 09:30", "10:00 - 11:30", "13:30 - 15:00", "15:30 - 17:00", "18:00 - 20:00"];
+      const assignedSlot = defaultSlots[Math.min(stopCount, defaultSlots.length - 1)] || "16:00 - 17:30";
+      const newStop = placeToItineraryStop(place, assignedSlot, isEn);
+      targetDay.stops = [...targetDay.stops, newStop];
+      newPlan.days = [
+        ...newPlan.days.slice(0, dayIdx),
+        targetDay,
+        ...newPlan.days.slice(dayIdx + 1)
+      ];
+      setCurrentPlan(newPlan);
+      setIsCustomized(true);
+      try {
+        sessionStorage.setItem("chamaluoi_custom_tour_plan", JSON.stringify(newPlan));
+      } catch {}
+      setToastMsg(isEn ? `Added "${place.name}" to Day 0${dayIdx + 1}!` : `Đã thêm "${place.name}" vào Ngày 0${dayIdx + 1}!`);
+      setModalState((prev) => ({ ...prev, isOpen: false }));
+    }
+  };
+
+  const handleRemoveStop = (dayIdx: number, stopIdx: number) => {
+    const stopToRemove = currentPlan.days[dayIdx]?.stops[stopIdx];
+    if (!stopToRemove) return;
+    const newPlan = { ...currentPlan };
+    const targetDay = { ...newPlan.days[dayIdx] };
+    targetDay.stops = targetDay.stops.filter((_, idx) => idx !== stopIdx);
+    newPlan.days = [
+      ...newPlan.days.slice(0, dayIdx),
+      targetDay,
+      ...newPlan.days.slice(dayIdx + 1)
+    ];
+    setCurrentPlan(newPlan);
+    setIsCustomized(true);
+    try {
+      sessionStorage.setItem("chamaluoi_custom_tour_plan", JSON.stringify(newPlan));
+    } catch {}
+    setToastMsg(isEn ? `Removed "${stopToRemove.name}" from route` : `Đã bỏ điểm "${stopToRemove.name}" khỏi lịch trình`);
+  };
+
+  const handleRestoreOriginal = () => {
+    setCurrentPlan(originalPlan);
+    setIsCustomized(false);
+    try {
+      sessionStorage.setItem("chamaluoi_custom_tour_plan", JSON.stringify(originalPlan));
+    } catch {}
+    setToastMsg(isEn ? "Restored original AI plan!" : "Đã khôi phục lịch trình gốc của AI!");
   };
 
   const energyLabels = {
@@ -94,12 +274,27 @@ export function HighlandItineraryView({ plan, onReset }: HighlandItineraryViewPr
 
         <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-amber-300">
-              <Sparkles className="h-3.5 w-3.5" />
-              <span>{isEn ? "Bespoke Highland Journal" : "Sổ Tay Viễn Du Đại Ngàn"}</span>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-amber-300">
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>{isEn ? "Bespoke Highland Journal" : "Sổ Tay Viễn Du Đại Ngàn"}</span>
+              </div>
+              {isCustomized && (
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/50 bg-amber-400/20 px-3 py-1 text-xs font-bold text-amber-200 animate-in fade-in duration-200">
+                  <span>✨ {isEn ? "Customized by you" : "Lịch trình đã tùy chỉnh"}</span>
+                  <button
+                    type="button"
+                    onClick={handleRestoreOriginal}
+                    className="ml-1 underline text-amber-300 hover:text-white transition"
+                    title={isEn ? "Restore original AI plan" : "Khôi phục lịch trình ban đầu của AI"}
+                  >
+                    ({isEn ? "Restore" : "Khôi phục gốc"})
+                  </button>
+                </div>
+              )}
             </div>
             <h1 className="text-2xl font-black tracking-tight text-white md:text-3xl lg:text-4xl">
-              {isEn ? plan.enTitle : plan.title}
+              {isEn ? currentPlan.enTitle : currentPlan.title}
             </h1>
             <p className="max-w-2xl text-sm leading-relaxed text-white/85 md:text-base">
               {isEn
@@ -336,7 +531,7 @@ export function HighlandItineraryView({ plan, onReset }: HighlandItineraryViewPr
       {/* TIMELINE TAB */}
       {activeTab === "timeline" && (
         <div className="space-y-10">
-          {plan.days.map((day) => (
+          {currentPlan.days.map((day, dayIdx) => (
             <section
               key={day.dayNumber}
               className="space-y-4 rounded-3xl border border-forest/10 bg-white p-5 shadow-card sm:p-7"
@@ -466,13 +661,39 @@ export function HighlandItineraryView({ plan, onReset }: HighlandItineraryViewPr
                               <span className="text-ink/30">•</span>
                               <span>{stop.duration}</span>
                             </div>
-                            <span
-                              className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${
-                                energyColors[stop.energyLevel]
-                              }`}
-                            >
-                              {energyLabels[stop.energyLevel]}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${
+                                  energyColors[stop.energyLevel]
+                                }`}
+                              >
+                                {energyLabels[stop.energyLevel]}
+                              </span>
+
+                              {/* Interactive Stop Actions: Swap or Remove */}
+                              {!isTravelLeg && (
+                                <div className="flex items-center gap-1.5 print:hidden">
+                                  <button
+                                    type="button"
+                                    onClick={() => openSwapModal(dayIdx, sIdx, stop)}
+                                    className="inline-flex items-center gap-1 rounded-lg border border-forest/25 bg-white hover:bg-forest/5 px-2 py-1 text-[11px] font-bold text-forest shadow-2xs transition hover:scale-105 active:scale-95"
+                                    title={isEn ? "Swap this destination" : "Đổi điểm đến khác"}
+                                  >
+                                    <ArrowLeftRight className="size-3 text-forest" />
+                                    <span>{isEn ? "Swap" : "Đổi điểm"}</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveStop(dayIdx, sIdx)}
+                                    className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 px-2 py-1 text-[11px] font-bold text-rose-700 shadow-2xs transition hover:scale-105 active:scale-95"
+                                    title={isEn ? "Remove this stop from route" : "Bỏ điểm này khỏi lịch trình"}
+                                  >
+                                    <Trash2 className="size-3 text-rose-600" />
+                                    <span>{isEn ? "Remove" : "Bỏ bớt"}</span>
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           </div>
 
                           <h3 className="text-lg font-extrabold text-ink">
@@ -558,6 +779,18 @@ export function HighlandItineraryView({ plan, onReset }: HighlandItineraryViewPr
                     </article>
                   );
                 })}
+
+                {/* Dotted button to add destination to this day */}
+                <div className="pt-2 flex justify-center sm:justify-start md:ml-12 print:hidden">
+                  <button
+                    type="button"
+                    onClick={() => openAddModal(dayIdx)}
+                    className="inline-flex items-center gap-2 rounded-2xl border-2 border-dashed border-forest/30 bg-forest/5 hover:bg-forest/10 hover:border-forest/50 px-4 py-2.5 text-xs font-bold text-forest transition group shadow-2xs hover:scale-102 active:scale-98"
+                  >
+                    <PlusCircle className="size-4 text-forest transition-transform group-hover:scale-110" />
+                    <span>{isEn ? `+ Add destination to Day 0${day.dayNumber}` : `+ Thêm địa điểm vào Ngày 0${day.dayNumber}`}</span>
+                  </button>
+                </div>
               </div>
             </section>
           ))}
@@ -663,36 +896,112 @@ export function HighlandItineraryView({ plan, onReset }: HighlandItineraryViewPr
         </div>
       </div>
 
-      {/* Bottom Actions Bar */}
-      <div className="flex flex-col items-center justify-between gap-4 rounded-3xl border border-forest/15 bg-white p-6 shadow-card sm:flex-row print:hidden">
-        <div className="text-center sm:text-left">
-          <h4 className="font-bold text-ink">
-            {isEn ? "Want to adjust this route?" : "Bạn muốn điều chỉnh lại theo ý mình?"}
-          </h4>
-          <p className="text-xs text-ink/60">
-            {isEn
-              ? "Re-run the smart questionnaire anytime to explore different highland rhythms."
-              : "Có thể chọn lại các điểm yêu thích hoặc thêm điều muốn tránh bất kỳ lúc nào."}
-          </p>
+      {/* Bottom Utility & Action Bar (Phương án 2: Tiện ích & Tùy biến linh hoạt) */}
+      <div className="rounded-3xl border border-forest/15 bg-white p-6 sm:p-7 shadow-card space-y-5 print:hidden mb-12 sm:mb-8">
+        {/* Hàng 1: Bộ công cụ tiện ích đồng hành cùng du khách */}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-forest/10 pb-4">
+          <div className="flex items-center gap-2 text-xs font-bold text-forest">
+            <Sparkles className="size-4 text-amber-500" />
+            <span>{isEn ? "Traveler Toolkit & Route Actions" : "Tiện ích đồng hành & Công cụ lịch trình"}</span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handlePrint}
+              className="border-forest/25 text-forest hover:bg-forest/5 text-xs font-bold rounded-xl h-9"
+            >
+              <Printer className="mr-1.5 size-3.5" />
+              <span>{isEn ? "Print / Save PDF" : "In / Lưu PDF"}</span>
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleShare}
+              className="border-forest/25 text-forest hover:bg-forest/5 text-xs font-bold rounded-xl h-9"
+            >
+              <Share2 className="mr-1.5 size-3.5" />
+              <span>{copied ? (isEn ? "Link Copied!" : "Đã sao chép link!") : (isEn ? "Share Route" : "Chia sẻ lịch trình")}</span>
+            </Button>
+
+            {isCustomized && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleRestoreOriginal}
+                className="border-amber-300 text-amber-800 bg-amber-50 hover:bg-amber-100 text-xs font-bold rounded-xl h-9"
+                title={isEn ? "Revert to initial AI recommendation" : "Khôi phục lại lịch trình ban đầu của AI"}
+              >
+                <Undo2 className="mr-1.5 size-3.5" />
+                <span>{isEn ? "Reset to AI Plan" : "Khôi phục gợi ý gốc của AI"}</span>
+              </Button>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onReset}
-            className="border-forest text-forest hover:bg-forest hover:text-white"
-          >
-            <RotateCcw className="mr-1.5 h-4 w-4" />
-            {t.itinerary.startOver}
-          </Button>
-          <Button asChild className="bg-forest text-white hover:bg-forest-light">
-            <Link href="/places">
-              {t.nav.places}
-              <ChevronRight className="ml-1 h-4 w-4" />
-            </Link>
-          </Button>
+
+        {/* Hàng 2: Điều hướng tùy biến & Khám phá địa điểm */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="text-left max-w-xl">
+            <h4 className="font-extrabold text-ink text-sm sm:text-base">
+              {isEn ? "Want to adjust your trip rhythm?" : "Bạn muốn điều chỉnh lại theo ý mình?"}
+            </h4>
+            <p className="text-xs text-ink/65 mt-0.5 leading-relaxed">
+              {isEn
+                ? "You can customize your questionnaire answers, or directly swap, remove, and add destinations on each day above."
+                : "Có thể tùy chỉnh lại tiêu chí câu hỏi ban đầu, hoặc linh hoạt đổi điểm / bỏ bớt / thêm điểm ngay ở từng ngày phía trên."}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onReset}
+              className="border-forest/30 text-forest hover:bg-forest hover:text-white rounded-2xl font-bold text-xs px-4 py-2.5 h-10"
+            >
+              <RotateCcw className="mr-1.5 size-3.5" />
+              <span>{isEn ? "Adjust Questionnaire" : "Tùy chỉnh lại tiêu chí"}</span>
+            </Button>
+
+            <Button
+              asChild
+              variant="outline"
+              className="border-forest text-forest hover:bg-forest hover:text-white rounded-2xl font-bold text-xs px-4 py-2.5 h-10"
+            >
+              <Link href="/places">
+                <Compass className="mr-1.5 size-3.5" />
+                <span>{isEn ? "Explore 40+ Places" : "Khám phá danh bạ địa điểm"}</span>
+                <ChevronRight className="ml-1 size-3.5" />
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
+
+      {/* Place Selector Modal (Swap / Add destination) */}
+      <PlaceSelectorModal
+        isOpen={modalState.isOpen}
+        onClose={() => setModalState((prev) => ({ ...prev, isOpen: false }))}
+        mode={modalState.mode}
+        targetDayNumber={modalState.dayIndex + 1}
+        currentStopName={modalState.currentStopName}
+        places={availablePlaces}
+        onSelectPlace={handleSelectPlace}
+        isEn={isEn}
+      />
+
+      {/* Toast Feedback Notification */}
+      {toastMsg && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 rounded-full bg-forest px-5 py-2.5 text-xs font-bold text-white shadow-2xl border border-white/20 animate-in fade-in slide-in-from-bottom-3 duration-200">
+          <CheckCircle2 className="size-4 text-amber-300 shrink-0" />
+          <span>{toastMsg}</span>
+        </div>
+      )}
     </div>
   );
 }
