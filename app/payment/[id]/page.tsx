@@ -42,6 +42,11 @@ export default function PaymentCheckoutPage() {
   const [copied, setCopied] = useState(false);
   const [isPending, startTransition] = useTransition();
 
+  // Bank settings loaded from Admin
+  const [bankSettings, setBankSettings] = useState<{
+    bankId: string; bankName: string; accountNumber: string; accountName: string;
+  } | null>(null);
+
   // Payment proof states
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
@@ -51,10 +56,36 @@ export default function PaymentCheckoutPage() {
   const [receiptUploadedSuccess, setReceiptUploadedSuccess] = useState(false);
   const [receiptError, setReceiptError] = useState<string | null>(null);
 
+  // Tạo mã thanh toán từ ID đơn (không cần server)
+  const paymentCode = booking
+    ? `CAL-${booking.id.replace(/[^A-Z0-9]/gi, "").toUpperCase().slice(-8)}`
+    : "";
+
+  // Tạo QR URL client-side từ bank settings
+  const buildQrUrl = (bank: typeof bankSettings, amount: number, memo: string) => {
+    if (!bank?.bankId || !bank?.accountNumber) return "";
+    return `https://img.vietqr.io/image/${bank.bankId}-${bank.accountNumber}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(memo)}&accountName=${encodeURIComponent(bank.accountName || "")}`;
+  };
+
   const loadData = async () => {
     setLoading(true);
     try {
-      // 1. Check if id is a booking or payment
+      // 1. Load bank settings from admin API
+      try {
+        const settingsRes = await fetch("/api/settings", { cache: "no-store" });
+        const settingsData = await settingsRes.json();
+        if (settingsData.success && settingsData.settings?.bankAccountNumber) {
+          const s = settingsData.settings;
+          setBankSettings({
+            bankId: s.bankId || "MB",
+            bankName: s.bankName || "MBBank",
+            accountNumber: s.bankAccountNumber,
+            accountName: s.bankAccountName || ""
+          });
+        }
+      } catch {}
+
+      // 2. Load booking
       let currentBooking: BookingRecord | null = null;
       let currentPayment: PaymentRecord | null = null;
 
@@ -74,21 +105,21 @@ export default function PaymentCheckoutPage() {
 
       setBooking(currentBooking);
 
+      // 3. Try server action for payment record (for tracking), but don't block on it
       if (currentBooking) {
-        // Khởi tạo payment request
-        const initRes = await initiatePaymentAction({
+        initiatePaymentAction({
           bookingId: currentBooking.id,
           method: selectedMethod,
           amount: currentBooking.finalAmount,
           customerId: currentBooking.customerId || currentBooking.userId,
           customerName: currentBooking.customerName,
           customerPhone: currentBooking.phone
-        });
-
-        if (initRes.success && initRes.payment) {
-          setPayment(initRes.payment);
-          setPaymentDetails(initRes.details);
-        }
+        }).then((initRes) => {
+          if (initRes.success && initRes.payment) {
+            setPayment(initRes.payment);
+            if (initRes.details) setPaymentDetails(initRes.details);
+          }
+        }).catch(() => {});
       }
     } catch (err) {
       console.error("Error loading payment data:", err);
@@ -101,6 +132,13 @@ export default function PaymentCheckoutPage() {
     if (id) loadData();
   }, [id, selectedMethod]);
 
+  // Derived: bank info từ paymentDetails (server) hoặc bankSettings (client fallback)
+  const activeBankAccount = paymentDetails?.bankAccount || bankSettings;
+  const activePaymentCode = payment?.paymentCode || paymentCode;
+  const activeQrUrl = paymentDetails?.qrUrl ||
+    (booking && bankSettings
+      ? buildQrUrl(bankSettings, booking.finalAmount, payment?.paymentCode || paymentCode)
+      : "");
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
     setCopied(true);
@@ -321,11 +359,11 @@ export default function PaymentCheckoutPage() {
               </div>
 
               {/* QR Code display */}
-              {selectedMethod === "qr" && paymentDetails?.qrUrl && (
+              {selectedMethod === "qr" && activeQrUrl && (
                 <div className="p-6 rounded-3xl bg-beige/40 border border-forest/10 text-center space-y-4">
-                  <div className="relative size-60 mx-auto bg-white p-3 rounded-2xl shadow-sm border border-forest/15">
+                  <div className="relative size-64 mx-auto bg-white p-3 rounded-2xl shadow-sm border border-forest/15">
                     <Image
-                      src={paymentDetails.qrUrl}
+                      src={activeQrUrl}
                       alt="VietQR Napas247"
                       fill
                       className="object-contain p-2"
@@ -340,18 +378,18 @@ export default function PaymentCheckoutPage() {
               )}
 
               {/* Bank Account Info */}
-              {paymentDetails?.bankAccount && (
+              {activeBankAccount && (
                 <div className="p-4 rounded-2xl bg-forest/5 border border-forest/10 text-xs space-y-2.5">
                   <div className="flex items-center justify-between border-b border-forest/10 pb-2">
                     <span className="text-ink/60">Ngân hàng:</span>
-                    <span className="font-bold text-ink">{paymentDetails.bankAccount.bankName}</span>
+                    <span className="font-bold text-ink">{activeBankAccount.bankName}</span>
                   </div>
                   <div className="flex items-center justify-between border-b border-forest/10 pb-2">
                     <span className="text-ink/60">Số tài khoản:</span>
                     <div className="flex items-center gap-1.5 font-mono font-black text-sm text-forest">
-                      <span>{paymentDetails.bankAccount.accountNumber}</span>
+                      <span>{activeBankAccount.accountNumber}</span>
                       <button
-                        onClick={() => handleCopy(paymentDetails.bankAccount.accountNumber)}
+                        onClick={() => handleCopy(activeBankAccount.accountNumber)}
                         className="p-1 text-ink/40 hover:text-forest"
                         title="Sao chép STK"
                       >
@@ -361,7 +399,7 @@ export default function PaymentCheckoutPage() {
                   </div>
                   <div className="flex items-center justify-between border-b border-forest/10 pb-2">
                     <span className="text-ink/60">Chủ tài khoản:</span>
-                    <span className="font-bold text-ink uppercase">{paymentDetails.bankAccount.accountName}</span>
+                    <span className="font-bold text-ink uppercase">{activeBankAccount.accountName}</span>
                   </div>
                   <div className="flex items-center justify-between border-b border-forest/10 pb-2">
                     <span className="text-ink/60">Số tiền:</span>
@@ -370,9 +408,9 @@ export default function PaymentCheckoutPage() {
                   <div className="flex items-center justify-between">
                     <span className="text-ink/60">Nội dung chuyển khoản (bắt buộc):</span>
                     <div className="flex items-center gap-1.5 font-mono font-black text-xs text-rose-700 bg-rose-50 px-2 py-0.5 rounded-lg">
-                      <span>{payment?.paymentCode}</span>
+                      <span>{activePaymentCode}</span>
                       <button
-                        onClick={() => handleCopy(payment?.paymentCode || "")}
+                        onClick={() => handleCopy(activePaymentCode)}
                         className="p-0.5 text-rose-600 hover:text-rose-900"
                         title="Sao chép nội dung"
                       >
@@ -417,7 +455,7 @@ export default function PaymentCheckoutPage() {
                   </div>
 
                   {/* ---- THÔNG TIN CHUYỂN KHOẢN: Luôn hiển thị để khách không phải cuộn lên ---- */}
-                  {paymentDetails?.bankAccount && (
+                  {activeBankAccount && (
                     <div className="rounded-xl bg-white border border-forest/20 p-4 space-y-2 text-xs">
                       <p className="text-[11px] font-extrabold text-forest uppercase tracking-wider mb-2 flex items-center gap-1.5">
                         <Building2 className="size-3.5" /> Thông tin chuyển khoản
@@ -425,15 +463,15 @@ export default function PaymentCheckoutPage() {
                       <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2">
                         <div className="flex justify-between items-center border-b border-forest/10 pb-1.5">
                           <span className="text-ink/60">Ngân hàng:</span>
-                          <span className="font-bold text-ink">{paymentDetails.bankAccount.bankName}</span>
+                          <span className="font-bold text-ink">{activeBankAccount.bankName}</span>
                         </div>
                         <div className="flex justify-between items-center border-b border-forest/10 pb-1.5">
                           <span className="text-ink/60">Số tài khoản:</span>
                           <div className="flex items-center gap-1 font-mono font-black text-sm text-forest">
-                            <span>{paymentDetails.bankAccount.accountNumber}</span>
+                            <span>{activeBankAccount.accountNumber}</span>
                             <button
                               type="button"
-                              onClick={() => handleCopy(paymentDetails.bankAccount.accountNumber)}
+                              onClick={() => handleCopy(activeBankAccount.accountNumber)}
                               className="p-0.5 text-ink/40 hover:text-forest transition"
                               title="Sao chép STK"
                             >
@@ -443,7 +481,7 @@ export default function PaymentCheckoutPage() {
                         </div>
                         <div className="flex justify-between items-center border-b border-forest/10 pb-1.5">
                           <span className="text-ink/60">Chủ tài khoản:</span>
-                          <span className="font-bold text-ink uppercase">{paymentDetails.bankAccount.accountName}</span>
+                          <span className="font-bold text-ink uppercase">{activeBankAccount.accountName}</span>
                         </div>
                         <div className="flex justify-between items-center border-b border-forest/10 pb-1.5">
                           <span className="text-ink/60">Số tiền:</span>
@@ -452,10 +490,10 @@ export default function PaymentCheckoutPage() {
                         <div className="sm:col-span-2 flex justify-between items-center pt-0.5">
                           <span className="text-ink/60 shrink-0 mr-2">Nội dung CK <span className="text-rose-600 font-bold">(bắt buộc)</span>:</span>
                           <div className="flex items-center gap-1.5 font-mono font-black text-xs text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-lg">
-                            <span>{payment?.paymentCode}</span>
+                            <span>{activePaymentCode}</span>
                             <button
                               type="button"
-                              onClick={() => handleCopy(payment?.paymentCode || "")}
+                              onClick={() => handleCopy(activePaymentCode)}
                               className="p-0.5 text-rose-500 hover:text-rose-900 transition"
                               title="Sao chép nội dung"
                             >
