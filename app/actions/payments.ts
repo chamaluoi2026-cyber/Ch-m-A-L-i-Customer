@@ -10,12 +10,40 @@ import {
   getPaymentsByBookingId,
   getBookingById,
   type PaymentRecord,
-  type PaymentMethodType
+  type PaymentMethodType,
+  type BookingRecord
 } from "@/lib/server-store";
 import { PaymentProviderFactory } from "@/lib/payment/provider";
 import { revalidatePath } from "next/cache";
 import { getSession, requireRole, assertCustomerAccess, sanitizeErrorMessage } from "@/lib/auth/roles";
 import { sendTelegramNotification } from "@/lib/notification/telegram";
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://hcunfovtwbzfatudejfs.supabase.co";
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjdW5mb3Z0d2J6ZmF0dWRlamZzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4OTM5NTM5OSwiZXhwIjoyMTA0OTcxMzk5fQ.7QwyRHqGXa6UwgbUNAhlWdmGZqpuS8Cxall2v8j7lMU";
+
+/**
+ * Lấy booking từ cloud (Supabase) hoặc local store.
+ * Quan trọng: Vercel serverless không giữ in-memory store,
+ * nên phải luôn ưu tiên tìm trên cloud trước.
+ */
+async function getBookingByIdCloud(bookingId: string): Promise<BookingRecord | null> {
+  // 1. Thử từ Supabase cloud trước
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/system_store?id=eq.bookings_store&select=data`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+      cache: "no-store"
+    });
+    if (res.ok) {
+      const rows = await res.json();
+      if (Array.isArray(rows[0]?.data)) {
+        const found = (rows[0].data as BookingRecord[]).find((b) => b.id === bookingId);
+        if (found) return found;
+      }
+    }
+  } catch {}
+  // 2. Fallback local in-memory store
+  return getBookingById(bookingId) || null;
+}
 
 // 1. Tạo yêu cầu thanh toán (Payment Request)
 export async function initiatePaymentAction(params: {
@@ -28,7 +56,8 @@ export async function initiatePaymentAction(params: {
   customerPhone?: string;
 }) {
   try {
-    const booking = getBookingById(params.bookingId);
+    // Tìm booking từ cloud + local store
+    const booking = await getBookingByIdCloud(params.bookingId);
     if (!booking) {
       return { success: false, error: "Không tìm thấy mã đơn đặt." };
     }

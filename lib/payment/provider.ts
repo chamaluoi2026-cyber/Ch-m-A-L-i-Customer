@@ -100,18 +100,31 @@ export class VietQRProvider implements IPaymentProvider {
 export class BankTransferProvider implements IPaymentProvider {
   readonly providerName = "bank_transfer";
 
-  private bank = {
-    bankId: "BIDV",
-    bankName: "Ngân hàng TMCP Đầu tư và Phát triển Việt Nam (BIDV)",
-    accountNumber: "55110002345678",
-    accountName: "BAN QUAN TRI CHAM A LUOI"
+  private defaultBank = {
+    bankId: "MB",
+    bankName: "Ngân hàng TMCP Quân đội (MBBank)",
+    accountNumber: "0825497468",
+    accountName: "VO QUANG HUY"
   };
 
   async initiatePayment(payment: PaymentRecord, booking: BookingRecord): Promise<PaymentInitiateResult> {
+    let bank = this.defaultBank;
+    try {
+      const settings = await getSiteSettingsAsync();
+      if (settings?.bankAccountNumber && settings?.bankId) {
+        bank = {
+          bankId: settings.bankId,
+          bankName: settings.bankName || this.defaultBank.bankName,
+          accountNumber: settings.bankAccountNumber,
+          accountName: settings.bankAccountName || this.defaultBank.accountName
+        };
+      }
+    } catch {}
+
     return {
       paymentCode: payment.paymentCode,
-      bankAccount: this.bank,
-      instructions: `Chuyển khoản tới số tài khoản ${this.bank.accountNumber} (${this.bank.bankName}) - Chủ tài khoản: ${this.bank.accountName}. Nội dung chuyển tiền: ${payment.paymentCode}`
+      bankAccount: bank,
+      instructions: `Chuyển khoản tới số tài khoản ${bank.accountNumber} (${bank.bankName}) - Chủ tài khoản: ${bank.accountName}. Nội dung chuyển tiền: ${payment.paymentCode}`
     };
   }
 
