@@ -1,5 +1,6 @@
-"use client";
+﻿"use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import {
   ArrowDown,
@@ -42,33 +43,33 @@ interface HomeClientViewProps {
 
 const aluoiGallery = [
   {
-    title: "Núi rừng A Lưới",
+    title: "NÃºi rá»«ng A LÆ°á»›i",
     enTitle: "A Luoi Mountain Passes",
-    caption: "Những cung đường xanh mở ra nhịp đi chậm và sâu.",
+    caption: "Nhá»¯ng cung Ä‘Æ°á»ng xanh má»Ÿ ra nhá»‹p Ä‘i cháº­m vÃ  sÃ¢u.",
     enCaption: "Pristine mountain passes opening up a deep, mindful travel rhythm.",
     image: imageFor("photo-1500534314209-a25ddb2bd429"),
     className: "md:col-span-2 md:row-span-2"
   },
   {
-    title: "Thác A Nôr",
+    title: "ThÃ¡c A NÃ´r",
     enTitle: "A Nor Waterfall",
-    caption: "Không gian mát lành cho hành trình cộng đồng.",
+    caption: "KhÃ´ng gian mÃ¡t lÃ nh cho hÃ nh trÃ¬nh cá»™ng Ä‘á»“ng.",
     enCaption: "Crystal mountain waters creating an idyllic sanctuary for travelers.",
     image: imageFor("photo-1506744038136-46273834b3fb"),
     className: ""
   },
   {
-    title: "Bình minh vùng cao",
+    title: "BÃ¬nh minh vÃ¹ng cao",
     enTitle: "Highland Sunrise",
-    caption: "Ánh sáng mềm trên núi và bản làng.",
+    caption: "Ãnh sÃ¡ng má»m trÃªn nÃºi vÃ  báº£n lÃ ng.",
     enCaption: "Soft morning light cascading over limestone crests and stilt houses.",
     image: imageFor("photo-1501785888041-af3ef285b470"),
     className: ""
   },
   {
-    title: "Văn hóa bản địa",
+    title: "VÄƒn hÃ³a báº£n Ä‘á»‹a",
     enTitle: "Indigenous Living Heritage",
-    caption: "Chạm vào đời sống, nghề thủ công và sự đón tiếp ấm áp.",
+    caption: "Cháº¡m vÃ o Ä‘á»i sá»‘ng, nghá» thá»§ cÃ´ng vÃ  sá»± Ä‘Ã³n tiáº¿p áº¥m Ã¡p.",
     enCaption: "Immersion into tribal crafts, stilt architecture, and sincere smiles.",
     image: imageFor("photo-1452860606245-08befc0ff44b"),
     className: "md:col-span-2"
@@ -101,6 +102,7 @@ export function HomeClientView({
 }: HomeClientViewProps) {
   const { t, language } = useLanguage();
   const isEn = language === "en";
+  const [activeItineraryDay, setActiveItineraryDay] = useState<1 | 2>(1);
 
   // Dynamic Hero Content & Translations
   const heroBadge = isEn
@@ -109,11 +111,11 @@ export function HomeClientView({
 
   const heroTitle1 = isEn
     ? (settings?.heroTitleLine1En || "Highland Adventure &")
-    : (settings?.heroTitleLine1 || "Chạm A Lưới");
+    : (settings?.heroTitleLine1 || "Cháº¡m A LÆ°á»›i");
 
   const heroTitle2 = isEn
     ? (settings?.heroTitleLine2En || "Nature Retreat")
-    : (settings?.heroTitleLine2 || "Du lịch cộng đồng");
+    : (settings?.heroTitleLine2 || "Du lá»‹ch cá»™ng Ä‘á»“ng");
 
   const heroDesc = isEn
     ? (settings?.heroDescriptionEn || "Discover verified community homestays, traditional craft villages, authentic cuisine, and pristine waterfalls in A Luoi, Thua Thien Hue.")
@@ -133,7 +135,7 @@ export function HomeClientView({
 
   const overlayOpacity = Math.min(Math.max(settings?.heroOverlayOpacity ?? 60, 20), 95) / 100;
 
-  // Cấu hình Vị trí hiển thị & Layer Giữa (Khung chữ)
+  // Cáº¥u hÃ¬nh Vá»‹ trÃ­ hiá»ƒn thá»‹ & Layer Giá»¯a (Khung chá»¯)
   const position = settings?.heroPosition || "top";
   const cardStyle = settings?.heroCardStyle || "crystal";
   const cardColor = settings?.heroCardColor || "#0f382e";
@@ -155,7 +157,7 @@ export function HomeClientView({
   if (cardStyle === "none") {
     containerClasses += "bg-transparent border-0 shadow-none";
   } else if (cardStyle === "crystal") {
-    // Kính pha lê siêu trong suốt chuẩn Apple Liquid Crystal - Không làm tối mặt người phía sau
+    // KÃ­nh pha lÃª siÃªu trong suá»‘t chuáº©n Apple Liquid Crystal - KhÃ´ng lÃ m tá»‘i máº·t ngÆ°á»i phÃ­a sau
     containerClasses += `rounded-3xl border border-white/30 shadow-2xl ${blurClass}`;
     containerBgStyle = {
       background: "linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.05) 100%)",
@@ -193,12 +195,12 @@ export function HomeClientView({
         <figure className="absolute inset-0">
           <AppImage
             src={activeHeroImage}
-            alt="Phong cảnh núi rừng A Lưới"
+            alt="Phong cáº£nh nÃºi rá»«ng A LÆ°á»›i"
             fill
             priority
             className="object-cover object-center brightness-[0.82] contrast-[1.05]"
           />
-          <figcaption className="sr-only">Hình ảnh đại diện phong cảnh thiên nhiên A Lưới</figcaption>
+          <figcaption className="sr-only">HÃ¬nh áº£nh Ä‘áº¡i diá»‡n phong cáº£nh thiÃªn nhiÃªn A LÆ°á»›i</figcaption>
           {/* Enhanced Dark Overlay Scrim with dynamic opacity */}
           <div
             className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/50 transition-opacity duration-300"
@@ -208,7 +210,7 @@ export function HomeClientView({
         </figure>
 
         <header className={`relative z-10 mx-auto max-w-5xl px-4 ${isTop ? "py-2 sm:py-4" : "py-8"} text-center sm:px-6 lg:px-8`}>
-          {/* Glassmorphism Frosted Backdrop Card (Layer mờ dưới chữ để làm nổi bật nội dung) */}
+          {/* Glassmorphism Frosted Backdrop Card (Layer má» dÆ°á»›i chá»¯ Ä‘á»ƒ lÃ m ná»•i báº­t ná»™i dung) */}
           <div className={containerClasses} style={containerBgStyle}>
             {/* Ambient top border glow */}
             {cardStyle !== "none" && cardStyle !== "radial" && (
@@ -239,7 +241,7 @@ export function HomeClientView({
             </MotionReveal>
 
             <MotionReveal delay={0.3}>
-              <nav className="mt-8 flex flex-wrap items-center justify-center gap-4" aria-label="Điều hướng chính Hero">
+              <nav className="mt-8 flex flex-wrap items-center justify-center gap-4" aria-label="Äiá»u hÆ°á»›ng chÃ­nh Hero">
                 <Button
                   asChild
                   size="lg"
@@ -264,22 +266,22 @@ export function HomeClientView({
             {/* Micro Trust badges */}
             <div className="mt-8 pt-6 border-t border-white/10 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] sm:text-xs text-white/80 font-medium">
               <span className="flex items-center gap-1.5">
-                <span className="text-emerald-400 font-bold">✓</span> {isEn ? "100% Verified Local Homestays" : "100% Homestay bản địa"}
+                <span className="text-emerald-400 font-bold">âœ“</span> {isEn ? "100% Verified Local Homestays" : "100% Homestay báº£n Ä‘á»‹a"}
               </span>
-              <span className="hidden sm:inline text-white/30">•</span>
+              <span className="hidden sm:inline text-white/30">â€¢</span>
               <span className="flex items-center gap-1.5">
-                <span className="text-emerald-400 font-bold">✓</span> {isEn ? "Exclusive Direct Vouchers" : "Nhận voucher ưu đãi trực tiếp"}
+                <span className="text-emerald-400 font-bold">âœ“</span> {isEn ? "Exclusive Direct Vouchers" : "Nháº­n voucher Æ°u Ä‘Ã£i trá»±c tiáº¿p"}
               </span>
-              <span className="hidden sm:inline text-white/30">•</span>
+              <span className="hidden sm:inline text-white/30">â€¢</span>
               <span className="flex items-center gap-1.5">
-                <span className="text-emerald-400 font-bold">✓</span> {isEn ? "Mountain Pass Weather Advice" : "Cố vấn đèo QL49 an toàn"}
+                <span className="text-emerald-400 font-bold">âœ“</span> {isEn ? "Mountain Pass Weather Advice" : "Cá»‘ váº¥n Ä‘Ã¨o QL49 an toÃ n"}
               </span>
             </div>
           </div>
         </header>
 
         <aside className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 text-white/70 text-xs font-medium tracking-widest uppercase">
-          <span>{isEn ? "Scroll to Explore" : "Cuộn để khám phá"}</span>
+          <span>{isEn ? "Scroll to Explore" : "Cuá»™n Ä‘á»ƒ khÃ¡m phÃ¡"}</span>
           <ArrowDown className="size-4 animate-bounce text-emerald-300" />
         </aside>
       </section>
@@ -333,17 +335,33 @@ export function HomeClientView({
         </div>
       </section>
 
-      {/* ✨ AI LỊCH TRÌNH — SECTION HIGHLIGHT */}
+      {/* âœ¨ AI Lá»ŠCH TRÃŒNH â€” SECTION HIGHLIGHT */}
       <section className="relative overflow-hidden bg-gradient-to-br from-forest via-forest/95 to-[#0a2e22] py-24">
-        {/* Decorative background texture */}
-        <div className="pointer-events-none absolute inset-0 opacity-10"
-          style={{
-            backgroundImage: "radial-gradient(circle at 20% 50%, #34d399 0%, transparent 40%), radial-gradient(circle at 80% 20%, #6ee7b7 0%, transparent 35%)"
-          }}
-        />
-        <div className="pointer-events-none absolute right-0 top-0 h-full w-1/2 opacity-5"
-          style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='1.5' fill='%23fff'/%3E%3C/svg%3E\")" }}
-        />
+        {/* CSS animations for floating effects */}
+        <style>{`
+          @keyframes floatY { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-18px)} }
+          @keyframes floatY2 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+          @keyframes floatRotate { 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-14px) rotate(8deg)} }
+          @keyframes shimmer { 0%{opacity:0.15} 50%{opacity:0.35} 100%{opacity:0.15} }
+          .float-1 { animation: floatY 6s ease-in-out infinite; }
+          .float-2 { animation: floatY2 8s ease-in-out infinite 1s; }
+          .float-3 { animation: floatRotate 7s ease-in-out infinite 2s; }
+          .float-card { animation: floatY2 5s ease-in-out infinite 0.5s; }
+          .shimmer-orb { animation: shimmer 4s ease-in-out infinite; }
+        `}</style>
+
+        {/* Floating decorative orbs */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="shimmer-orb float-1 absolute left-[8%] top-[20%] size-48 rounded-full bg-emerald-400/10 blur-3xl" />
+          <div className="shimmer-orb float-2 absolute right-[10%] bottom-[15%] size-64 rounded-full bg-teal-500/10 blur-3xl" />
+          <div className="float-3 absolute left-[60%] top-[10%] size-8 rounded-full border border-emerald-400/30 bg-emerald-400/10" />
+          <div className="float-2 absolute left-[15%] bottom-[25%] size-4 rounded-full bg-emerald-300/20" />
+          <div className="float-1 absolute right-[25%] top-[30%] size-5 rounded-full bg-teal-400/15 border border-teal-300/20" />
+          {/* Dot grid */}
+          <div className="absolute right-0 top-0 h-full w-1/3 opacity-5"
+            style={{ backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)", backgroundSize: "28px 28px" }}
+          />
+        </div>
 
         <div className="section-shell relative">
           <div className="grid lg:grid-cols-[1fr_1.1fr] gap-12 lg:gap-16 items-center">
@@ -357,22 +375,22 @@ export function HomeClientView({
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                     <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
                   </span>
-                  {isEn ? "Powered by AI" : "Trợ lý AI du lịch"}
+                  {isEn ? "Powered by AI" : "Trá»£ lÃ½ AI du lá»‹ch"}
                 </div>
 
                 {/* Headline */}
                 <div>
                   <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black leading-[1.15] text-white">
                     {isEn ? (
-                      <>Personalized A Lưới<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-teal-200">Itinerary in 60s</span></>
+                      <>Personalized A LÆ°á»›i<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-teal-200">Itinerary in 60s</span></>
                     ) : (
-                      <>Lịch trình A Lưới<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-teal-200">cá nhân hoá trong 60 giây</span></>
+                      <>Lá»‹ch trÃ¬nh A LÆ°á»›i<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-teal-200">cÃ¡ nhÃ¢n hoÃ¡ trong 60 giÃ¢y</span></>
                     )}
                   </h2>
                   <p className="mt-5 text-sm sm:text-base leading-relaxed text-white/75 max-w-lg">
                     {isEn
-                      ? "Tell our AI your travel style, group, budget and interests — it builds a full A Lưới itinerary with real local stops, meals, and bookable experiences. No generic templates."
-                      : "Chỉ cần cho AI biết phong cách, số người, ngân sách và sở thích — hệ thống sẽ tạo lịch trình A Lưới hoàn chỉnh với điểm tham quan thực tế, ẩm thực địa phương và trải nghiệm đặt ngay. Không copy-paste."
+                      ? "Tell our AI your travel style, group, budget and interests â€” it builds a full A LÆ°á»›i itinerary with real local stops, meals, and bookable experiences. No generic templates."
+                      : "Chá»‰ cáº§n cho AI biáº¿t phong cÃ¡ch, sá»‘ ngÆ°á»i, ngÃ¢n sÃ¡ch vÃ  sá»Ÿ thÃ­ch â€” há»‡ thá»‘ng sáº½ táº¡o lá»‹ch trÃ¬nh A LÆ°á»›i hoÃ n chá»‰nh vá»›i Ä‘iá»ƒm tham quan thá»±c táº¿, áº©m thá»±c Ä‘á»‹a phÆ°Æ¡ng vÃ  tráº£i nghiá»‡m Ä‘áº·t ngay. KhÃ´ng copy-paste."
                     }
                   </p>
                 </div>
@@ -381,24 +399,18 @@ export function HomeClientView({
                 <ol className="space-y-4">
                   {[
                     {
-                      num: "01",
-                      vi: "Mô tả chuyến đi",
-                      en: "Describe your trip",
-                      descVi: "Nhóm, ngân sách, sở thích — càng chi tiết AI càng sát thực tế.",
-                      descEn: "Group size, budget, interests — the more detail, the better the plan."
+                      num: "01", vi: "MÃ´ táº£ chuyáº¿n Ä‘i", en: "Describe your trip",
+                      descVi: "NhÃ³m, ngÃ¢n sÃ¡ch, sá»Ÿ thÃ­ch â€” cÃ ng chi tiáº¿t AI cÃ ng sÃ¡t thá»±c táº¿.",
+                      descEn: "Group size, budget, interests â€” the more detail, the better the plan."
                     },
                     {
-                      num: "02",
-                      vi: "AI dựng lịch trình",
-                      en: "AI builds the plan",
-                      descVi: "Tự động chọn điểm đến, thời gian di chuyển, tiết trời phù hợp.",
+                      num: "02", vi: "AI dá»±ng lá»‹ch trÃ¬nh", en: "AI builds the plan",
+                      descVi: "Tá»± Ä‘á»™ng chá»n Ä‘iá»ƒm Ä‘áº¿n, thá»i gian di chuyá»ƒn, tiáº¿t trá»i phÃ¹ há»£p.",
                       descEn: "Auto-selects destinations, travel times, and weather-appropriate timing."
                     },
                     {
-                      num: "03",
-                      vi: "Đặt và điều chỉnh",
-                      en: "Book & customize",
-                      descVi: "Đặt homestay, tour trong một chỗ. Thay đổi linh hoạt theo ý bạn.",
+                      num: "03", vi: "Äáº·t vÃ  Ä‘iá»u chá»‰nh", en: "Book & customize",
+                      descVi: "Äáº·t homestay, tour trong má»™t chá»—. Thay Ä‘á»•i linh hoáº¡t theo Ã½ báº¡n.",
                       descEn: "Book stays and tours in one place. Adjust freely to your preference."
                     }
                   ].map((step) => (
@@ -414,28 +426,22 @@ export function HomeClientView({
                   ))}
                 </ol>
 
-                {/* CTA */}
-                <div className="flex flex-wrap gap-3 pt-2">
+                {/* Single CTA */}
+                <div className="pt-2">
                   <Link
                     href="/itinerary"
-                    className="inline-flex items-center gap-2 rounded-full bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-bold text-sm px-7 py-3 shadow-lg shadow-emerald-950/40 hover:scale-105 active:scale-95 transition-all duration-200"
+                    className="inline-flex items-center gap-2.5 rounded-full bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-bold text-sm px-8 py-3.5 shadow-lg shadow-emerald-950/40 hover:scale-105 active:scale-95 transition-all duration-200"
                   >
                     <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                    {isEn ? "Create my itinerary" : "Tạo lịch trình của tôi"}
-                  </Link>
-                  <Link
-                    href="/itinerary"
-                    className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 text-white font-semibold text-sm px-6 py-3 backdrop-blur-sm transition-all duration-200"
-                  >
-                    {isEn ? "See sample itinerary" : "Xem mẫu lịch trình"} →
+                    {isEn ? "Create my AI itinerary â€” free" : "Táº¡o lá»‹ch trÃ¬nh AI cá»§a tÃ´i â€” miá»…n phÃ­"}
                   </Link>
                 </div>
 
                 {/* Feature chips */}
                 <div className="flex flex-wrap gap-2 pt-1">
                   {(isEn
-                    ? ["🌤 Weather-aware", "👥 Group friendly", "💰 Budget-smart", "🌿 Eco activities", "🏠 Local homestays"]
-                    : ["🌤 Theo tiết trời", "👥 Mọi nhóm", "💰 Phù hợp ngân sách", "🌿 Trải nghiệm sinh thái", "🏠 Homestay bản địa"]
+                    ? ["ðŸŒ¤ Weather-aware", "ðŸ‘¥ Group friendly", "ðŸ’° Budget-smart", "ðŸŒ¿ Eco activities", "ðŸ  Local homestays"]
+                    : ["ðŸŒ¤ Theo tiáº¿t trá»i", "ðŸ‘¥ Má»i nhÃ³m", "ðŸ’° PhÃ¹ há»£p ngÃ¢n sÃ¡ch", "ðŸŒ¿ Tráº£i nghiá»‡m sinh thÃ¡i", "ðŸ  Homestay báº£n Ä‘á»‹a"]
                   ).map((chip) => (
                     <span key={chip} className="text-[11px] font-medium text-emerald-200/80 bg-white/5 border border-white/10 rounded-full px-3 py-1">{chip}</span>
                   ))}
@@ -445,8 +451,8 @@ export function HomeClientView({
 
             {/* RIGHT: Itinerary Preview Card (mock UI) */}
             <MotionReveal delay={0.15}>
-              <div className="relative">
-                {/* Glow effect behind card */}
+              <div className="float-card relative">
+                {/* Glow effect */}
                 <div className="absolute -inset-4 bg-emerald-500/10 rounded-3xl blur-2xl" />
 
                 <div className="relative rounded-2xl border border-white/15 bg-white/8 backdrop-blur-md overflow-hidden shadow-2xl">
@@ -459,31 +465,44 @@ export function HomeClientView({
                         <span className="size-3 rounded-full bg-emerald-400/70" />
                       </div>
                       <span className="text-xs font-semibold text-white/60 ml-1">
-                        {isEn ? "AI Itinerary — 2 Days in A Lưới" : "Lịch trình AI — 2 ngày tại A Lưới"}
+                        {isEn ? "AI Itinerary â€” 2 Days in A LÆ°á»›i" : "Lá»‹ch trÃ¬nh AI â€” 2 ngÃ y táº¡i A LÆ°á»›i"}
                       </span>
                     </div>
-                    <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 rounded-full px-2.5 py-0.5">AI ✦</span>
+                    <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 rounded-full px-2.5 py-0.5">AI âœ¦</span>
                   </div>
 
-                  {/* Day tabs */}
+                  {/* Day tabs â€” interactive */}
                   <div className="flex border-b border-white/10">
-                    <button className="flex-1 py-2.5 text-xs font-bold text-white bg-white/10">
-                      {isEn ? "Day 1" : "Ngày 1"}
-                    </button>
-                    <button className="flex-1 py-2.5 text-xs font-medium text-white/40">
-                      {isEn ? "Day 2" : "Ngày 2"}
-                    </button>
+                    {([1, 2] as const).map((day) => (
+                      <button
+                        key={day}
+                        onClick={() => setActiveItineraryDay(day)}
+                        className={`flex-1 py-2.5 text-xs font-bold transition-all ${
+                          activeItineraryDay === day
+                            ? "text-white bg-white/10 border-b-2 border-emerald-400"
+                            : "text-white/40 hover:text-white/70 hover:bg-white/5"
+                        }`}
+                      >
+                        {isEn ? `Day ${day}` : `NgÃ y ${day}`}
+                      </button>
+                    ))}
                   </div>
 
                   {/* Itinerary timeline */}
                   <div className="p-5 space-y-3">
-                    {[
-                      { time: "07:30", icon: "☀️", activity: isEn ? "Breakfast at Ta Lăng homestay — sticky rice & jungle herbs" : "Sáng tại homestay Tà Lăng — cơm nếp & rau rừng", tag: isEn ? "Meal" : "Ẩm thực" },
-                      { time: "09:00", icon: "🌊", activity: isEn ? "A Nor Waterfall hike — 45 min trail" : "Trekking thác A Nôr — đường mòn 45 phút", tag: isEn ? "Nature" : "Thiên nhiên" },
-                      { time: "11:30", icon: "🧵", activity: isEn ? "Zèng brocade weaving workshop — Pa Co village" : "Học dệt thổ cẩm Zèng — bản Pa Co", tag: isEn ? "Culture" : "Văn hoá" },
-                      { time: "14:00", icon: "🏊", activity: isEn ? "A Lin hot spring swim & relaxation" : "Tắm suối khoáng nóng A Lin thư giãn", tag: isEn ? "Wellness" : "Nghỉ dưỡng" },
-                      { time: "18:30", icon: "🍖", activity: isEn ? "Community dinner — Tà Ôi traditional dishes" : "Cơm cộng đồng — đặc sản Tà Ôi truyền thống", tag: isEn ? "Meal" : "Ẩm thực" }
-                    ].map((item, i) => (
+                    {(activeItineraryDay === 1 ? [
+                      { time: "07:30", icon: "â˜€ï¸", activity: isEn ? "Breakfast at Ta LÄƒng homestay â€” sticky rice & jungle herbs" : "SÃ¡ng táº¡i homestay TÃ  LÄƒng â€” cÆ¡m náº¿p & rau rá»«ng", tag: isEn ? "Meal" : "áº¨m thá»±c" },
+                      { time: "09:00", icon: "ðŸŒŠ", activity: isEn ? "A Nor Waterfall hike â€” 45 min trail" : "Trekking thÃ¡c A NÃ´r â€” Ä‘Æ°á»ng mÃ²n 45 phÃºt", tag: isEn ? "Nature" : "ThiÃªn nhiÃªn" },
+                      { time: "11:30", icon: "ðŸ§µ", activity: isEn ? "ZÃ¨ng brocade weaving workshop â€” Pa Co village" : "Há»c dá»‡t thá»• cáº©m ZÃ¨ng â€” báº£n Pa Co", tag: isEn ? "Culture" : "VÄƒn hoÃ¡" },
+                      { time: "14:00", icon: "ðŸŠ", activity: isEn ? "A Lin hot spring swim & relaxation" : "Táº¯m suá»‘i khoÃ¡ng nÃ³ng A Lin thÆ° giÃ£n", tag: isEn ? "Wellness" : "Nghá»‰ dÆ°á»¡ng" },
+                      { time: "18:30", icon: "ðŸ–", activity: isEn ? "Community dinner â€” TÃ  Ã”i traditional dishes" : "CÆ¡m cá»™ng Ä‘á»“ng â€” Ä‘áº·c sáº£n TÃ  Ã”i truyá»n thá»‘ng", tag: isEn ? "Meal" : "áº¨m thá»±c" }
+                    ] : [
+                      { time: "06:30", icon: "ðŸŒ„", activity: isEn ? "Sunrise at A Ráº±ng pass â€” panoramic highland views" : "Ngáº¯m bÃ¬nh minh Ä‘Ã¨o A Ráº±ng â€” toÃ n cáº£nh nÃºi rá»«ng", tag: isEn ? "Nature" : "ThiÃªn nhiÃªn" },
+                      { time: "08:30", icon: "ðŸŽ‹", activity: isEn ? "Bamboo forest walk & forest foraging with Pa KÃ´ guide" : "Äi bá»™ rá»«ng tre & hÃ¡i lÆ°á»£m vá»›i hÆ°á»›ng dáº«n Pa KÃ´", tag: isEn ? "Eco" : "Sinh thÃ¡i" },
+                      { time: "11:00", icon: "ðŸµ", activity: isEn ? "Wild forest tea tasting â€” A LÆ°á»›i highland specialty" : "ThÆ°á»Ÿng trÃ  rá»«ng A LÆ°á»›i â€” Ä‘áº·c sáº£n vÃ¹ng cao", tag: isEn ? "Meal" : "áº¨m thá»±c" },
+                      { time: "14:30", icon: "ðŸŽ­", activity: isEn ? "Ta Ã”i traditional dance performance & costume" : "Xem mÃºa truyá»n thá»‘ng TÃ  Ã”i â€” thá»­ trang phá»¥c dÃ¢n tá»™c", tag: isEn ? "Culture" : "VÄƒn hoÃ¡" },
+                      { time: "17:00", icon: "ðŸš—", activity: isEn ? "Scenic drive back to Huáº¿ via Háº£i VÃ¢n Pass" : "Di chuyá»ƒn vá» Huáº¿ qua Ä‘Ã¨o Háº£i VÃ¢n", tag: isEn ? "Transfer" : "Di chuyá»ƒn" }
+                    ]).map((item, i) => (
                       <div key={i} className="flex gap-3 items-start">
                         <span className="shrink-0 mt-0.5 text-[11px] font-mono text-white/40 w-10">{item.time}</span>
                         <div className="flex-1 min-w-0 flex items-start gap-2 bg-white/5 rounded-xl px-3 py-2.5 border border-white/8">
@@ -497,34 +516,75 @@ export function HomeClientView({
                     ))}
                   </div>
 
-                  {/* Bottom action bar */}
+                  {/* Bottom info bar */}
                   <div className="px-5 pb-5 pt-1">
                     <div className="flex items-center justify-between rounded-xl bg-emerald-500/15 border border-emerald-400/20 px-4 py-3">
                       <div>
-                        <p className="text-[11px] font-bold text-white/80">{isEn ? "4 people · 2 days · Budget 4M₫" : "4 người · 2 ngày · Ngân sách 4 triệu"}</p>
-                        <p className="text-[10px] text-emerald-300/70 mt-0.5">{isEn ? "Estimated cost includes stays & meals" : "Ước tính bao gồm lưu trú và ăn uống"}</p>
+                        <p className="text-[11px] font-bold text-white/80">{isEn ? "4 people Â· 2 days Â· Budget 4Mâ‚«" : "4 ngÆ°á»i Â· 2 ngÃ y Â· NgÃ¢n sÃ¡ch 4 triá»‡u"}</p>
+                        <p className="text-[10px] text-emerald-300/70 mt-0.5">{isEn ? "Includes stays & all meals" : "Bao gá»“m lÆ°u trÃº vÃ  Äƒn uá»‘ng"}</p>
                       </div>
-                      <Link href="/itinerary" className="shrink-0 text-[11px] font-bold text-slate-950 bg-emerald-400 rounded-lg px-3 py-1.5 hover:bg-emerald-300 transition">
-                        {isEn ? "Book →" : "Đặt ngay →"}
-                      </Link>
+                      <span className="shrink-0 text-[10px] font-bold text-emerald-300 bg-emerald-950/50 border border-emerald-500/30 rounded-lg px-3 py-1.5">
+                        {isEn ? "AI Generated âœ¦" : "AI táº¡o ra âœ¦"}
+                      </span>
                     </div>
-                  </div>
-                </div>
-
-                {/* Floating trust badge */}
-                <div className="absolute -bottom-3 -left-3 rounded-xl bg-white px-3.5 py-2.5 shadow-xl border border-forest/10 flex items-center gap-2">
-                  <span className="text-lg">🤖</span>
-                  <div>
-                    <p className="text-[10px] font-black text-ink leading-none">{isEn ? "Gemini AI" : "Gemini AI"}</p>
-                    <p className="text-[9px] text-ink/50 mt-0.5">{isEn ? "Locally verified" : "Dữ liệu A Lưới thực tế"}</p>
                   </div>
                 </div>
               </div>
             </MotionReveal>
 
           </div>
+
+          {/* FEATURES GRID â€” below main split */}
+          <MotionReveal delay={0.2}>
+            <div className="mt-20 pt-16 border-t border-white/10">
+              <p className="text-center text-xs font-bold uppercase tracking-[0.2em] text-emerald-400/70 mb-10">
+                {isEn ? "What the AI considers for your itinerary" : "Nhá»¯ng gÃ¬ AI xem xÃ©t khi lÃªn lá»‹ch trÃ¬nh cho báº¡n"}
+              </p>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    icon: "ðŸŒ¤",
+                    vi: "Thá»i tiáº¿t thá»±c táº¿",
+                    en: "Real weather data",
+                    descVi: "AI kiá»ƒm tra dá»± bÃ¡o thá»i tiáº¿t A LÆ°á»›i theo ngÃ y báº¡n chá»n Ä‘á»ƒ Ä‘iá»u chá»‰nh lá»‹ch trÃ¬nh phÃ¹ há»£p.",
+                    descEn: "AI checks A LÆ°á»›i weather forecasts for your chosen dates to plan outdoor activities wisely."
+                  },
+                  {
+                    icon: "ðŸ‘¥",
+                    vi: "PhÃ¹ há»£p nhÃ³m Ä‘i",
+                    en: "Group-optimized",
+                    descVi: "Tá»« cáº·p Ä‘Ã´i Ä‘áº¿n gia Ä‘Ã¬nh Ä‘Ã´ng ngÆ°á»i â€” AI chá»n Ä‘á»‹a Ä‘iá»ƒm, phÆ°Æ¡ng tiá»‡n vÃ  homestay phÃ¹ há»£p.",
+                    descEn: "From couples to large families â€” AI picks venues, transport, and stays suited to your group."
+                  },
+                  {
+                    icon: "ðŸ’š",
+                    vi: "Tráº£i nghiá»‡m báº£n Ä‘á»‹a",
+                    en: "Local-first experiences",
+                    descVi: "Æ¯u tiÃªn hÃ ng Ä‘áº§u lÃ  cÆ¡ sá»Ÿ cá»™ng Ä‘á»“ng, há»™ gia Ä‘Ã¬nh Ä‘á»‹a phÆ°Æ¡ng vÃ  nghá» thá»§ cÃ´ng truyá»n thá»‘ng.",
+                    descEn: "Priority given to community-run stays, local families, and authentic indigenous crafts."
+                  },
+                  {
+                    icon: "âš¡",
+                    vi: "Táº¡o trong 60 giÃ¢y",
+                    en: "Ready in 60 seconds",
+                    descVi: "KhÃ´ng cáº§n chá» tÆ° váº¥n viÃªn hay láº­t Google. Nháº­p yÃªu cáº§u â€” nháº­n lá»‹ch trÃ¬nh hoÃ n chá»‰nh ngay.",
+                    descEn: "No waiting for agents or browsing maps. Describe your trip â€” get a full plan instantly."
+                  }
+                ].map((f) => (
+                  <div key={f.vi} className="rounded-2xl border border-white/10 bg-white/5 p-5 hover:bg-white/10 transition-colors">
+                    <span className="text-2xl">{f.icon}</span>
+                    <h3 className="mt-3 text-sm font-bold text-white">{isEn ? f.en : f.vi}</h3>
+                    <p className="mt-2 text-xs leading-relaxed text-white/55">{isEn ? f.descEn : f.descVi}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </MotionReveal>
+
         </div>
       </section>
+
+
 
       {/* 3. TRIP BOOKING (ALL-INCLUSIVE VS SELF-GUIDED) */}
       <section className="section-shell py-24">
@@ -623,7 +683,7 @@ export function HomeClientView({
               const title = isEn && hsTrans ? hsTrans.name : item.name;
               const village = isEn && hsTrans ? hsTrans.village : item.village;
               const capacity = isEn && hsTrans ? hsTrans.capacity : item.capacity;
-              const meta = `${item.rating} ${isEn ? "rating" : "điểm đánh giá"}`;
+              const meta = `${item.rating} ${isEn ? "rating" : "Ä‘iá»ƒm Ä‘Ã¡nh giÃ¡"}`;
 
               return (
                 <ImageCard
@@ -632,10 +692,10 @@ export function HomeClientView({
                   image={item.image}
                   alt={`Homestay ${title}`}
                   title={title}
-                  subtitle={`${village} · ${capacity}`}
+                  subtitle={`${village} Â· ${capacity}`}
                   meta={meta}
                   price={item.price}
-                  cta={isEn ? "View Details" : "Xem chi tiết"}
+                  cta={isEn ? "View Details" : "Xem chi tiáº¿t"}
                 />
               );
             })}
@@ -666,7 +726,7 @@ export function HomeClientView({
                 subtitle={subtitle}
                 meta={meta}
                 price={item.price}
-                cta={isEn ? "Order Now" : "Đặt hàng"}
+                cta={isEn ? "Order Now" : "Äáº·t hÃ ng"}
               />
             );
           })}
@@ -727,10 +787,10 @@ export function HomeClientView({
                   ))}
                 </p>
                 <blockquote className="mt-5 text-lg font-medium leading-8 text-ink">
-                  “{quote}”
+                  â€œ{quote}â€
                 </blockquote>
                 <footer className="mt-5 text-sm text-ink/60">
-                  <strong className="text-ink">{name}</strong> · {role}
+                  <strong className="text-ink">{name}</strong> Â· {role}
                 </footer>
               </article>
             );
