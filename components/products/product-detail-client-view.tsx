@@ -1,7 +1,8 @@
-﻿"use client";
+"use client";
 
 import { AppImage } from "@/components/ui/app-image";
-import { CheckCircle2, Leaf, PackageCheck, ShieldCheck, Truck } from "lucide-react";
+import { CheckCircle2, Leaf, PackageCheck, ShieldCheck, Truck, Play } from "lucide-react";
+import { BlogVideoEmbed } from "@/components/blog/blog-video-embed";
 import { ImageCard } from "@/components/image-card";
 import { ProductOrderForm } from "@/components/product-order-form";
 import { formatCurrency } from "@/lib/utils";
@@ -55,6 +56,20 @@ export function ProductDetailClientView({
               </span>
             ))}
           </figcaption>
+          {product.videoUrl && (
+            <div className="mt-2 rounded-3xl overflow-hidden shadow-card border border-forest/10 bg-white p-4 sm:p-5">
+              <div className="flex items-center gap-2 mb-3 text-forest">
+                <Play className="size-4 fill-forest" />
+                <h3 className="font-extrabold text-sm text-ink uppercase tracking-wider">
+                  {isEn ? "Product Video" : "Video giới thiệu sản phẩm"}
+                </h3>
+              </div>
+              <BlogVideoEmbed
+                url={product.videoUrl}
+                caption={isEn ? `Video about ${title}` : `Video quy trình làm ${product.name}`}
+              />
+            </div>
+          )}
         </figure>
         <article className="lg:sticky lg:top-28 lg:h-fit">
           <section className="rounded-3xl bg-white p-6 shadow-card md:p-8">

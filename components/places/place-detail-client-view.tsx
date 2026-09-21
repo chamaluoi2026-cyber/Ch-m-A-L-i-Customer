@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { AppImage } from "@/components/ui/app-image";
 import Link from "next/link";
@@ -14,11 +14,14 @@ import {
   MapPin,
   Navigation,
   Phone,
+  Play,
+  Film,
   ShieldCheck,
   Star,
   TicketCheck,
   Users
 } from "lucide-react";
+import { BlogVideoEmbed, parseYouTubeVideoId, isDirectVideoUrl } from "@/components/blog/blog-video-embed";
 import { PlaceLeadForm } from "@/components/place-lead-form";
 import { PlaceCard } from "@/components/place-card";
 import { PlaceReviewsSection } from "@/components/place-reviews-section";
@@ -193,6 +196,22 @@ export function PlaceDetailClientView({
               })}
             </div>
           )}
+
+          {/* Featured Experience Video */}
+          {place.videoUrl && (
+            <div className="mt-6 rounded-3xl overflow-hidden shadow-card border border-forest/10 bg-white p-4 sm:p-6">
+              <div className="flex items-center gap-2 mb-3 text-forest">
+                <Play className="size-4 fill-forest" />
+                <h3 className="font-extrabold text-sm sm:text-base text-ink uppercase tracking-wider">
+                  {isEn ? "Experience Video" : "Video trải nghiệm thực tế"}
+                </h3>
+              </div>
+              <BlogVideoEmbed
+                url={place.videoUrl}
+                caption={isEn ? `Real-life experience at ${displayName}` : `Video trải nghiệm thực tế tại ${place.name}`}
+              />
+            </div>
+          )}
         </article>
 
         {/* Business & Booking Sidebar */}
@@ -274,9 +293,23 @@ export function PlaceDetailClientView({
           <h2 className="mt-2 text-2xl font-extrabold text-ink">
             {isEn ? `About ${displayName}` : `Về ${place.name}`}
           </h2>
-          <p className="mt-4 text-base leading-8 text-ink/75 whitespace-pre-line">
-            {displaySummary}
-          </p>
+          <div className="mt-4 space-y-4 text-base leading-8 text-ink/75">
+            {(place.description || displaySummary).split(/\n\n+/).map((para: string, i: number) => {
+              const trimmed = para.trim();
+              if (parseYouTubeVideoId(trimmed) || isDirectVideoUrl(trimmed)) {
+                return (
+                  <div key={i} className="my-4">
+                    <BlogVideoEmbed url={trimmed} />
+                  </div>
+                );
+              }
+              return (
+                <p key={i} className="whitespace-pre-line leading-relaxed">
+                  {para}
+                </p>
+              );
+            })}
+          </div>
 
           {place.highlights && place.highlights.length > 0 && (
             <div className="mt-8">
