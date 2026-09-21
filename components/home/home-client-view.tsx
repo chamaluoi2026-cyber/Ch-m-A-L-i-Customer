@@ -43,33 +43,33 @@ interface HomeClientViewProps {
 
 const aluoiGallery = [
   {
-    title: "NÃºi rá»«ng A LÆ°á»›i",
+    title: "Núi rừng A Lưới",
     enTitle: "A Luoi Mountain Passes",
-    caption: "Nhá»¯ng cung Ä‘Æ°á»ng xanh má»Ÿ ra nhá»‹p Ä‘i cháº­m vÃ  sÃ¢u.",
+    caption: "Những cung đường xanh mở ra nhịp đi chậm và sâu.",
     enCaption: "Pristine mountain passes opening up a deep, mindful travel rhythm.",
     image: imageFor("photo-1500534314209-a25ddb2bd429"),
     className: "md:col-span-2 md:row-span-2"
   },
   {
-    title: "ThÃ¡c A NÃ´r",
+    title: "Thác A Nôr",
     enTitle: "A Nor Waterfall",
-    caption: "KhÃ´ng gian mÃ¡t lÃ nh cho hÃ nh trÃ¬nh cá»™ng Ä‘á»“ng.",
+    caption: "Không gian mát lành cho hành trình cộng đồng.",
     enCaption: "Crystal mountain waters creating an idyllic sanctuary for travelers.",
     image: imageFor("photo-1506744038136-46273834b3fb"),
     className: ""
   },
   {
-    title: "BÃ¬nh minh vÃ¹ng cao",
+    title: "Bình minh vùng cao",
     enTitle: "Highland Sunrise",
-    caption: "Ãnh sÃ¡ng má»m trÃªn nÃºi vÃ  báº£n lÃ ng.",
+    caption: "Ánh sáng mềm trên núi và bản làng.",
     enCaption: "Soft morning light cascading over limestone crests and stilt houses.",
     image: imageFor("photo-1501785888041-af3ef285b470"),
     className: ""
   },
   {
-    title: "VÄƒn hÃ³a báº£n Ä‘á»‹a",
+    title: "Văn hóa bản địa",
     enTitle: "Indigenous Living Heritage",
-    caption: "Cháº¡m vÃ o Ä‘á»i sá»‘ng, nghá» thá»§ cÃ´ng vÃ  sá»± Ä‘Ã³n tiáº¿p áº¥m Ã¡p.",
+    caption: "Chạm vào đời sống, nghề thủ công và sự đón tiếp ấm áp.",
     enCaption: "Immersion into tribal crafts, stilt architecture, and sincere smiles.",
     image: imageFor("photo-1452860606245-08befc0ff44b"),
     className: "md:col-span-2"
@@ -111,11 +111,11 @@ export function HomeClientView({
 
   const heroTitle1 = isEn
     ? (settings?.heroTitleLine1En || "Highland Adventure &")
-    : (settings?.heroTitleLine1 || "Cháº¡m A LÆ°á»›i");
+    : (settings?.heroTitleLine1 || "Chạm A Lưới");
 
   const heroTitle2 = isEn
     ? (settings?.heroTitleLine2En || "Nature Retreat")
-    : (settings?.heroTitleLine2 || "Du lá»‹ch cá»™ng Ä‘á»“ng");
+    : (settings?.heroTitleLine2 || "Du lịch cộng đồng");
 
   const heroDesc = isEn
     ? (settings?.heroDescriptionEn || "Discover verified community homestays, traditional craft villages, authentic cuisine, and pristine waterfalls in A Luoi, Thua Thien Hue.")
@@ -135,7 +135,7 @@ export function HomeClientView({
 
   const overlayOpacity = Math.min(Math.max(settings?.heroOverlayOpacity ?? 60, 20), 95) / 100;
 
-  // Cáº¥u hÃ¬nh Vá»‹ trÃ­ hiá»ƒn thá»‹ & Layer Giá»¯a (Khung chá»¯)
+  // Cấu hình Vị trí hiển thị & Layer Giữa (Khung chữ)
   const position = settings?.heroPosition || "top";
   const cardStyle = settings?.heroCardStyle || "crystal";
   const cardColor = settings?.heroCardColor || "#0f382e";
@@ -157,7 +157,7 @@ export function HomeClientView({
   if (cardStyle === "none") {
     containerClasses += "bg-transparent border-0 shadow-none";
   } else if (cardStyle === "crystal") {
-    // KÃ­nh pha lÃª siÃªu trong suá»‘t chuáº©n Apple Liquid Crystal - KhÃ´ng lÃ m tá»‘i máº·t ngÆ°á»i phÃ­a sau
+    // Kính pha lê siêu trong suốt chuẩn Apple Liquid Crystal - Không làm tối mặt người phía sau
     containerClasses += `rounded-3xl border border-white/30 shadow-2xl ${blurClass}`;
     containerBgStyle = {
       background: "linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.05) 100%)",
@@ -195,12 +195,12 @@ export function HomeClientView({
         <figure className="absolute inset-0">
           <AppImage
             src={activeHeroImage}
-            alt="Phong cáº£nh nÃºi rá»«ng A LÆ°á»›i"
+            alt="Phong cảnh núi rừng A Lưới"
             fill
             priority
             className="object-cover object-center brightness-[0.82] contrast-[1.05]"
           />
-          <figcaption className="sr-only">HÃ¬nh áº£nh Ä‘áº¡i diá»‡n phong cáº£nh thiÃªn nhiÃªn A LÆ°á»›i</figcaption>
+          <figcaption className="sr-only">Hình ảnh đại diện phong cảnh thiên nhiên A Lưới</figcaption>
           {/* Enhanced Dark Overlay Scrim with dynamic opacity */}
           <div
             className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/50 transition-opacity duration-300"
@@ -210,7 +210,7 @@ export function HomeClientView({
         </figure>
 
         <header className={`relative z-10 mx-auto max-w-5xl px-4 ${isTop ? "py-2 sm:py-4" : "py-8"} text-center sm:px-6 lg:px-8`}>
-          {/* Glassmorphism Frosted Backdrop Card (Layer má» dÆ°á»›i chá»¯ Ä‘á»ƒ lÃ m ná»•i báº­t ná»™i dung) */}
+          {/* Glassmorphism Frosted Backdrop Card (Layer mờ dưới chữ để làm nổi bật nội dung) */}
           <div className={containerClasses} style={containerBgStyle}>
             {/* Ambient top border glow */}
             {cardStyle !== "none" && cardStyle !== "radial" && (
@@ -241,7 +241,7 @@ export function HomeClientView({
             </MotionReveal>
 
             <MotionReveal delay={0.3}>
-              <nav className="mt-8 flex flex-wrap items-center justify-center gap-4" aria-label="Äiá»u hÆ°á»›ng chÃ­nh Hero">
+              <nav className="mt-8 flex flex-wrap items-center justify-center gap-4" aria-label="Điều hướng chính Hero">
                 <Button
                   asChild
                   size="lg"
@@ -266,22 +266,22 @@ export function HomeClientView({
             {/* Micro Trust badges */}
             <div className="mt-8 pt-6 border-t border-white/10 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] sm:text-xs text-white/80 font-medium">
               <span className="flex items-center gap-1.5">
-                <span className="text-emerald-400 font-bold">âœ“</span> {isEn ? "100% Verified Local Homestays" : "100% Homestay báº£n Ä‘á»‹a"}
+                <span className="text-emerald-400 font-bold">✓</span> {isEn ? "100% Verified Local Homestays" : "100% Homestay bản địa"}
               </span>
-              <span className="hidden sm:inline text-white/30">â€¢</span>
+              <span className="hidden sm:inline text-white/30">•</span>
               <span className="flex items-center gap-1.5">
-                <span className="text-emerald-400 font-bold">âœ“</span> {isEn ? "Exclusive Direct Vouchers" : "Nháº­n voucher Æ°u Ä‘Ã£i trá»±c tiáº¿p"}
+                <span className="text-emerald-400 font-bold">✓</span> {isEn ? "Exclusive Direct Vouchers" : "Nhận voucher ưu đãi trực tiếp"}
               </span>
-              <span className="hidden sm:inline text-white/30">â€¢</span>
+              <span className="hidden sm:inline text-white/30">•</span>
               <span className="flex items-center gap-1.5">
-                <span className="text-emerald-400 font-bold">âœ“</span> {isEn ? "Mountain Pass Weather Advice" : "Cá»‘ váº¥n Ä‘Ã¨o QL49 an toÃ n"}
+                <span className="text-emerald-400 font-bold">✓</span> {isEn ? "Mountain Pass Weather Advice" : "Cố vấn đèo QL49 an toàn"}
               </span>
             </div>
           </div>
         </header>
 
         <aside className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 text-white/70 text-xs font-medium tracking-widest uppercase">
-          <span>{isEn ? "Scroll to Explore" : "Cuá»™n Ä‘á»ƒ khÃ¡m phÃ¡"}</span>
+          <span>{isEn ? "Scroll to Explore" : "Cuộn để khám phá"}</span>
           <ArrowDown className="size-4 animate-bounce text-emerald-300" />
         </aside>
       </section>
@@ -335,7 +335,7 @@ export function HomeClientView({
         </div>
       </section>
 
-      {/* âœ¨ AI Lá»ŠCH TRÃŒNH â€” SECTION HIGHLIGHT */}
+      {/* ✨ AI LỊCH TRÌNH — SECTION HIGHLIGHT */}
       <section className="relative overflow-hidden bg-gradient-to-br from-forest via-forest/95 to-[#0a2e22] py-24">
         {/* CSS animations for floating effects */}
         <style>{`
@@ -683,7 +683,7 @@ export function HomeClientView({
               const title = isEn && hsTrans ? hsTrans.name : item.name;
               const village = isEn && hsTrans ? hsTrans.village : item.village;
               const capacity = isEn && hsTrans ? hsTrans.capacity : item.capacity;
-              const meta = `${item.rating} ${isEn ? "rating" : "Ä‘iá»ƒm Ä‘Ã¡nh giÃ¡"}`;
+              const meta = `${item.rating} ${isEn ? "rating" : "điểm đánh giá"}`;
 
               return (
                 <ImageCard
@@ -692,10 +692,10 @@ export function HomeClientView({
                   image={item.image}
                   alt={`Homestay ${title}`}
                   title={title}
-                  subtitle={`${village} Â· ${capacity}`}
+                  subtitle={`${village} · ${capacity}`}
                   meta={meta}
                   price={item.price}
-                  cta={isEn ? "View Details" : "Xem chi tiáº¿t"}
+                  cta={isEn ? "View Details" : "Xem chi tiết"}
                 />
               );
             })}
@@ -726,7 +726,7 @@ export function HomeClientView({
                 subtitle={subtitle}
                 meta={meta}
                 price={item.price}
-                cta={isEn ? "Order Now" : "Äáº·t hÃ ng"}
+                cta={isEn ? "Order Now" : "Đặt hàng"}
               />
             );
           })}
@@ -787,10 +787,10 @@ export function HomeClientView({
                   ))}
                 </p>
                 <blockquote className="mt-5 text-lg font-medium leading-8 text-ink">
-                  â€œ{quote}â€
+                  “{quote}”
                 </blockquote>
                 <footer className="mt-5 text-sm text-ink/60">
-                  <strong className="text-ink">{name}</strong> Â· {role}
+                  <strong className="text-ink">{name}</strong> · {role}
                 </footer>
               </article>
             );
