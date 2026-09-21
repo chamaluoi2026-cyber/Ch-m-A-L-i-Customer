@@ -333,8 +333,202 @@ export function HomeClientView({
         </div>
       </section>
 
+      {/* ✨ AI LỊCH TRÌNH — SECTION HIGHLIGHT */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-forest via-forest/95 to-[#0a2e22] py-24">
+        {/* Decorative background texture */}
+        <div className="pointer-events-none absolute inset-0 opacity-10"
+          style={{
+            backgroundImage: "radial-gradient(circle at 20% 50%, #34d399 0%, transparent 40%), radial-gradient(circle at 80% 20%, #6ee7b7 0%, transparent 35%)"
+          }}
+        />
+        <div className="pointer-events-none absolute right-0 top-0 h-full w-1/2 opacity-5"
+          style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='1.5' fill='%23fff'/%3E%3C/svg%3E\")" }}
+        />
+
+        <div className="section-shell relative">
+          <div className="grid lg:grid-cols-[1fr_1.1fr] gap-12 lg:gap-16 items-center">
+
+            {/* LEFT: Value Proposition */}
+            <MotionReveal>
+              <div className="space-y-7">
+                {/* Badge */}
+                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-950/60 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-emerald-300 backdrop-blur-sm">
+                  <span className="relative flex size-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
+                  </span>
+                  {isEn ? "Powered by AI" : "Trợ lý AI du lịch"}
+                </div>
+
+                {/* Headline */}
+                <div>
+                  <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black leading-[1.15] text-white">
+                    {isEn ? (
+                      <>Personalized A Lưới<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-teal-200">Itinerary in 60s</span></>
+                    ) : (
+                      <>Lịch trình A Lưới<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-teal-200">cá nhân hoá trong 60 giây</span></>
+                    )}
+                  </h2>
+                  <p className="mt-5 text-sm sm:text-base leading-relaxed text-white/75 max-w-lg">
+                    {isEn
+                      ? "Tell our AI your travel style, group, budget and interests — it builds a full A Lưới itinerary with real local stops, meals, and bookable experiences. No generic templates."
+                      : "Chỉ cần cho AI biết phong cách, số người, ngân sách và sở thích — hệ thống sẽ tạo lịch trình A Lưới hoàn chỉnh với điểm tham quan thực tế, ẩm thực địa phương và trải nghiệm đặt ngay. Không copy-paste."
+                    }
+                  </p>
+                </div>
+
+                {/* 3 Steps */}
+                <ol className="space-y-4">
+                  {[
+                    {
+                      num: "01",
+                      vi: "Mô tả chuyến đi",
+                      en: "Describe your trip",
+                      descVi: "Nhóm, ngân sách, sở thích — càng chi tiết AI càng sát thực tế.",
+                      descEn: "Group size, budget, interests — the more detail, the better the plan."
+                    },
+                    {
+                      num: "02",
+                      vi: "AI dựng lịch trình",
+                      en: "AI builds the plan",
+                      descVi: "Tự động chọn điểm đến, thời gian di chuyển, tiết trời phù hợp.",
+                      descEn: "Auto-selects destinations, travel times, and weather-appropriate timing."
+                    },
+                    {
+                      num: "03",
+                      vi: "Đặt và điều chỉnh",
+                      en: "Book & customize",
+                      descVi: "Đặt homestay, tour trong một chỗ. Thay đổi linh hoạt theo ý bạn.",
+                      descEn: "Book stays and tours in one place. Adjust freely to your preference."
+                    }
+                  ].map((step) => (
+                    <li key={step.num} className="flex items-start gap-4">
+                      <span className="shrink-0 mt-0.5 w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-400/25 flex items-center justify-center text-[11px] font-black text-emerald-300 font-mono">
+                        {step.num}
+                      </span>
+                      <div>
+                        <p className="text-sm font-bold text-white">{isEn ? step.en : step.vi}</p>
+                        <p className="text-xs text-white/55 mt-0.5 leading-relaxed">{isEn ? step.descEn : step.descVi}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+
+                {/* CTA */}
+                <div className="flex flex-wrap gap-3 pt-2">
+                  <Link
+                    href="/itinerary"
+                    className="inline-flex items-center gap-2 rounded-full bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-bold text-sm px-7 py-3 shadow-lg shadow-emerald-950/40 hover:scale-105 active:scale-95 transition-all duration-200"
+                  >
+                    <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    {isEn ? "Create my itinerary" : "Tạo lịch trình của tôi"}
+                  </Link>
+                  <Link
+                    href="/itinerary"
+                    className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 text-white font-semibold text-sm px-6 py-3 backdrop-blur-sm transition-all duration-200"
+                  >
+                    {isEn ? "See sample itinerary" : "Xem mẫu lịch trình"} →
+                  </Link>
+                </div>
+
+                {/* Feature chips */}
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {(isEn
+                    ? ["🌤 Weather-aware", "👥 Group friendly", "💰 Budget-smart", "🌿 Eco activities", "🏠 Local homestays"]
+                    : ["🌤 Theo tiết trời", "👥 Mọi nhóm", "💰 Phù hợp ngân sách", "🌿 Trải nghiệm sinh thái", "🏠 Homestay bản địa"]
+                  ).map((chip) => (
+                    <span key={chip} className="text-[11px] font-medium text-emerald-200/80 bg-white/5 border border-white/10 rounded-full px-3 py-1">{chip}</span>
+                  ))}
+                </div>
+              </div>
+            </MotionReveal>
+
+            {/* RIGHT: Itinerary Preview Card (mock UI) */}
+            <MotionReveal delay={0.15}>
+              <div className="relative">
+                {/* Glow effect behind card */}
+                <div className="absolute -inset-4 bg-emerald-500/10 rounded-3xl blur-2xl" />
+
+                <div className="relative rounded-2xl border border-white/15 bg-white/8 backdrop-blur-md overflow-hidden shadow-2xl">
+                  {/* Card header */}
+                  <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 bg-white/5">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex gap-1.5">
+                        <span className="size-3 rounded-full bg-red-400/70" />
+                        <span className="size-3 rounded-full bg-yellow-400/70" />
+                        <span className="size-3 rounded-full bg-emerald-400/70" />
+                      </div>
+                      <span className="text-xs font-semibold text-white/60 ml-1">
+                        {isEn ? "AI Itinerary — 2 Days in A Lưới" : "Lịch trình AI — 2 ngày tại A Lưới"}
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 rounded-full px-2.5 py-0.5">AI ✦</span>
+                  </div>
+
+                  {/* Day tabs */}
+                  <div className="flex border-b border-white/10">
+                    <button className="flex-1 py-2.5 text-xs font-bold text-white bg-white/10">
+                      {isEn ? "Day 1" : "Ngày 1"}
+                    </button>
+                    <button className="flex-1 py-2.5 text-xs font-medium text-white/40">
+                      {isEn ? "Day 2" : "Ngày 2"}
+                    </button>
+                  </div>
+
+                  {/* Itinerary timeline */}
+                  <div className="p-5 space-y-3">
+                    {[
+                      { time: "07:30", icon: "☀️", activity: isEn ? "Breakfast at Ta Lăng homestay — sticky rice & jungle herbs" : "Sáng tại homestay Tà Lăng — cơm nếp & rau rừng", tag: isEn ? "Meal" : "Ẩm thực" },
+                      { time: "09:00", icon: "🌊", activity: isEn ? "A Nor Waterfall hike — 45 min trail" : "Trekking thác A Nôr — đường mòn 45 phút", tag: isEn ? "Nature" : "Thiên nhiên" },
+                      { time: "11:30", icon: "🧵", activity: isEn ? "Zèng brocade weaving workshop — Pa Co village" : "Học dệt thổ cẩm Zèng — bản Pa Co", tag: isEn ? "Culture" : "Văn hoá" },
+                      { time: "14:00", icon: "🏊", activity: isEn ? "A Lin hot spring swim & relaxation" : "Tắm suối khoáng nóng A Lin thư giãn", tag: isEn ? "Wellness" : "Nghỉ dưỡng" },
+                      { time: "18:30", icon: "🍖", activity: isEn ? "Community dinner — Tà Ôi traditional dishes" : "Cơm cộng đồng — đặc sản Tà Ôi truyền thống", tag: isEn ? "Meal" : "Ẩm thực" }
+                    ].map((item, i) => (
+                      <div key={i} className="flex gap-3 items-start">
+                        <span className="shrink-0 mt-0.5 text-[11px] font-mono text-white/40 w-10">{item.time}</span>
+                        <div className="flex-1 min-w-0 flex items-start gap-2 bg-white/5 rounded-xl px-3 py-2.5 border border-white/8">
+                          <span className="text-base leading-none mt-0.5">{item.icon}</span>
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-semibold text-white/90 leading-snug">{item.activity}</p>
+                            <span className="inline-block mt-1 text-[9px] font-bold uppercase tracking-wider text-emerald-400/80 bg-emerald-950/40 rounded-full px-2 py-0.5">{item.tag}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Bottom action bar */}
+                  <div className="px-5 pb-5 pt-1">
+                    <div className="flex items-center justify-between rounded-xl bg-emerald-500/15 border border-emerald-400/20 px-4 py-3">
+                      <div>
+                        <p className="text-[11px] font-bold text-white/80">{isEn ? "4 people · 2 days · Budget 4M₫" : "4 người · 2 ngày · Ngân sách 4 triệu"}</p>
+                        <p className="text-[10px] text-emerald-300/70 mt-0.5">{isEn ? "Estimated cost includes stays & meals" : "Ước tính bao gồm lưu trú và ăn uống"}</p>
+                      </div>
+                      <Link href="/itinerary" className="shrink-0 text-[11px] font-bold text-slate-950 bg-emerald-400 rounded-lg px-3 py-1.5 hover:bg-emerald-300 transition">
+                        {isEn ? "Book →" : "Đặt ngay →"}
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Floating trust badge */}
+                <div className="absolute -bottom-3 -left-3 rounded-xl bg-white px-3.5 py-2.5 shadow-xl border border-forest/10 flex items-center gap-2">
+                  <span className="text-lg">🤖</span>
+                  <div>
+                    <p className="text-[10px] font-black text-ink leading-none">{isEn ? "Gemini AI" : "Gemini AI"}</p>
+                    <p className="text-[9px] text-ink/50 mt-0.5">{isEn ? "Locally verified" : "Dữ liệu A Lưới thực tế"}</p>
+                  </div>
+                </div>
+              </div>
+            </MotionReveal>
+
+          </div>
+        </div>
+      </section>
+
       {/* 3. TRIP BOOKING (ALL-INCLUSIVE VS SELF-GUIDED) */}
       <section className="section-shell py-24">
+
         <MotionReveal>
           <SectionHeading
             eyebrow={t.home.bookingEyebrow}
