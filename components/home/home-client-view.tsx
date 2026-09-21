@@ -375,22 +375,22 @@ export function HomeClientView({
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                     <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
                   </span>
-                  {isEn ? "Powered by AI" : "Trá»£ lÃ½ AI du lá»‹ch"}
+                  {isEn ? "Powered by AI" : "Trợ lý AI du lịch"}
                 </div>
 
                 {/* Headline */}
                 <div>
                   <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black leading-[1.15] text-white">
                     {isEn ? (
-                      <>Personalized A LÆ°á»›i<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-teal-200">Itinerary in 60s</span></>
+                      <>Personalized A Lưới<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-teal-200">Itinerary in 60s</span></>
                     ) : (
-                      <>Lá»‹ch trÃ¬nh A LÆ°á»›i<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-teal-200">cÃ¡ nhÃ¢n hoÃ¡ trong 60 giÃ¢y</span></>
+                      <>Lịch trình A Lưới<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-teal-200">cá nhân hoá trong 60 giây</span></>
                     )}
                   </h2>
                   <p className="mt-5 text-sm sm:text-base leading-relaxed text-white/75 max-w-lg">
                     {isEn
-                      ? "Tell our AI your travel style, group, budget and interests â€” it builds a full A LÆ°á»›i itinerary with real local stops, meals, and bookable experiences. No generic templates."
-                      : "Chá»‰ cáº§n cho AI biáº¿t phong cÃ¡ch, sá»‘ ngÆ°á»i, ngÃ¢n sÃ¡ch vÃ  sá»Ÿ thÃ­ch â€” há»‡ thá»‘ng sáº½ táº¡o lá»‹ch trÃ¬nh A LÆ°á»›i hoÃ n chá»‰nh vá»›i Ä‘iá»ƒm tham quan thá»±c táº¿, áº©m thá»±c Ä‘á»‹a phÆ°Æ¡ng vÃ  tráº£i nghiá»‡m Ä‘áº·t ngay. KhÃ´ng copy-paste."
+                      ? "Tell our AI your travel style, group, budget and interests — it builds a full A Lưới itinerary with real local stops, meals, and bookable experiences. No generic templates."
+                      : "Chỉ cần cho AI biết phong cách, số người, ngân sách và sở thích — hệ thống sẽ tạo lịch trình A Lưới hoàn chỉnh với điểm tham quan thực tế, ẩm thực địa phương và trải nghiệm đặt ngay. Không copy-paste."
                     }
                   </p>
                 </div>
@@ -399,18 +399,18 @@ export function HomeClientView({
                 <ol className="space-y-4">
                   {[
                     {
-                      num: "01", vi: "MÃ´ táº£ chuyáº¿n Ä‘i", en: "Describe your trip",
-                      descVi: "NhÃ³m, ngÃ¢n sÃ¡ch, sá»Ÿ thÃ­ch â€” cÃ ng chi tiáº¿t AI cÃ ng sÃ¡t thá»±c táº¿.",
-                      descEn: "Group size, budget, interests â€” the more detail, the better the plan."
+                      num: "01", vi: "Mô tả chuyến đi", en: "Describe your trip",
+                      descVi: "Nhóm, ngân sách, sở thích — càng chi tiết AI càng sát thực tế.",
+                      descEn: "Group size, budget, interests — the more detail, the better the plan."
                     },
                     {
-                      num: "02", vi: "AI dá»±ng lá»‹ch trÃ¬nh", en: "AI builds the plan",
-                      descVi: "Tá»± Ä‘á»™ng chá»n Ä‘iá»ƒm Ä‘áº¿n, thá»i gian di chuyá»ƒn, tiáº¿t trá»i phÃ¹ há»£p.",
+                      num: "02", vi: "AI dựng lịch trình", en: "AI builds the plan",
+                      descVi: "Tự động chọn điểm đến, thời gian di chuyển, tiết trời phù hợp.",
                       descEn: "Auto-selects destinations, travel times, and weather-appropriate timing."
                     },
                     {
-                      num: "03", vi: "Äáº·t vÃ  Ä‘iá»u chá»‰nh", en: "Book & customize",
-                      descVi: "Äáº·t homestay, tour trong má»™t chá»—. Thay Ä‘á»•i linh hoáº¡t theo Ã½ báº¡n.",
+                      num: "03", vi: "Đặt và điều chỉnh", en: "Book & customize",
+                      descVi: "Đặt homestay, tour trong một chỗ. Thay đổi linh hoạt theo ý bạn.",
                       descEn: "Book stays and tours in one place. Adjust freely to your preference."
                     }
                   ].map((step) => (
@@ -433,15 +433,15 @@ export function HomeClientView({
                     className="inline-flex items-center gap-2.5 rounded-full bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-bold text-sm px-8 py-3.5 shadow-lg shadow-emerald-950/40 hover:scale-105 active:scale-95 transition-all duration-200"
                   >
                     <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                    {isEn ? "Create my AI itinerary â€” free" : "Táº¡o lá»‹ch trÃ¬nh AI cá»§a tÃ´i â€” miá»…n phÃ­"}
+                    {isEn ? "Create my AI itinerary — free" : "Tạo lịch trình AI của tôi — miễn phí"}
                   </Link>
                 </div>
 
                 {/* Feature chips */}
                 <div className="flex flex-wrap gap-2 pt-1">
                   {(isEn
-                    ? ["ðŸŒ¤ Weather-aware", "ðŸ‘¥ Group friendly", "ðŸ’° Budget-smart", "ðŸŒ¿ Eco activities", "ðŸ  Local homestays"]
-                    : ["ðŸŒ¤ Theo tiáº¿t trá»i", "ðŸ‘¥ Má»i nhÃ³m", "ðŸ’° PhÃ¹ há»£p ngÃ¢n sÃ¡ch", "ðŸŒ¿ Tráº£i nghiá»‡m sinh thÃ¡i", "ðŸ  Homestay báº£n Ä‘á»‹a"]
+                    ? ["🌤️ Weather-aware", "👥 Group friendly", "💰 Budget-smart", "🌿 Eco activities", "🏡 Local homestays"]
+                    : ["🌤️ Theo thời tiết", "👥 Mọi nhóm", "💰 Phù hợp ngân sách", "🌿 Trải nghiệm sinh thái", "🏡 Homestay bản địa"]
                   ).map((chip) => (
                     <span key={chip} className="text-[11px] font-medium text-emerald-200/80 bg-white/5 border border-white/10 rounded-full px-3 py-1">{chip}</span>
                   ))}
@@ -465,13 +465,13 @@ export function HomeClientView({
                         <span className="size-3 rounded-full bg-emerald-400/70" />
                       </div>
                       <span className="text-xs font-semibold text-white/60 ml-1">
-                        {isEn ? "AI Itinerary â€” 2 Days in A LÆ°á»›i" : "Lá»‹ch trÃ¬nh AI â€” 2 ngÃ y táº¡i A LÆ°á»›i"}
+                        {isEn ? "AI Itinerary — 2 Days in A Lưới" : "Lịch trình AI — 2 ngày tại A Lưới"}
                       </span>
                     </div>
-                    <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 rounded-full px-2.5 py-0.5">AI âœ¦</span>
+                    <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 rounded-full px-2.5 py-0.5">AI ✦</span>
                   </div>
 
-                  {/* Day tabs â€” interactive */}
+                  {/* Day tabs — interactive */}
                   <div className="flex border-b border-white/10">
                     {([1, 2] as const).map((day) => (
                       <button
@@ -483,7 +483,7 @@ export function HomeClientView({
                             : "text-white/40 hover:text-white/70 hover:bg-white/5"
                         }`}
                       >
-                        {isEn ? `Day ${day}` : `NgÃ y ${day}`}
+                        {isEn ? `Day ${day}` : `Ngày ${day}`}
                       </button>
                     ))}
                   </div>
@@ -491,17 +491,17 @@ export function HomeClientView({
                   {/* Itinerary timeline */}
                   <div className="p-5 space-y-3">
                     {(activeItineraryDay === 1 ? [
-                      { time: "07:30", icon: "â˜€ï¸", activity: isEn ? "Breakfast at Ta LÄƒng homestay â€” sticky rice & jungle herbs" : "SÃ¡ng táº¡i homestay TÃ  LÄƒng â€” cÆ¡m náº¿p & rau rá»«ng", tag: isEn ? "Meal" : "áº¨m thá»±c" },
-                      { time: "09:00", icon: "ðŸŒŠ", activity: isEn ? "A Nor Waterfall hike â€” 45 min trail" : "Trekking thÃ¡c A NÃ´r â€” Ä‘Æ°á»ng mÃ²n 45 phÃºt", tag: isEn ? "Nature" : "ThiÃªn nhiÃªn" },
-                      { time: "11:30", icon: "ðŸ§µ", activity: isEn ? "ZÃ¨ng brocade weaving workshop â€” Pa Co village" : "Há»c dá»‡t thá»• cáº©m ZÃ¨ng â€” báº£n Pa Co", tag: isEn ? "Culture" : "VÄƒn hoÃ¡" },
-                      { time: "14:00", icon: "ðŸŠ", activity: isEn ? "A Lin hot spring swim & relaxation" : "Táº¯m suá»‘i khoÃ¡ng nÃ³ng A Lin thÆ° giÃ£n", tag: isEn ? "Wellness" : "Nghá»‰ dÆ°á»¡ng" },
-                      { time: "18:30", icon: "ðŸ–", activity: isEn ? "Community dinner â€” TÃ  Ã”i traditional dishes" : "CÆ¡m cá»™ng Ä‘á»“ng â€” Ä‘áº·c sáº£n TÃ  Ã”i truyá»n thá»‘ng", tag: isEn ? "Meal" : "áº¨m thá»±c" }
+                      { time: "07:30", icon: "☀️", activity: isEn ? "Breakfast at Ta Lang homestay — sticky rice & jungle herbs" : "Sáng tại homestay Tà Lăng — cơm nếp & rau rừng", tag: isEn ? "Meal" : "Ẩm thực" },
+                      { time: "09:00", icon: "🌊", activity: isEn ? "A Nor Waterfall hike — 45 min trail" : "Trekking thác A Nôr — đường mòn 45 phút", tag: isEn ? "Nature" : "Thiên nhiên" },
+                      { time: "11:30", icon: "🧵", activity: isEn ? "Zèng brocade weaving workshop — Pa Co village" : "Học dệt thổ cẩm Zèng — bản Pa Co", tag: isEn ? "Culture" : "Văn hoá" },
+                      { time: "14:00", icon: "🏊", activity: isEn ? "A Lin hot spring swim & relaxation" : "Tắm suối khoáng nóng A Lin thư giãn", tag: isEn ? "Wellness" : "Nghỉ dưỡng" },
+                      { time: "18:30", icon: "🍲", activity: isEn ? "Community dinner — Ta Oi traditional dishes" : "Cơm cộng đồng — đặc sản Tà Ôi truyền thống", tag: isEn ? "Meal" : "Ẩm thực" }
                     ] : [
-                      { time: "06:30", icon: "ðŸŒ„", activity: isEn ? "Sunrise at A Ráº±ng pass â€” panoramic highland views" : "Ngáº¯m bÃ¬nh minh Ä‘Ã¨o A Ráº±ng â€” toÃ n cáº£nh nÃºi rá»«ng", tag: isEn ? "Nature" : "ThiÃªn nhiÃªn" },
-                      { time: "08:30", icon: "ðŸŽ‹", activity: isEn ? "Bamboo forest walk & forest foraging with Pa KÃ´ guide" : "Äi bá»™ rá»«ng tre & hÃ¡i lÆ°á»£m vá»›i hÆ°á»›ng dáº«n Pa KÃ´", tag: isEn ? "Eco" : "Sinh thÃ¡i" },
-                      { time: "11:00", icon: "ðŸµ", activity: isEn ? "Wild forest tea tasting â€” A LÆ°á»›i highland specialty" : "ThÆ°á»Ÿng trÃ  rá»«ng A LÆ°á»›i â€” Ä‘áº·c sáº£n vÃ¹ng cao", tag: isEn ? "Meal" : "áº¨m thá»±c" },
-                      { time: "14:30", icon: "ðŸŽ­", activity: isEn ? "Ta Ã”i traditional dance performance & costume" : "Xem mÃºa truyá»n thá»‘ng TÃ  Ã”i â€” thá»­ trang phá»¥c dÃ¢n tá»™c", tag: isEn ? "Culture" : "VÄƒn hoÃ¡" },
-                      { time: "17:00", icon: "ðŸš—", activity: isEn ? "Scenic drive back to Huáº¿ via Háº£i VÃ¢n Pass" : "Di chuyá»ƒn vá» Huáº¿ qua Ä‘Ã¨o Háº£i VÃ¢n", tag: isEn ? "Transfer" : "Di chuyá»ƒn" }
+                      { time: "06:30", icon: "🌄", activity: isEn ? "Sunrise at A Roang pass — panoramic highland views" : "Ngắm bình minh đèo A Roàng — toàn cảnh núi rừng", tag: isEn ? "Nature" : "Thiên nhiên" },
+                      { time: "08:30", icon: "🎋", activity: isEn ? "Bamboo forest walk & forest foraging with Pa Ko guide" : "Đi bộ rừng tre & hái lượm với hướng dẫn Pa Kô", tag: isEn ? "Eco" : "Sinh thái" },
+                      { time: "11:00", icon: "🍵", activity: isEn ? "Wild forest tea tasting — A Luoi highland specialty" : "Thưởng trà rừng A Lưới — đặc sản vùng cao", tag: isEn ? "Meal" : "Ẩm thực" },
+                      { time: "14:30", icon: "🎭", activity: isEn ? "Ta Oi traditional dance performance & costume" : "Xem múa truyền thống Tà Ôi — thử trang phục dân tộc", tag: isEn ? "Culture" : "Văn hoá" },
+                      { time: "17:00", icon: "🚗", activity: isEn ? "Scenic drive back to Hue" : "Di chuyển về Huế", tag: isEn ? "Transfer" : "Di chuyển" }
                     ]).map((item, i) => (
                       <div key={i} className="flex gap-3 items-start">
                         <span className="shrink-0 mt-0.5 text-[11px] font-mono text-white/40 w-10">{item.time}</span>
@@ -520,11 +520,11 @@ export function HomeClientView({
                   <div className="px-5 pb-5 pt-1">
                     <div className="flex items-center justify-between rounded-xl bg-emerald-500/15 border border-emerald-400/20 px-4 py-3">
                       <div>
-                        <p className="text-[11px] font-bold text-white/80">{isEn ? "4 people Â· 2 days Â· Budget 4Mâ‚«" : "4 ngÆ°á»i Â· 2 ngÃ y Â· NgÃ¢n sÃ¡ch 4 triá»‡u"}</p>
-                        <p className="text-[10px] text-emerald-300/70 mt-0.5">{isEn ? "Includes stays & all meals" : "Bao gá»“m lÆ°u trÃº vÃ  Äƒn uá»‘ng"}</p>
+                        <p className="text-[11px] font-bold text-white/80">{isEn ? "4 people · 2 days · Budget 4M₫" : "4 người · 2 ngày · Ngân sách 4 triệu"}</p>
+                        <p className="text-[10px] text-emerald-300/70 mt-0.5">{isEn ? "Includes stays & all meals" : "Bao gồm lưu trú và ăn uống"}</p>
                       </div>
                       <span className="shrink-0 text-[10px] font-bold text-emerald-300 bg-emerald-950/50 border border-emerald-500/30 rounded-lg px-3 py-1.5">
-                        {isEn ? "AI Generated âœ¦" : "AI táº¡o ra âœ¦"}
+                        {isEn ? "AI Generated ✦" : "AI tạo ra ✦"}
                       </span>
                     </div>
                   </div>
@@ -534,41 +534,41 @@ export function HomeClientView({
 
           </div>
 
-          {/* FEATURES GRID â€” below main split */}
+          {/* FEATURES GRID — below main split */}
           <MotionReveal delay={0.2}>
             <div className="mt-20 pt-16 border-t border-white/10">
               <p className="text-center text-xs font-bold uppercase tracking-[0.2em] text-emerald-400/70 mb-10">
-                {isEn ? "What the AI considers for your itinerary" : "Nhá»¯ng gÃ¬ AI xem xÃ©t khi lÃªn lá»‹ch trÃ¬nh cho báº¡n"}
+                {isEn ? "What the AI considers for your itinerary" : "Những gì AI xem xét khi lên lịch trình cho bạn"}
               </p>
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 {[
                   {
-                    icon: "ðŸŒ¤",
-                    vi: "Thá»i tiáº¿t thá»±c táº¿",
+                    icon: "🌤️",
+                    vi: "Thời tiết thực tế",
                     en: "Real weather data",
-                    descVi: "AI kiá»ƒm tra dá»± bÃ¡o thá»i tiáº¿t A LÆ°á»›i theo ngÃ y báº¡n chá»n Ä‘á»ƒ Ä‘iá»u chá»‰nh lá»‹ch trÃ¬nh phÃ¹ há»£p.",
-                    descEn: "AI checks A LÆ°á»›i weather forecasts for your chosen dates to plan outdoor activities wisely."
+                    descVi: "AI kiểm tra dự báo thời tiết A Lưới theo ngày bạn chọn để điều chỉnh lịch trình phù hợp.",
+                    descEn: "AI checks A Lưới weather forecasts for your chosen dates to plan outdoor activities wisely."
                   },
                   {
-                    icon: "ðŸ‘¥",
-                    vi: "PhÃ¹ há»£p nhÃ³m Ä‘i",
+                    icon: "👥",
+                    vi: "Phù hợp nhóm đi",
                     en: "Group-optimized",
-                    descVi: "Tá»« cáº·p Ä‘Ã´i Ä‘áº¿n gia Ä‘Ã¬nh Ä‘Ã´ng ngÆ°á»i â€” AI chá»n Ä‘á»‹a Ä‘iá»ƒm, phÆ°Æ¡ng tiá»‡n vÃ  homestay phÃ¹ há»£p.",
-                    descEn: "From couples to large families â€” AI picks venues, transport, and stays suited to your group."
+                    descVi: "Từ cặp đôi đến gia đình đông người — AI chọn địa điểm, phương tiện và homestay phù hợp.",
+                    descEn: "From couples to large families — AI picks venues, transport, and stays suited to your group."
                   },
                   {
-                    icon: "ðŸ’š",
-                    vi: "Tráº£i nghiá»‡m báº£n Ä‘á»‹a",
+                    icon: "💚",
+                    vi: "Trải nghiệm bản địa",
                     en: "Local-first experiences",
-                    descVi: "Æ¯u tiÃªn hÃ ng Ä‘áº§u lÃ  cÆ¡ sá»Ÿ cá»™ng Ä‘á»“ng, há»™ gia Ä‘Ã¬nh Ä‘á»‹a phÆ°Æ¡ng vÃ  nghá» thá»§ cÃ´ng truyá»n thá»‘ng.",
+                    descVi: "Ưu tiên hàng đầu là cơ sở cộng đồng, hộ gia đình địa phương và nghề thủ công truyền thống.",
                     descEn: "Priority given to community-run stays, local families, and authentic indigenous crafts."
                   },
                   {
-                    icon: "âš¡",
-                    vi: "Táº¡o trong 60 giÃ¢y",
+                    icon: "⚡",
+                    vi: "Tạo trong 60 giây",
                     en: "Ready in 60 seconds",
-                    descVi: "KhÃ´ng cáº§n chá» tÆ° váº¥n viÃªn hay láº­t Google. Nháº­p yÃªu cáº§u â€” nháº­n lá»‹ch trÃ¬nh hoÃ n chá»‰nh ngay.",
-                    descEn: "No waiting for agents or browsing maps. Describe your trip â€” get a full plan instantly."
+                    descVi: "Không cần chờ tư vấn viên hay lật Google. Nhập yêu cầu — nhận lịch trình hoàn chỉnh ngay.",
+                    descEn: "No waiting for agents or browsing maps. Describe your trip — get a full plan instantly."
                   }
                 ].map((f) => (
                   <div key={f.vi} className="rounded-2xl border border-white/10 bg-white/5 p-5 hover:bg-white/10 transition-colors">
