@@ -10,6 +10,7 @@ import {
 } from "@/lib/i18n/catalog-translations";
 import { Sparkles, Globe, RefreshCw } from "lucide-react";
 import type { BlogContentBlock, BlogPostRecord } from "@/lib/server-store";
+import { BlogVideoEmbed, parseYouTubeVideoId, isDirectVideoUrl } from "./blog-video-embed";
 
 interface BlogDetailClientViewProps {
   post: BlogPostRecord;
@@ -159,6 +160,13 @@ export function BlogDetailClientView({
           <AppImage src={post.image} alt={displayTitle} fill priority className="object-cover" />
         </figure>
 
+        {/* Featured Video (if post has videoUrl) */}
+        {post.videoUrl && (
+          <div className="mx-auto mt-8 max-w-3xl">
+            <BlogVideoEmbed url={post.videoUrl} caption="Video tiêu điểm bài viết" />
+          </div>
+        )}
+
         {/* Excerpt */}
         {displayExcerpt && (
           <div className="mx-auto mt-10 max-w-3xl rounded-2xl bg-forest/5 border-l-4 border-forest p-5 text-lg italic text-ink/80 font-serif leading-relaxed">
@@ -169,20 +177,73 @@ export function BlogDetailClientView({
         {/* Main Content */}
         <section className="mx-auto mt-10 max-w-3xl space-y-6 text-lg leading-8 text-ink/80">
           {activeIsEn && displayContent ? (
-            displayContent.split("\n\n").map((para: string, i: number) => (
-              <p key={i} className="leading-relaxed">
-                {para}
-              </p>
-            ))
+            displayContent.split("\n\n").map((para: string, i: number) => {
+              const trimmed = para.trim();
+              if (parseYouTubeVideoId(trimmed) || isDirectVideoUrl(trimmed)) {
+                return <BlogVideoEmbed key={i} url={trimmed} />;
+              }
+              return (
+                <p key={i} className="leading-relaxed">
+                  {para}
+                </p>
+              );
+            })
           ) : post.blocks && post.blocks.length > 0 ? (
             post.blocks.map((block: BlogContentBlock) => (
               <div key={block.id}>
+                {/* Paragraph (with auto-detect video link) */}
                 {block.type === "paragraph" && (
-                  <p style={{ textAlign: block.align || "left" }}>
-                    {block.content}
-                  </p>
+                  Boolean(parseYouTubeVideoId(block.content.trim()) || isDirectVideoUrl(block.content.trim())) ? (
+                    <BlogVideoEmbed url={block.content.trim()} />
+                  ) : (
+                    <p style={{ textAlign: block.align || "left" }}>
+                      {block.content}
+                    </p>
+                  )
                 )}
 
+                {/* Video Block */}
+                {block.type === "video" && (
+                  <BlogVideoEmbed
+                    url={block.url}
+                    caption={block.caption}
+                    aspectRatio={block.aspectRatio}
+                  />
+                )}
+
+                {/* Single Image Block */}
+                {block.type === "image" && (
+                  <figure className={`my-8 ${block.width === "sm" ? "max-w-md mx-auto" : block.width === "md" ? "max-w-xl mx-auto" : "w-full"}`}>
+                    <div className="relative aspect-[16/10] overflow-hidden rounded-2xl shadow-card border border-black/5 bg-beige/30">
+                      <AppImage src={block.url} alt={block.alt || block.caption || displayTitle} fill className="object-cover" />
+                    </div>
+                    {block.caption && (
+                      <figcaption className="mt-2 text-center text-xs italic text-ink/65">
+                        📷 {block.caption}
+                      </figcaption>
+                    )}
+                  </figure>
+                )}
+
+                {/* Image Gallery Block */}
+                {block.type === "gallery" && (
+                  <div className={`my-8 grid gap-3.5 ${block.layout === "grid-2" ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3"}`}>
+                    {block.images.map((img) => (
+                      <figure key={img.id} className="overflow-hidden rounded-2xl border border-black/5 shadow-xs bg-white">
+                        <div className="relative aspect-[4/3]">
+                          <AppImage src={img.url} alt={img.caption || displayTitle} fill className="object-cover hover:scale-105 transition duration-300" />
+                        </div>
+                        {img.caption && (
+                          <figcaption className="p-2 text-center text-[11px] text-ink/65 italic">
+                            {img.caption}
+                          </figcaption>
+                        )}
+                      </figure>
+                    ))}
+                  </div>
+                )}
+
+                {/* Heading Block */}
                 {block.type === "heading" &&
                   (block.level === 3 ? (
                     <h3 className="text-2xl font-bold text-forest mt-8 mb-3">
@@ -194,10 +255,11 @@ export function BlogDetailClientView({
                     </h2>
                   ))}
 
+                {/* Quote Block */}
                 {block.type === "quote" && (
                   <blockquote className="my-8 rounded-2xl bg-forest/5 border-l-4 border-forest p-6">
                     <p className="text-xl italic font-serif text-ink leading-relaxed">
-                      "{block.content}"
+                      &ldquo;{block.content}&rdquo;
                     </p>
                     {block.author && (
                       <cite className="block mt-2 text-sm font-bold text-forest not-italic">
@@ -207,6 +269,7 @@ export function BlogDetailClientView({
                   </blockquote>
                 )}
 
+                {/* List Block */}
                 {block.type === "list" && (
                   <ul className={`my-4 space-y-2 pl-6 ${block.style === "number" ? "list-decimal" : "list-disc"}`}>
                     {block.items.map((item, i) => (
@@ -214,14 +277,39 @@ export function BlogDetailClientView({
                     ))}
                   </ul>
                 )}
+
+                {/* Divider Block */}
+                {block.type === "divider" && (
+                  <hr className="my-10 border-forest/15" />
+                )}
+
+                {/* Code / Note Block */}
+                {block.type === "code" && (
+                  <div className="my-6 rounded-2xl bg-[#0E2E25] text-white p-5 font-mono text-xs overflow-x-auto shadow-inner border border-emerald-500/20">
+                    <pre className="whitespace-pre-wrap">{block.code}</pre>
+                  </div>
+                )}
               </div>
             ))
           ) : (
             <>
-              <p>{post.content}</p>
-              <p>
-                Du lịch cộng đồng phát huy giá trị cao nhất khi du khách đến với lòng tò mò và sự kiên nhẫn. Tại A Lưới, những kỷ niệm ý nghĩa nhất thường đến từ những khoảnh khắc dung dị: bữa ăn ấm áp, tấm Zèng thủ công, đường mòn ven rừng hay cuộc trò chuyện thân tình cùng bà con bản địa.
-              </p>
+              {post.content ? (
+                post.content.split("\n\n").map((para: string, i: number) => {
+                  const trimmed = para.trim();
+                  if (parseYouTubeVideoId(trimmed) || isDirectVideoUrl(trimmed)) {
+                    return <BlogVideoEmbed key={i} url={trimmed} />;
+                  }
+                  return (
+                    <p key={i} className="leading-relaxed">
+                      {para}
+                    </p>
+                  );
+                })
+              ) : (
+                <p>
+                  Du lịch cộng đồng phát huy giá trị cao nhất khi du khách đến với lòng tò mò và sự kiên nhẫn. Tại A Lưới, những kỷ niệm ý nghĩa nhất thường đến từ những khoảnh khắc dung dị: bữa ăn ấm áp, tấm Zèng thủ công, đường mòn ven rừng hay cuộc trò chuyện thân tình cùng bà con bản địa.
+                </p>
+              )}
             </>
           )}
         </section>
