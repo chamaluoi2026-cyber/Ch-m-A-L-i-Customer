@@ -1,5 +1,85 @@
 import { placeCategories, places as staticPlaces, type PlaceCategory, type Place } from "@/data/places";
-import { getAllPlaces as getStorePlaces, getDynamicPlaceBySlug as getStorePlaceBySlug, getActivePlaces as getStoreActivePlaces } from "@/lib/server-store";
+import { getAllPlaces as getStorePlaces, getDynamicPlaceBySlug as getStorePlaceBySlug, getActivePlaces as getStoreActivePlaces, type PlaceRecord } from "@/lib/server-store";
+import { getPlacesFromCloudAsync } from "@/lib/cloud-store";
+
+function mapRecordToPlace(r: PlaceRecord): Place {
+  return {
+    name: r.name,
+    slug: r.slug,
+    category: r.category as PlaceCategory,
+    businessName: r.businessName,
+    businessId: r.businessId,
+    summary: r.summary,
+    description: r.description,
+    address: r.address,
+    mapEmbedUrl: r.mapEmbedUrl,
+    priceLabel: r.priceLabel,
+    voucherOffer: r.voucherOffer,
+    commissionRate: r.commissionRate || 10,
+    rating: r.rating || 4.8,
+    reviewCount: r.reviewCount || 1,
+    openingHours: r.openingHours,
+    phone: r.phone,
+    zaloUrl: r.zaloUrl,
+    image: r.image || r.coverImage || "",
+    gallery: (r.gallery || []).map((g) => (typeof g === "string" ? g : (g as any).url)),
+    services: r.services || [],
+    highlights: r.highlights || [],
+    activities: r.activities || [],
+    suitableFor: r.suitableFor || [],
+    safetyNotes: r.safetyNotes || [],
+    status: (r.status === "temporarily_closed" ? "temporarily_closed" : "active") as "active" | "temporarily_closed"
+  };
+}
+
+// ==========================================
+// ASYNC API (KẾT NỐI TRỰC TIẾP SUPABASE CLOUD)
+// ==========================================
+
+export async function getAllPlacesAsync(): Promise<Place[]> {
+  try {
+    const records = await getPlacesFromCloudAsync();
+    const active = records.filter((r) => !r.isDeleted);
+    if (active.length > 0) {
+      return active.map(mapRecordToPlace);
+    }
+  } catch (err) {
+    console.error("[PLACES] Error loading async places from cloud:", err);
+  }
+  return getAllPlaces();
+}
+
+export async function getActivePlacesAsync(): Promise<Place[]> {
+  const all = await getAllPlacesAsync();
+  return all.filter((p) => p.status === "active");
+}
+
+export async function getPlaceBySlugAsync(slug: string): Promise<Place | undefined> {
+  const all = await getAllPlacesAsync();
+  return all.find((place) => place.slug === slug);
+}
+
+export async function getPlacesByCategoryAsync(categoryId?: string): Promise<Place[]> {
+  const currentPlaces = await getAllPlacesAsync();
+  if (!categoryId || categoryId === "all") return currentPlaces;
+  return currentPlaces.filter((place) => place.category === categoryId);
+}
+
+export async function getFeaturedPlacesAsync(limit = 3): Promise<Place[]> {
+  const currentPlaces = await getAllPlacesAsync();
+  return currentPlaces.slice(0, limit);
+}
+
+export async function getRelatedPlacesAsync(currentSlug: string, category: PlaceCategory): Promise<Place[]> {
+  const currentPlaces = await getAllPlacesAsync();
+  return currentPlaces
+    .filter((place) => place.slug !== currentSlug && (place.category === category || category === "all"))
+    .slice(0, 3);
+}
+
+// ==========================================
+// SYNCHRONOUS FALLBACK API (DÙNG KHI CẦN)
+// ==========================================
 
 export function getAllPlaces(): Place[] {
   try {

@@ -8,7 +8,7 @@ import {
   TravelCompanion,
   DepartureTime
 } from "@/lib/highland-itinerary-engine";
-import { getActivePlaces } from "@/lib/places";
+import { getActivePlacesAsync } from "@/lib/places";
 
 export async function POST(req: NextRequest) {
   try {
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Thuật toán AI tạo khung lịch trình thích ứng theo thời tiết, ngày đi & phương tiện
-    const activePlaces = getActivePlaces();
+    const activePlaces = await getActivePlacesAsync();
     const rawPlan = generateHighlandItinerary({
       duration: duration as TripDuration,
       transport: transport as TransportType,

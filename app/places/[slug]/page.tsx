@@ -1,5 +1,5 @@
-﻿import { notFound, redirect } from "next/navigation";
-import { getPlaceBySlug, getPlaceStaticParams, getRelatedPlaces } from "@/lib/places";
+import { notFound, redirect } from "next/navigation";
+import { getPlaceBySlugAsync, getPlaceStaticParams, getRelatedPlacesAsync } from "@/lib/places";
 import { fetchPlaceReviewsAction } from "@/app/actions/reviews";
 import { siteUrl } from "@/lib/utils";
 import { generatePlaceJsonLd, toAbsoluteImageUrl } from "@/lib/seo/schema-generator";
@@ -21,9 +21,9 @@ export async function generateMetadata({
   searchParams?: Promise<{ preview?: string; token?: string }>;
 }) {
   const { slug } = await params;
-  const place = getPlaceBySlug(slug);
+  const place = await getPlaceBySlugAsync(slug);
 
-  if (!place || place.isDeleted) {
+  if (!place || (place as any).isDeleted) {
     notFound();
   }
 
@@ -70,8 +70,8 @@ export default async function PlaceDetailPage({
   const query = searchParams ? await searchParams : undefined;
   const isPreview = query?.preview === "true" || !!query?.token;
 
-  const place = getPlaceBySlug(slug);
-  if (!place || (place.isDeleted && !isPreview)) notFound();
+  const place = await getPlaceBySlugAsync(slug);
+  if (!place || ((place as any).isDeleted && !isPreview)) notFound();
 
   // Tự động chuyển hướng từ slug cũ sang slug mới nếu đã được đổi tên
   if (place.slug !== slug) {
@@ -83,7 +83,7 @@ export default async function PlaceDetailPage({
     notFound();
   }
 
-  const relatedPlaces = getRelatedPlaces(place.slug, place.category as any);
+  const relatedPlaces = await getRelatedPlacesAsync(place.slug, place.category as any);
   const approvedReviews = await fetchPlaceReviewsAction(place.slug, true);
   const { mainSchema, breadcrumbSchema, faqSchema } = generatePlaceJsonLd(place, approvedReviews);
 

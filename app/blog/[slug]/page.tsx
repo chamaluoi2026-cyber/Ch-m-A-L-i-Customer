@@ -1,5 +1,5 @@
-﻿import { notFound } from "next/navigation";
-import { getBlogPostBySlug, getBlogPosts } from "@/lib/server-store";
+import { notFound } from "next/navigation";
+import { getBlogsFromCloudAsync } from "@/lib/cloud-store";
 import { siteUrl } from "@/lib/utils";
 import { BlogDetailClientView } from "@/components/blog/blog-detail-client-view";
 
@@ -18,7 +18,8 @@ export default async function BlogDetailPage({
   const sParams = searchParams ? await searchParams : {};
   const isPreview = sParams.preview === "true" || Boolean(sParams.token);
 
-  const post = getBlogPostBySlug(slug);
+  const allPosts = await getBlogsFromCloudAsync();
+  const post = allPosts.find((p) => p.slug === slug && !p.isDeleted);
   if (!post) notFound();
 
   // Bảo vệ bài nháp: Nếu bài viết chưa xuất bản và không có cờ preview -> Trả về 404
@@ -26,8 +27,7 @@ export default async function BlogDetailPage({
     notFound();
   }
 
-  const allPosts = getBlogPosts();
-  const related = allPosts.filter((item) => item.slug !== slug && item.status === "published").slice(0, 3);
+  const related = allPosts.filter((item) => item.slug !== slug && item.status === "published" && !item.isDeleted).slice(0, 3);
 
   const jsonLd = {
     "@context": "https://schema.org",

@@ -1,4 +1,4 @@
-import { getPlacesByCategory } from "@/lib/places";
+import { getPlacesByCategoryAsync } from "@/lib/places";
 import { siteUrl } from "@/lib/utils";
 import { toAbsoluteImageUrl } from "@/lib/seo/schema-generator";
 import { PlacesClientView } from "@/components/places/places-client-view";
@@ -28,7 +28,7 @@ export default async function PlacesPage({
 }) {
   const query = await searchParams;
   const activeCategoryId = query.category || "all";
-  const filteredPlaces = getPlacesByCategory(activeCategoryId);
+  const filteredPlaces = await getPlacesByCategoryAsync(activeCategoryId);
 
   const itemListJsonLd = {
     "@context": "https://schema.org",

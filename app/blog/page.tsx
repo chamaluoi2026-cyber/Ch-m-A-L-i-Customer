@@ -1,5 +1,5 @@
-﻿import type { Metadata } from "next";
-import { getBlogPosts } from "@/lib/server-store";
+import type { Metadata } from "next";
+import { getBlogsFromCloudAsync } from "@/lib/cloud-store";
 import { BlogListClientView } from "@/components/blog/blog-list-client-view";
 
 export const dynamic = "force-dynamic";
@@ -10,9 +10,9 @@ export const metadata: Metadata = {
   description: "Văn hóa, ẩm thực, cẩm nang du lịch, trải nghiệm và tin tức từ du lịch cộng đồng A Lưới."
 };
 
-export default function BlogPage() {
-  const allPosts = getBlogPosts();
-  const publishedPosts = allPosts.filter((p) => p.status === "published");
+export default async function BlogPage() {
+  const allPosts = await getBlogsFromCloudAsync();
+  const publishedPosts = allPosts.filter((p) => p.status === "published" && !p.isDeleted);
 
   return <BlogListClientView publishedPosts={publishedPosts} />;
 }
