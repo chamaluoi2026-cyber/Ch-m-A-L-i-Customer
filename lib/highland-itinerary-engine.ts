@@ -1169,13 +1169,23 @@ export function generateHighlandItinerary(params: {
  */
 export function enrichPlanWithPlaces(
   plan: ItineraryPlan,
-  places?: Array<{ slug?: string; image?: string; coverImage?: string }>
+  places?: Array<{
+    slug?: string;
+    name?: string;
+    image?: string;
+    coverImage?: string;
+    summary?: string;
+    highlights?: string[];
+    activities?: string[];
+    voucherOffer?: string;
+    priceLabel?: string;
+  }>
 ): ItineraryPlan {
   if (!places || places.length === 0) return plan;
-  const placeMap = new Map<string, string>();
+  const placeMap = new Map<string, any>();
   for (const p of places) {
-    if (p.slug && (p.image || p.coverImage)) {
-      placeMap.set(p.slug, (p.image || p.coverImage) as string);
+    if (p.slug) {
+      placeMap.set(p.slug, p);
     }
   }
 
@@ -1183,7 +1193,21 @@ export function enrichPlanWithPlaces(
     ...day,
     stops: day.stops.map((stop) => {
       if (stop.slug && placeMap.has(stop.slug)) {
-        return { ...stop, image: placeMap.get(stop.slug)! };
+        const p = placeMap.get(stop.slug);
+        const updatedImage = p.coverImage || p.image || stop.image;
+        const updatedName = p.name || stop.name;
+        const updatedSummary = p.summary || stop.summary;
+        const updatedMustTry = p.highlights?.length ? p.highlights.slice(0, 3) : (p.activities?.length ? p.activities.slice(0, 3) : stop.mustTry);
+        const voucherInfo = p.voucherOffer ? `🎁 ${p.voucherOffer}. ` : "";
+
+        return {
+          ...stop,
+          name: updatedName,
+          image: updatedImage,
+          summary: updatedSummary,
+          mustTry: updatedMustTry,
+          wisdomTip: voucherInfo ? `${voucherInfo}${stop.wisdomTip}` : stop.wisdomTip
+        };
       }
       return stop;
     })

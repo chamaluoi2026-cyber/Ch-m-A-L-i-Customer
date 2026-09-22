@@ -9,6 +9,7 @@ import {
   DepartureTime
 } from "@/lib/highland-itinerary-engine";
 import { getActivePlacesAsync } from "@/lib/places";
+import { getSiteSettingsAsync } from "@/lib/server-store";
 
 export async function POST(req: NextRequest) {
   try {
@@ -42,9 +43,8 @@ export async function POST(req: NextRequest) {
       if (weatherRes.ok) {
         const wData = await weatherRes.json();
         const times: string[] = wData.daily?.time || [];
-        // Khớp ngày khởi hành với ngày trong dự báo thời tiết
         let targetIdx = departureDate ? times.indexOf(departureDate) : 0;
-        if (targetIdx < 0) targetIdx = 0; // Nếu ngày xa hơn 7 ngày thì lấy ngày gần nhất
+        if (targetIdx < 0) targetIdx = 0;
 
         const maxT = Math.round(wData.daily?.temperature_2m_max?.[targetIdx] ?? 26);
         const minT = Math.round(wData.daily?.temperature_2m_min?.[targetIdx] ?? 18);
@@ -58,11 +58,9 @@ export async function POST(req: NextRequest) {
           rainChance: rain
         };
       }
-    } catch {
-      // Dùng fallback mặc định
-    }
+    } catch {}
 
-    // 2. Thuật toán AI tạo khung lịch trình thích ứng theo thời tiết, ngày đi & phương tiện
+    // 2. Lấy toàn bộ danh sách địa điểm mới nhất từ Cloud Database (đã cập nhật từ Admin)
     const activePlaces = await getActivePlacesAsync();
     const rawPlan = generateHighlandItinerary({
       duration: duration as TripDuration,
@@ -75,19 +73,26 @@ export async function POST(req: NextRequest) {
       isRainy,
       weatherForecast
     });
-    // Đồng bộ ảnh thực tế từ kho Điểm đến do Admin quản lý
+
+    // Đồng bộ toàn bộ thông tin thực tế mới nhất (ảnh, tên, mô tả, ưu đãi, điểm đặc sắc)
     const basePlan = enrichPlanWithPlaces(rawPlan, activePlaces);
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    // 3. Nạp API Key Gemini từ biến môi trường hoặc cấu hình hệ thống trên Cloud
+    let apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      try {
+        const settings = await getSiteSettingsAsync();
+        apiKey = settings.geminiApiKey;
+      } catch {}
+    }
 
-    // 3. Nếu có Gemini API Key: Kích hoạt Gemini 2.5 Flash làm Chuyên Gia Cố Vấn Khí Hậu & Lịch Trình
+    // 4. Nếu có Gemini API Key: Kích hoạt Gemini 2.5 Flash làm Chuyên Gia Cố Vấn Khí Hậu & Lịch Trình
     if (apiKey) {
       try {
         const placesCatalog = activePlaces
-          .slice(0, 25)
           .map(
             (p) =>
-              `- [${p.name}] (Loại: ${p.category}, Điểm đặc sắc: ${p.highlights?.join(", ") || p.summary}, Hoạt động: ${p.activities?.join(", ") || "Tham quan"}, Ưu đãi: ${p.voucherOffer || "Ưu đãi đặt trước"}, Phù hợp: ${p.suitableFor?.join(", ") || "Mọi người"})`
+              `- [${p.name}] (Slug: ${p.slug}, Phân loại: ${p.category}, Điểm nổi bật: ${p.highlights?.join(", ") || p.summary}, Hoạt động: ${p.activities?.join(", ") || "Tham quan, chụp ảnh"}, Giá: ${p.priceLabel || "Liên hệ"}, Ưu đãi: ${p.voucherOffer || "Ưu đãi qua Chạm A Lưới"}, Phù hợp: ${p.suitableFor?.join(", ") || "Tất cả du khách"})`
           )
           .join("\n");
 
