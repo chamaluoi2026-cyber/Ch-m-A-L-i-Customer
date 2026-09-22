@@ -136,6 +136,17 @@ export async function getPlacesFromCloudAsync(): Promise<PlaceRecord[]> {
       }
     } catch {}
 
+    // Đảm bảo an toàn: Nếu danh sách từ cloud bị thiếu (< 10 địa điểm),
+    // tự động bổ sung các địa điểm tĩnh còn thiếu để không bao giờ bị mất địa điểm
+    if (placesList.length > 0 && placesList.length < staticPlaces.length) {
+      const existingSlugs = new Set(placesList.map(p => p.slug));
+      for (const sp of staticPlaces) {
+        if (!existingSlugs.has(sp.slug)) {
+          placesList.push(mapStaticToRecord(sp));
+        }
+      }
+    }
+
     if (placesList.length > 0) {
       cachedPlaces = placesList;
       lastPlacesFetch = now;
@@ -157,7 +168,18 @@ export async function getPlacesFromCloudAsync(): Promise<PlaceRecord[]> {
  * Lưu danh sách địa điểm lên Supabase Cloud (places_store)
  */
 export async function savePlacesToCloudAsync(places: PlaceRecord[]): Promise<boolean> {
-  cachedPlaces = places;
+  // Rào chắn bảo vệ an toàn: tự động bổ sung nếu thiếu
+  let safePlaces = [...places];
+  if (safePlaces.length < staticPlaces.length) {
+    const existingSlugs = new Set(safePlaces.map(p => p.slug));
+    for (const sp of staticPlaces) {
+      if (!existingSlugs.has(sp.slug)) {
+        safePlaces.push(mapStaticToRecord(sp));
+      }
+    }
+  }
+
+  cachedPlaces = safePlaces;
   lastPlacesFetch = Date.now();
 
   try {
@@ -173,7 +195,7 @@ export async function savePlacesToCloudAsync(places: PlaceRecord[]): Promise<boo
       },
       body: JSON.stringify({
         id: "places_store",
-        data: places,
+        data: safePlaces,
         updated_at: timestamp
       })
     });
