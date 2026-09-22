@@ -42,10 +42,15 @@ export default function PaymentCheckoutPage() {
   const [copied, setCopied] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  // Bank settings loaded from Admin
+  // Bank settings loaded from Admin — default fallback ensures QR always renders
   const [bankSettings, setBankSettings] = useState<{
     bankId: string; bankName: string; accountNumber: string; accountName: string;
-  } | null>(null);
+  }>({
+    bankId: "MB",
+    bankName: "MBBank (Ngân hàng Quân Đội)",
+    accountNumber: "0825497468",
+    accountName: "VO QUANG HUY"
+  });
 
   // Payment proof states
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
@@ -62,8 +67,8 @@ export default function PaymentCheckoutPage() {
     : "";
 
   // Tạo QR URL client-side từ bank settings
-  const buildQrUrl = (bank: typeof bankSettings, amount: number, memo: string) => {
-    if (!bank?.bankId || !bank?.accountNumber) return "";
+  const buildQrUrl = (bank: { bankId: string; accountNumber: string; accountName: string }, amount: number, memo: string) => {
+    if (!bank.bankId || !bank.accountNumber) return "";
     return `https://img.vietqr.io/image/${bank.bankId}-${bank.accountNumber}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(memo)}&accountName=${encodeURIComponent(bank.accountName || "")}`;
   };
 
@@ -136,7 +141,7 @@ export default function PaymentCheckoutPage() {
   const activeBankAccount = paymentDetails?.bankAccount || bankSettings;
   const activePaymentCode = payment?.paymentCode || paymentCode;
   const activeQrUrl = paymentDetails?.qrUrl ||
-    (booking && bankSettings
+    (booking
       ? buildQrUrl(bankSettings, booking.finalAmount, payment?.paymentCode || paymentCode)
       : "");
   const handleCopy = (text: string) => {
