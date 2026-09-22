@@ -8,10 +8,7 @@ import { PlaceDetailClientView } from "@/components/places/place-detail-client-v
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 export const revalidate = 0;
-
-export function generateStaticParams() {
-  return getPlaceStaticParams();
-}
+export const fetchCache = "force-no-store";
 
 export async function generateMetadata({
   params,

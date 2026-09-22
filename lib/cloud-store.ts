@@ -161,6 +161,8 @@ export async function savePlacesToCloudAsync(places: PlaceRecord[]): Promise<boo
   lastPlacesFetch = Date.now();
 
   try {
+    const timestamp = new Date().toISOString();
+
     const res = await fetch(`${SUPABASE_URL}/rest/v1/system_store`, {
       method: "POST",
       headers: {
@@ -172,9 +174,37 @@ export async function savePlacesToCloudAsync(places: PlaceRecord[]): Promise<boo
       body: JSON.stringify({
         id: "places_store",
         data: places,
-        updated_at: new Date().toISOString()
+        updated_at: timestamp
       })
     });
+
+    try {
+      const mainRes = await fetch(`${SUPABASE_URL}/rest/v1/system_store?id=eq.main&select=data`, {
+        method: "GET",
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+        cache: "no-store"
+      });
+      if (mainRes.ok) {
+        const rows = await mainRes.json();
+        const mainData = rows[0]?.data || {};
+        mainData.places = places;
+        await fetch(`${SUPABASE_URL}/rest/v1/system_store`, {
+          method: "POST",
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`,
+            "Content-Type": "application/json",
+            Prefer: "resolution=merge-duplicates"
+          },
+          body: JSON.stringify({
+            id: "main",
+            data: mainData,
+            updated_at: timestamp
+          })
+        });
+      }
+    } catch {}
+
     return res.ok;
   } catch (err) {
     console.error("[CLOUD_STORE] Error saving places to cloud:", err);
