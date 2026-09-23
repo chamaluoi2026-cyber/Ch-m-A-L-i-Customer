@@ -3,32 +3,22 @@ import { getAllPlaces as getStorePlaces, getDynamicPlaceBySlug as getStorePlaceB
 import { getPlacesFromCloudAsync } from "@/lib/cloud-store";
 
 function mapRecordToPlace(r: PlaceRecord): Place {
+  const primaryImage = r.coverImage || r.image || "";
   return {
-    name: r.name,
-    slug: r.slug,
+    ...r,
     category: r.category as PlaceCategory,
-    businessName: r.businessName,
-    businessId: r.businessId,
-    summary: r.summary,
-    description: r.description,
-    address: r.address,
-    mapEmbedUrl: r.mapEmbedUrl,
-    priceLabel: r.priceLabel,
-    voucherOffer: r.voucherOffer,
     commissionRate: r.commissionRate || 10,
     rating: r.rating || 4.8,
     reviewCount: r.reviewCount || 1,
-    openingHours: r.openingHours,
-    phone: r.phone,
-    zaloUrl: r.zaloUrl,
-    image: r.image || r.coverImage || "",
+    image: primaryImage,
+    coverImage: primaryImage,
     gallery: (r.gallery || []).map((g) => (typeof g === "string" ? g : (g as any).url)),
     services: r.services || [],
     highlights: r.highlights || [],
     activities: r.activities || [],
     suitableFor: r.suitableFor || [],
     safetyNotes: r.safetyNotes || [],
-    status: (r.status === "temporarily_closed" ? "temporarily_closed" : "active") as "active" | "temporarily_closed"
+    status: (r.status === "temporarily_closed" ? "temporarily_closed" : (r.status === "hidden" ? "hidden" : "active")) as any
   };
 }
 
