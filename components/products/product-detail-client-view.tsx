@@ -142,10 +142,46 @@ export function ProductDetailClientView({
 
       <section className="section-shell grid gap-8 pb-16 lg:grid-cols-[0.9fr_1.1fr]">
         <section className="rounded-3xl bg-white p-6 shadow-card md:p-8">
-          <h2 className="text-2xl font-bold text-ink">
+          <h2 className="text-2xl font-bold text-ink mb-4">
             {tPage.productInfoTitle}
           </h2>
-          <ul className="mt-5 grid gap-3">
+
+          {/* Shopee-style Product Specifications Table */}
+          <div className="mb-6 rounded-2xl bg-forest/5 p-4 text-xs divide-y divide-forest/10">
+            <div className="py-2 flex items-center justify-between">
+              <span className="text-ink/60">{isEn ? "Origin" : "Xuất xứ"}</span>
+              <span className="font-bold text-ink">{product.origin || "Huyện A Lưới, Thừa Thiên Huế"}</span>
+            </div>
+            {product.weight && (
+              <div className="py-2 flex items-center justify-between">
+                <span className="text-ink/60">{isEn ? "Weight / Volume" : "Khối lượng / Thể tích"}</span>
+                <span className="font-bold text-ink">{product.weight}</span>
+              </div>
+            )}
+            {product.expiryDate && (
+              <div className="py-2 flex items-center justify-between">
+                <span className="text-ink/60">{isEn ? "Shelf Life" : "Hạn sử dụng"}</span>
+                <span className="font-bold text-ink">{product.expiryDate}</span>
+              </div>
+            )}
+            {product.storageGuide && (
+              <div className="py-2 flex items-center justify-between">
+                <span className="text-ink/60">{isEn ? "Storage Guide" : "Hướng dẫn bảo quản"}</span>
+                <span className="font-bold text-ink text-right max-w-[220px]">{product.storageGuide}</span>
+              </div>
+            )}
+            {product.businessName && (
+              <div className="py-2 flex items-center justify-between">
+                <span className="text-ink/60">{isEn ? "Producer / Co-op" : "Cơ sở sản xuất"}</span>
+                <span className="font-bold text-ink">{product.businessName}</span>
+              </div>
+            )}
+          </div>
+
+          <h3 className="text-sm font-bold text-ink mb-3 uppercase tracking-wider">
+            {isEn ? "Key Highlights" : "Đặc điểm nổi bật"}
+          </h3>
+          <ul className="grid gap-3">
             {specs.map((spec: string) => (
               <li
                 key={spec}
