@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useMemo, useEffect } from "react";
 import { Search, X, MapPin, Tag, Check, ArrowLeftRight, Plus, Star } from "lucide-react";
@@ -68,7 +68,7 @@ export function PlaceSelectorModal({
       if (activeCategory !== "all") {
         if (activeCategory === "waterfall-stream" && place.category !== "waterfall-stream") return false;
         if (activeCategory === "culture" && place.category !== "culture" && place.category !== "experience") return false;
-        if (activeCategory === "food" && place.category !== "food" && place.category !== "specialty") return false;
+        if (activeCategory === "food" && place.category !== "food") return false;
         if (activeCategory === "stay" && place.category !== "stay") return false;
         if (activeCategory === "visit" && place.category !== "visit" && place.category !== "play") return false;
         if (activeCategory === "outdoor" && place.category !== "outdoor" && place.category !== "community-tourism") return false;

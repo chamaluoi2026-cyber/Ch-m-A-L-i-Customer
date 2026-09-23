@@ -1,4 +1,4 @@
-import { getPlacesByCategoryAsync } from "@/lib/places";
+import { getAllPlacesAsync } from "@/lib/places";
 import { siteUrl } from "@/lib/utils";
 import { toAbsoluteImageUrl } from "@/lib/seo/schema-generator";
 import { PlacesClientView } from "@/components/places/places-client-view";
@@ -28,15 +28,22 @@ export default async function PlacesPage({
 }) {
   const query = await searchParams;
   const activeCategoryId = query.category || "all";
-  const filteredPlaces = await getPlacesByCategoryAsync(activeCategoryId);
+  const allPlaces = await getAllPlacesAsync();
+  
+  // Filter out specialty products from places listing
+  const places = allPlaces.filter(
+    (p) =>
+      p.category !== ("specialty" as any) &&
+      !["mat-ong-rung-a-luoi", "tra-nui-thao-moc-a-luoi", "dac-san-thit-bo-ruou-can-a-luoi"].includes(p.slug)
+  );
 
   const itemListJsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
     name: "Danh sách Điểm Đến & Homestay Du Lịch Cộng Đồng A Lưới",
     description: "Khám phá Thác A Nôr, Suối Pâr Le, Homestay bản địa và các điểm du lịch sinh thái tại A Lưới, Thừa Thiên Huế",
-    numberOfItems: filteredPlaces.length,
-    itemListElement: filteredPlaces.map((p, idx) => ({
+    numberOfItems: places.length,
+    itemListElement: places.map((p, idx) => ({
       "@type": "ListItem",
       position: idx + 1,
       name: p.name,
@@ -53,8 +60,8 @@ export default async function PlacesPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
       />
       <PlacesClientView
-        activeCategoryId={activeCategoryId}
-        filteredPlaces={filteredPlaces}
+        initialCategoryId={activeCategoryId}
+        places={places}
       />
     </>
   );

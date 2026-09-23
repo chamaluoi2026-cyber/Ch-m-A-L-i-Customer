@@ -1,4 +1,4 @@
-﻿export interface PlaceI18n {
+export interface PlaceI18n {
   name: string;
   summary: string;
   address: string;
@@ -211,6 +211,12 @@ export const productTranslations: Record<string, ProductI18n> = {
     category: "Bamboo Handicrafts",
     description: "Durable natural bamboo basket, crafted for home decor, storage, and memorable gifts.",
     specs: ["Natural bamboo", "Hand-finished", "Lightweight", "Eco-reusable"]
+  },
+  "thit-bo-gac-bep-ruou-can": {
+    name: "A Luoi Smoked Beef & Stem Wine",
+    category: "Smoked Beef & Stem Wine",
+    description: "Savory mountain pasture beef gently smoked over highland hearths, paired with fragrant earthen jar stem wine.",
+    specs: ["Grass-fed beef", "500g vacuum pack", "Wild pepper seasoned", "Bamboo straws included"]
   }
 };
 

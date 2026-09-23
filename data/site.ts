@@ -1,4 +1,4 @@
-﻿import {
+import {
   BadgeCheck,
   Camera,
   Flame,
@@ -333,6 +333,20 @@ export const products = [
     gallery: ["/images/products/bamboo-basket.png", imageFor("photo-1513519245088-0e12902e5a38")],
     description: "Giỏ tre bền đẹp, phù hợp sử dụng trong gia đình, làm quà du lịch và trang trí.",
     specs: ["Tre tự nhiên", "Hoàn thiện thủ công", "Nhẹ", "Tái sử dụng"]
+  },
+  {
+    slug: "thit-bo-gac-bep-ruou-can",
+    name: "Thịt bò gác bếp & Rượu cần A Lưới",
+    category: "Thịt bò & Rượu cần",
+    price: 420000,
+    image: "/images/aluoi/am-thuc-nha-san.jpg",
+    gallery: [
+      "/images/aluoi/am-thuc-nha-san.jpg",
+      "/images/aluoi/checkin-nong-trai.jpg",
+      "/images/aluoi/nha-san-truyen-thong.jpg"
+    ],
+    description: "Thịt bò vàng gác bếp than củi thơm lừng đượm khói, chấm muối kiến vàng kèm ghè rượu cần men lá nồng ấm tình người vùng cao.",
+    specs: ["Bò cỏ thả đồi", "Gói 500g hút chân không", "Gia vị tiêu rừng & mắc khén", "Tặng kèm cần hút truyền thống"]
   }
 ];
 
