@@ -73,15 +73,38 @@ export function ProductDetailClientView({
         </figure>
         <article className="lg:sticky lg:top-28 lg:h-fit">
           <section className="rounded-3xl bg-white p-6 shadow-card md:p-8">
-            <p className="text-sm font-bold uppercase tracking-[0.24em] text-clay">
-              {category}
-            </p>
-            <h1 className="mt-3 text-4xl font-extrabold text-ink md:text-6xl">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm font-bold uppercase tracking-[0.24em] text-clay">
+                {category}
+              </span>
+              {product.isOcop && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-0.5 text-xs font-bold">
+                  ⭐ OCOP {product.ocopStars || 3} sao
+                </span>
+              )}
+              {product.status === "out_of_stock" && (
+                <span className="rounded-full bg-amber-500 text-white px-2.5 py-0.5 text-xs font-bold">
+                  {isEn ? "Out of Stock" : "Tạm hết hàng"}
+                </span>
+              )}
+            </div>
+
+            <h1 className="mt-3 text-4xl font-extrabold text-ink md:text-5xl">
               {title}
             </h1>
-            <p className="mt-5 text-3xl font-extrabold text-forest">
-              {formatCurrency(product.price)}
-            </p>
+            <div className="mt-5 flex items-baseline gap-2">
+              <p className="text-3xl font-extrabold text-forest">
+                {formatCurrency(product.price)}
+              </p>
+              {product.unit && (
+                <span className="text-sm font-medium text-ink/60">/ {product.unit}</span>
+              )}
+              {product.originalPrice && product.originalPrice > product.price && (
+                <span className="text-base line-through text-ink/40 font-medium">
+                  {formatCurrency(product.originalPrice)}
+                </span>
+              )}
+            </div>
             <p className="mt-6 text-lg leading-8 text-ink/65">
               {description}
             </p>
@@ -102,9 +125,15 @@ export function ProductDetailClientView({
             </div>
             <a
               href="#dat-hang"
-              className="focus-ring mt-7 inline-flex w-full items-center justify-center gap-2 rounded-full bg-forest px-7 py-4 text-base font-bold text-white shadow-soft transition hover:-translate-y-0.5 hover:bg-ink"
+              className={`focus-ring mt-7 inline-flex w-full items-center justify-center gap-2 rounded-full px-7 py-4 text-base font-bold text-white shadow-soft transition hover:-translate-y-0.5 ${
+                product.status === "out_of_stock"
+                  ? "bg-amber-600 hover:bg-amber-700"
+                  : "bg-forest hover:bg-ink"
+              }`}
             >
-              {tPage.orderNow}
+              {product.status === "out_of_stock"
+                ? (isEn ? "Pre-order Inquiries" : "Liên hệ đặt hàng trước")
+                : tPage.orderNow}
               <PackageCheck className="size-5" aria-hidden="true" />
             </a>
           </section>

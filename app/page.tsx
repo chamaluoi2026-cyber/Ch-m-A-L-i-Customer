@@ -1,5 +1,6 @@
-import { heroImage, homestays, products, testimonials } from "@/data/site";
+import { heroImage, homestays, testimonials } from "@/data/site";
 import { getFeaturedPlacesAsync } from "@/lib/places";
+import { getPublicProductsAsync } from "@/lib/products";
 import { getSiteSettingsAsync } from "@/lib/server-store";
 import { getBlogsFromCloudAsync } from "@/lib/cloud-store";
 import { HomeClientView } from "@/components/home/home-client-view";
@@ -15,6 +16,7 @@ export default async function HomePage() {
   const publishedBlogs = cloudBlogs
     .filter((p) => p.status === "published" && !p.isDeleted)
     .slice(0, 3);
+  const cloudProducts = await getPublicProductsAsync();
 
   return (
     <HomeClientView
@@ -22,7 +24,7 @@ export default async function HomePage() {
       settings={siteSettings}
       featuredPlaces={featuredPlaces}
       homestays={homestays}
-      products={products}
+      products={cloudProducts}
       publishedBlogs={publishedBlogs}
       testimonials={testimonials}
     />
