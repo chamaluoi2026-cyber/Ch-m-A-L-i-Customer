@@ -30,9 +30,10 @@ export default async function PlacesPage({
   const activeCategoryId = query.category || "all";
   const allPlaces = await getAllPlacesAsync();
   
-  // Filter out specialty products from places listing
+  // Filter out specialty products and hidden/draft places from public listing
   const places = allPlaces.filter(
     (p) =>
+      p.status !== "hidden" &&
       p.category !== ("specialty" as any) &&
       !["mat-ong-rung-a-luoi", "tra-nui-thao-moc-a-luoi", "dac-san-thit-bo-ruou-can-a-luoi"].includes(p.slug)
   );

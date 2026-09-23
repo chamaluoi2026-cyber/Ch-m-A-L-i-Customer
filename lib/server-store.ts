@@ -1499,12 +1499,13 @@ export function reconcileTransaction(transactionId: string): boolean {
 }
 
 // Businesses API
-export function getAllBusinesses(): BusinessRecord[] {
-  return loadStore().businesses;
+export function getAllBusinesses(includeDeleted = false): BusinessRecord[] {
+  const list = loadStore().businesses || [];
+  return includeDeleted ? list : list.filter((b) => !b.isDeleted);
 }
 
 export function getBusinessById(id: string): BusinessRecord | undefined {
-  return loadStore().businesses.find((b) => b.id === id);
+  return (loadStore().businesses || []).find((b) => b.id === id && !b.isDeleted);
 }
 
 export function updateBusinessProfile(id: string, updates: Partial<BusinessRecord>): BusinessRecord | null {

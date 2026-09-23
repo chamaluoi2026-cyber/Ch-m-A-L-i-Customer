@@ -57,13 +57,13 @@ export async function getPlacesByCategoryAsync(categoryId?: string): Promise<Pla
 
 export async function getFeaturedPlacesAsync(limit = 3): Promise<Place[]> {
   const currentPlaces = await getAllPlacesAsync();
-  return currentPlaces.slice(0, limit);
+  return currentPlaces.filter((p) => p.status !== "hidden").slice(0, limit);
 }
 
 export async function getRelatedPlacesAsync(currentSlug: string, category: PlaceCategory): Promise<Place[]> {
   const currentPlaces = await getAllPlacesAsync();
   return currentPlaces
-    .filter((place) => place.slug !== currentSlug && (place.category === category || category === "all"))
+    .filter((place) => place.status !== "hidden" && place.slug !== currentSlug && (place.category === category || category === "all"))
     .slice(0, 3);
 }
 
