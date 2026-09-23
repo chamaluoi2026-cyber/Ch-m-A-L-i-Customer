@@ -2,10 +2,13 @@
 
 import { AppImage } from "@/components/ui/app-image";
 import Link from "next/link";
+import { useState, useEffect, useCallback } from "react";
 import {
   AlertTriangle,
   ArrowLeft,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   Compass,
   Gift,
@@ -19,7 +22,9 @@ import {
   ShieldCheck,
   Star,
   TicketCheck,
-  Users
+  Users,
+  X,
+  ZoomIn
 } from "lucide-react";
 import { BlogVideoEmbed, parseYouTubeVideoId, isDirectVideoUrl } from "@/components/blog/blog-video-embed";
 import { PlaceLeadForm } from "@/components/place-lead-form";
@@ -75,6 +80,77 @@ export function PlaceDetailClientView({
     : place.priceLabel;
 
   const isActive = place.status === "active";
+
+  // Collect all photos for gallery/lightbox viewer
+  const heroImgUrl = place.coverImage || place.image;
+  const allPhotos: { url: string; alt: string; caption?: string }[] = [];
+
+  if (heroImgUrl) {
+    allPhotos.push({
+      url: heroImgUrl,
+      alt: displayName,
+      caption: isEn ? `${displayName} - Main View` : `${displayName} - Ảnh bìa`
+    });
+  }
+
+  if (Array.isArray(place.gallery)) {
+    place.gallery.forEach((item, idx) => {
+      const url = typeof item === "string" ? item : item?.url;
+      if (!url) return;
+      if (allPhotos.some((p) => p.url === url)) return;
+      const alt = typeof item === "object" && item.alt ? item.alt : `${displayName} - Ảnh ${idx + 1}`;
+      const caption = typeof item === "object" ? item.caption : undefined;
+      allPhotos.push({ url, alt, caption });
+    });
+  }
+
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  const openLightbox = useCallback((idx: number) => {
+    setLightboxIndex(idx);
+  }, []);
+
+  const closeLightbox = useCallback(() => {
+    setLightboxIndex(null);
+  }, []);
+
+  const showNext = useCallback(() => {
+    setLightboxIndex((prev) => {
+      if (prev === null || allPhotos.length <= 1) return prev;
+      return (prev + 1) % allPhotos.length;
+    });
+  }, [allPhotos.length]);
+
+  const showPrev = useCallback(() => {
+    setLightboxIndex((prev) => {
+      if (prev === null || allPhotos.length <= 1) return prev;
+      return (prev - 1 + allPhotos.length) % allPhotos.length;
+    });
+  }, [allPhotos.length]);
+
+  // Keyboard navigation & body scroll lock
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        closeLightbox();
+      } else if (e.key === "ArrowRight") {
+        showNext();
+      } else if (e.key === "ArrowLeft") {
+        showPrev();
+      }
+    };
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [lightboxIndex, closeLightbox, showNext, showPrev]);
 
   return (
     <main className="pt-24 bg-beige/30 min-h-screen">
@@ -143,15 +219,37 @@ export function PlaceDetailClientView({
       {/* Hero & Overview */}
       <section className="section-shell grid gap-8 py-8 lg:grid-cols-[1fr_0.8fr]">
         <article>
-          <figure className="relative aspect-[16/10] overflow-hidden rounded-3xl bg-white shadow-card">
+          <figure
+            role="button"
+            tabIndex={0}
+            onClick={() => openLightbox(0)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") openLightbox(0);
+            }}
+            className="relative aspect-[16/10] overflow-hidden rounded-3xl bg-white shadow-card cursor-pointer group focus:outline-none focus:ring-2 focus:ring-forest"
+            title={isEn ? "Click to view full photo" : "Bấm để xem ảnh phóng to"}
+          >
             <AppImage
               src={place.coverImage || place.image}
               alt={displayName}
               fill
               priority
               sizes="(max-width: 1024px) 100vw, 60vw"
-              className="object-cover"
+              className="object-cover transition duration-700 group-hover:scale-[1.03]"
             />
+            {allPhotos.length > 1 && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openLightbox(0);
+                }}
+                className="absolute top-4 right-4 z-20 flex items-center gap-1.5 rounded-full bg-ink/65 hover:bg-ink/85 px-3 py-1.5 text-xs font-bold text-white backdrop-blur border border-white/20 shadow-md transition transform hover:scale-105"
+              >
+                <ZoomIn className="size-3.5" />
+                <span>{isEn ? `View all ${allPhotos.length} photos` : `Xem tất cả ${allPhotos.length} ảnh`}</span>
+              </button>
+            )}
             <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/90 via-ink/40 to-transparent p-6 md:p-8 text-white">
               <div className="flex flex-wrap items-center gap-2 mb-3">
                 <span className="rounded-full bg-white/20 px-3.5 py-1 text-xs font-bold backdrop-blur">
@@ -182,16 +280,30 @@ export function PlaceDetailClientView({
               {place.gallery.map((galleryItem, idx) => {
                 const imgUrl = typeof galleryItem === "string" ? galleryItem : galleryItem.url;
                 const imgAlt = typeof galleryItem === "string" ? `${displayName} photo ${idx + 1}` : (galleryItem.alt || displayName);
+                const photoIndex = allPhotos.findIndex((p) => p.url === imgUrl);
+                const targetIdx = photoIndex !== -1 ? photoIndex : (heroImgUrl ? idx + 1 : idx);
+
                 return (
-                  <figure key={idx} className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-white shadow-sm group">
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => openLightbox(targetIdx)}
+                    className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-white shadow-sm group cursor-pointer focus:outline-none focus:ring-2 focus:ring-forest text-left"
+                    title={isEn ? "Click to enlarge photo" : "Bấm để xem ảnh phóng to"}
+                  >
                     <AppImage
                       src={imgUrl}
                       alt={imgAlt}
                       fill
                       sizes="33vw"
-                      className="object-cover transition duration-500 group-hover:scale-105"
+                      className="object-cover transition duration-500 group-hover:scale-110"
                     />
-                  </figure>
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/35 transition-all duration-300 flex items-center justify-center">
+                      <span className="opacity-0 group-hover:opacity-100 transition-all duration-300 p-2.5 rounded-full bg-white/90 text-ink shadow-lg backdrop-blur transform translate-y-1 group-hover:translate-y-0">
+                        <ZoomIn className="size-4" />
+                      </span>
+                    </div>
+                  </button>
                 );
               })}
             </div>
@@ -494,6 +606,128 @@ export function PlaceDetailClientView({
           </div>
         </section>
       ) : null}
+
+      {/* Fullscreen Lightbox Modal */}
+      {lightboxIndex !== null && allPhotos[lightboxIndex] && (
+        <aside
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-md flex flex-col justify-between select-none animate-in fade-in duration-200"
+          onClick={closeLightbox}
+        >
+          {/* Lightbox Header */}
+          <div
+            className="flex items-center justify-between p-4 sm:p-6 text-white z-20"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-white/15 backdrop-blur border border-white/10">
+                {lightboxIndex + 1} / {allPhotos.length}
+              </span>
+              <span className="hidden sm:inline text-sm text-white/90 font-semibold truncate max-w-md">
+                {displayName}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={closeLightbox}
+                className="p-2 sm:p-2.5 rounded-full bg-white/10 hover:bg-white/25 text-white transition focus:outline-none"
+                title={isEn ? "Close (Esc)" : "Đóng (Esc)"}
+              >
+                <X className="size-6" />
+              </button>
+            </div>
+          </div>
+
+          {/* Lightbox Center Image Viewport */}
+          <div
+            className="relative flex-1 flex items-center justify-center p-2 sm:p-6"
+            onClick={closeLightbox}
+          >
+            {/* Previous button */}
+            {allPhotos.length > 1 && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  showPrev();
+                }}
+                className="absolute left-2 sm:left-6 z-20 p-3 sm:p-4 rounded-full bg-black/50 hover:bg-black/80 text-white backdrop-blur border border-white/15 transition transform hover:scale-105 focus:outline-none"
+                title={isEn ? "Previous image (Left arrow)" : "Ảnh trước (Mũi tên trái)"}
+              >
+                <ChevronLeft className="size-6 sm:size-8" />
+              </button>
+            )}
+
+            {/* Main Image */}
+            <div
+              className="relative max-h-[72vh] max-w-[92vw] flex items-center justify-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={allPhotos[lightboxIndex].url}
+                alt={allPhotos[lightboxIndex].alt || displayName}
+                className="max-h-[72vh] max-w-[92vw] object-contain rounded-2xl shadow-2xl transition-all duration-300"
+              />
+            </div>
+
+            {/* Next button */}
+            {allPhotos.length > 1 && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  showNext();
+                }}
+                className="absolute right-2 sm:right-6 z-20 p-3 sm:p-4 rounded-full bg-black/50 hover:bg-black/80 text-white backdrop-blur border border-white/15 transition transform hover:scale-105 focus:outline-none"
+                title={isEn ? "Next image (Right arrow)" : "Ảnh tiếp theo (Mũi tên phải)"}
+              >
+                <ChevronRight className="size-6 sm:size-8" />
+              </button>
+            )}
+          </div>
+
+          {/* Lightbox Footer & Thumbnail Strip */}
+          <div
+            className="p-3 sm:p-5 text-white flex flex-col items-center gap-2.5 z-20 bg-gradient-to-t from-black/90 via-black/50 to-transparent"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {allPhotos[lightboxIndex].caption && (
+              <p className="text-center text-xs sm:text-sm text-white/90 font-medium max-w-xl truncate">
+                {allPhotos[lightboxIndex].caption}
+              </p>
+            )}
+
+            {/* Thumbnail Strip */}
+            {allPhotos.length > 1 && (
+              <div className="flex items-center gap-2 overflow-x-auto max-w-full py-1 px-2">
+                {allPhotos.map((photo, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setLightboxIndex(i)}
+                    className={`relative size-12 sm:size-16 rounded-xl overflow-hidden shrink-0 border-2 transition-all ${
+                      i === lightboxIndex
+                        ? "border-amber-400 scale-105 shadow-lg"
+                        : "border-transparent opacity-50 hover:opacity-90"
+                    }`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={photo.url}
+                      alt={photo.alt}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </aside>
+      )}
     </main>
   );
 }
