@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { AppImage } from "@/components/ui/app-image";
 import Link from "next/link";
@@ -25,6 +25,7 @@ export function ImageCard({
   subtitle: string;
   meta?: string;
   price?: number;
+  priceLabel?: string;
   cta?: string;
 }) {
   const { language } = useLanguage();
@@ -49,7 +50,13 @@ export function ImageCard({
         <h3 className="mt-2 text-xl font-bold text-ink">{title}</h3>
         <p className="mt-2 min-h-12 text-sm leading-6 text-ink/65">{subtitle}</p>
         <footer className="mt-5 flex items-center justify-between gap-3">
-          {price ? <p className="text-sm font-bold text-forest">{formatCurrency(price)}</p> : <span aria-hidden="true" />}
+          {priceLabel ? (
+            <p className="text-sm font-bold text-forest">{priceLabel}</p>
+          ) : price ? (
+            <p className="text-sm font-bold text-forest">{formatCurrency(price)}</p>
+          ) : (
+            <span aria-hidden="true" />
+          )}
           <Button asChild variant="outline" size="default">
             <Link href={href}>
               {resolvedCta}

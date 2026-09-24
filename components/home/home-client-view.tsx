@@ -699,17 +699,17 @@ export function HomeClientView({
           />
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {homestays.map((item) => {
-              const hsTrans = homestayTranslations[item.id];
-              const title = isEn && hsTrans ? hsTrans.name : item.name;
+              const hsTrans = homestayTranslations[item.id || item.slug];
+              const title = (isEn && hsTrans ? hsTrans.name : (item.name || item.title)) || "Homestay A Lưới";
               const village = isEn && hsTrans ? hsTrans.village : item.village;
               const capacity = isEn && hsTrans ? hsTrans.capacity : item.capacity;
               const meta = `${item.rating} ${isEn ? "rating" : "điểm đánh giá"}`;
 
               return (
                 <ImageCard
-                  key={item.id}
-                  href="/book-tour"
-                  image={item.image}
+                  key={item.id || item.slug}
+                  href={"slug" in item ? `/places/${item.slug}` : (item.href || `/places/${item.id}`)}
+                  image={item.image || item.coverImage || "/images/aluoi/homestay-bungalow.jpg"}
                   alt={`Homestay ${title}`}
                   title={title}
                   subtitle={`${village} · ${capacity}`}

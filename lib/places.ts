@@ -60,6 +60,17 @@ export async function getFeaturedPlacesAsync(limit = 3): Promise<Place[]> {
   return currentPlaces.filter((p) => p.status !== "hidden").slice(0, limit);
 }
 
+export async function getFeaturedHomestaysAsync(limit = 4): Promise<Place[]> {
+  const all = await getAllPlacesAsync();
+  const stayPlaces = all.filter(
+    (p) => p.category === "stay" && p.status === "active" && !p.isDeleted
+  );
+  if (stayPlaces.length > 0) {
+    return stayPlaces.slice(0, limit);
+  }
+  return all.filter((p) => p.status === "active" && !p.isDeleted).slice(0, limit);
+}
+
 export async function getRelatedPlacesAsync(currentSlug: string, category: PlaceCategory): Promise<Place[]> {
   const currentPlaces = await getAllPlacesAsync();
   return currentPlaces
