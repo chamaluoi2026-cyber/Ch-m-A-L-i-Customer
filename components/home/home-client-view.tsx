@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -12,7 +12,9 @@ import {
   MapPinned,
   Route,
   Star,
-  TentTree
+  TentTree,
+  X,
+  Maximize2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ImageCard } from "@/components/image-card";
@@ -41,7 +43,7 @@ interface HomeClientViewProps {
   testimonials: any[];
 }
 
-const aluoiGallery = [
+const defaultAluoiGallery = [
   {
     title: "Núi rừng A Lưới",
     enTitle: "A Luoi Mountain Passes",
@@ -71,7 +73,7 @@ const aluoiGallery = [
     enTitle: "Indigenous Living Heritage",
     caption: "Chạm vào đời sống, nghề thủ công và sự đón tiếp ấm áp.",
     enCaption: "Immersion into tribal crafts, stilt architecture, and sincere smiles.",
-    image: imageFor("photo-1452860606245-08befc0ff44b"),
+    image: "/images/aluoi/van-hoa-cong-dong.jpg",
     className: "md:col-span-2"
   }
 ];
@@ -103,6 +105,14 @@ export function HomeClientView({
   const { t, language } = useLanguage();
   const isEn = language === "en";
   const [activeItineraryDay, setActiveItineraryDay] = useState<1 | 2>(1);
+  const [previewGalleryImg, setPreviewGalleryImg] = useState<{ image: string; title: string; caption: string } | null>(null);
+
+  const galleryEyebrow = settings?.galleryEyebrow || t.home.galleryEyebrow;
+  const galleryTitle = settings?.galleryTitle || t.home.galleryTitle;
+  const galleryDesc = settings?.galleryDesc || t.home.galleryDesc;
+  const activeGallery = (settings?.homeGallery && settings.homeGallery.length > 0)
+    ? settings.homeGallery
+    : defaultAluoiGallery;
 
   // Dynamic Hero Content & Translations
   const heroBadge = isEn
@@ -638,23 +648,33 @@ export function HomeClientView({
               <section>
                 <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.24em] text-clay">
                   <MapPinned className="size-4" aria-hidden="true" />
-                  {t.home.galleryEyebrow}
+                  {galleryEyebrow}
                 </p>
                 <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-ink md:text-5xl">
-                  {t.home.galleryTitle}
+                  {galleryTitle}
                 </h2>
               </section>
               <p className="text-base leading-8 text-ink/65">
-                {t.home.galleryDesc}
+                {galleryDesc}
               </p>
             </header>
           </MotionReveal>
           <section className="grid auto-rows-[240px] gap-5 md:grid-cols-4">
-            {aluoiGallery.map((item) => (
-              <figure key={item.title} className={`group relative overflow-hidden rounded-3xl shadow-card ${item.className}`}>
+            {activeGallery.map((item, idx) => (
+              <figure
+                key={'id' in item && item.id ? item.id : `${item.title || idx}`}
+                onClick={() =>
+                  setPreviewGalleryImg({
+                    image: item.image,
+                    title: isEn && item.enTitle ? item.enTitle : item.title,
+                    caption: isEn && item.enCaption ? item.enCaption : item.caption
+                  })
+                }
+                className={`group relative overflow-hidden rounded-3xl shadow-card cursor-pointer ${item.className || ""}`}
+              >
                 <AppImage
                   src={item.image}
-                  alt={isEn ? item.enTitle : item.title}
+                  alt={(isEn && item.enTitle ? item.enTitle : item.title) || "Chạm A Lưới"}
                   fill
                   className="object-cover transition duration-700 group-hover:scale-105"
                 />
@@ -797,6 +817,40 @@ export function HomeClientView({
           })}
         </div>
       </section>
+      {/* Lightbox Preview Modal for Gallery */}
+      {previewGalleryImg && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in"
+          onClick={() => setPreviewGalleryImg(null)}
+        >
+          <button
+            onClick={() => setPreviewGalleryImg(null)}
+            className="absolute top-5 right-5 p-2 rounded-full bg-white/20 hover:bg-white/40 text-white transition z-10"
+            title="Đóng (Close)"
+          >
+            <X className="size-6" />
+          </button>
+          <div
+            className="relative max-w-4xl w-full max-h-[90vh] rounded-3xl overflow-hidden bg-black/60 flex flex-col items-center border border-white/10 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative w-full h-[65vh]">
+              <AppImage
+                src={previewGalleryImg.image}
+                alt={previewGalleryImg.title}
+                fill
+                className="object-contain"
+              />
+            </div>
+            <div className="w-full bg-ink/95 p-5 text-white text-center border-t border-white/10">
+              <h4 className="text-xl font-bold">{previewGalleryImg.title}</h4>
+              {previewGalleryImg.caption && (
+                <p className="text-sm text-white/80 mt-1 max-w-xl mx-auto leading-relaxed">{previewGalleryImg.caption}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

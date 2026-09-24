@@ -154,22 +154,33 @@ Trả về duy nhất định dạng JSON:
 }
 `;
 
-        const geminiRes = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: { responseMimeType: "application/json", temperature: 0.6 }
-            }),
-            signal: AbortSignal.timeout(9000)
-          }
-        );
+        const modelsToTry = ["gemini-flash-latest", "gemini-2.5-flash-lite", "gemini-2.5-flash"];
+        let rawText: string | null = null;
 
-        if (geminiRes.ok) {
-          const geminiData = await geminiRes.json();
-          const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+        for (const model of modelsToTry) {
+          try {
+            const geminiRes = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  contents: [{ parts: [{ text: prompt }] }],
+                  generationConfig: { responseMimeType: "application/json", temperature: 0.6 }
+                }),
+                signal: AbortSignal.timeout(7000)
+              }
+            );
+
+            if (geminiRes.ok) {
+              const geminiData = await geminiRes.json();
+              rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (rawText) break;
+            }
+          } catch (modelErr) {
+            console.warn(`[GEMINI_ITINERARY] Model ${model} failed, trying next:`, modelErr);
+          }
+        }
           if (rawText) {
             const parsed = JSON.parse(rawText);
             const currentAdvisory = basePlan.weatherAdvisory;
@@ -197,7 +208,6 @@ Trả về duy nhất định dạng JSON:
               }
             });
           }
-        }
       } catch (geminiError) {
         console.warn("Gemini 2.5 Flash call failed, falling back to local advisory:", geminiError);
       }

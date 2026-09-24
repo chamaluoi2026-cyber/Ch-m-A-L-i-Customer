@@ -85,6 +85,7 @@ export function HighlandItineraryView({ plan, onReset }: HighlandItineraryViewPr
   const { language, t } = useLanguage();
   const [activeTab, setActiveTab] = useState<"timeline" | "safety">("timeline");
   const [copied, setCopied] = useState(false);
+  const [copiedVoucher, setCopiedVoucher] = useState(false);
 
   // Interactive Itinerary State
   const [currentPlan, setCurrentPlan] = useState<ItineraryPlan>(plan);
@@ -498,6 +499,65 @@ export function HighlandItineraryView({ plan, onReset }: HighlandItineraryViewPr
             </div>
           </div>
         )}
+
+        {/* Special AI Voucher Banner */}
+        <div className="mt-6 p-4 rounded-2xl bg-gradient-to-r from-amber-500/25 via-emerald-500/20 to-teal-500/25 border border-amber-400/40 flex flex-col sm:flex-row items-center justify-between gap-4 backdrop-blur-md">
+          <div className="flex items-center gap-3">
+            <div className="size-11 rounded-2xl bg-amber-400 text-ink grid place-items-center text-xl shrink-0 shadow-sm font-bold">
+              🎁
+            </div>
+            <div>
+              <p className="font-extrabold text-white text-sm flex items-center gap-2">
+                <span>{isEn ? "Special Gift for Your AI Itinerary" : "Đặc quyền quà tặng cho Lịch trình của bạn"}</span>
+                <span className="px-2 py-0.5 rounded-full bg-amber-400 text-ink font-black text-[10px] uppercase">
+                  Giảm 10%
+                </span>
+              </p>
+              <p className="text-xs text-white/80 mt-0.5">
+                {isEn
+                  ? "Use voucher code for any homestay, local feast or eco-tour in this trip."
+                  : "Mã ưu đãi áp dụng trực tiếp khi đặt phòng homestay, mâm cỗ hoặc tour trong lịch trình này."}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+            <div className="px-3 py-1.5 rounded-xl bg-black/40 border border-white/20 font-mono font-bold text-amber-300 text-xs tracking-wider select-all">
+              CAL-AI-10OFF
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== "undefined" && navigator.clipboard) {
+                  navigator.clipboard.writeText("CAL-AI-10OFF");
+                  setCopiedVoucher(true);
+                  setTimeout(() => setCopiedVoucher(false), 2500);
+                }
+              }}
+              className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-ink font-extrabold text-xs transition shadow-sm active:scale-95"
+            >
+              {copiedVoucher ? (
+                <>
+                  <CheckCircle2 size={14} className="text-emerald-800" />
+                  <span>Đã sao chép!</span>
+                </>
+              ) : (
+                <>
+                  <Ticket size={14} />
+                  <span>Sao chép mã</span>
+                </>
+              )}
+            </button>
+            <a
+              href="https://zalo.me/0905000118"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition shadow-sm"
+            >
+              Đặt tour Zalo
+            </a>
+          </div>
+        </div>
       </div>
 
       {/* Tabs Navigation */}
