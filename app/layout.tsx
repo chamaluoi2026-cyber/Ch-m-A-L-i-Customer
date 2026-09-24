@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import "@/styles/globals.css";
 import { Footer } from "@/components/footer";
 import { CustomerChatbox } from "@/components/customer-chatbox";
@@ -84,7 +84,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           {children}
           <CustomerChatbox />
           <WeatherMascotBot />
-          <Footer logo={settings.logoDark || settings.logo} settings={settings} />
+          <Footer settings={settings} />
         </I18nProvider>
       </body>
     </html>

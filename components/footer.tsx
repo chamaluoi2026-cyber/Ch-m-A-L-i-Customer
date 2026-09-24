@@ -16,7 +16,17 @@ export function Footer({ logo, settings }: FooterProps = {}) {
   const { language, t } = useLanguage();
   const isEn = language === "en";
 
-  const activeLogo = logo || settings?.logoDark || settings?.logo || siteConfig.logoDark || siteConfig.logo;
+  // Logo footer: Ưu tiên logoDark nếu người dùng tùy chỉnh logoDark riêng (khác mặc định /images/logo-white.svg).
+  // Nếu không, tự động đồng bộ theo settings.logo chính (hoặc logo prop).
+  const hasCustomDarkLogo = Boolean(
+    settings?.logoDark &&
+    settings.logoDark !== "/images/logo-white.svg" &&
+    settings.logoDark !== siteConfig.logoDark &&
+    settings.logoDark !== settings?.logo
+  );
+  const activeLogo = hasCustomDarkLogo
+    ? settings!.logoDark!
+    : (settings?.logo || logo || siteConfig.logoDark || siteConfig.logo);
   const address = settings?.contactAddress || (isEn ? "A Luoi District, Thua Thien Hue, Vietnam" : "Huyện A Lưới, Thừa Thiên Huế");
   const phone = settings?.contactPhone || "0905 000 118";
   const email = settings?.contactEmail || "hotro@chamaluoi.vn";
