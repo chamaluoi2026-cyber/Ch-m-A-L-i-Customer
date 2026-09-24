@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { type ChatSession, type ChatMessage } from "@/lib/server-store";
 import { revalidatePath } from "next/cache";
 import { sendTelegramNotification } from "@/lib/notification/telegram";
-import { generateIndigenousAIResponse } from "@/lib/ai/indigenous-chat-bot";
+import { generateIndigenousAIResponse, generateGeminiConciergeResponse } from "@/lib/ai/indigenous-chat-bot";
+import { getActivePlacesAsync } from "@/lib/places";
+import { getPublicProductsAsync } from "@/lib/products";
 
 export const dynamic = "force-dynamic";
 
@@ -196,7 +198,36 @@ export async function POST(req: NextRequest) {
 
     // 2. Nếu là tin nhắn từ khách hàng -> Xử lý AI phản hồi tự động trong 3 giây và phát hiện SĐT
     if (!isStaff) {
-      const aiAnalysis = generateIndigenousAIResponse(trimmedText, session.guestName);
+      let placesContext = "";
+      let productsContext = "";
+      try {
+        const [activePlaces, publicProducts] = await Promise.all([
+          getActivePlacesAsync().catch(() => []),
+          getPublicProductsAsync().catch(() => [])
+        ]);
+        if (activePlaces.length > 0) {
+          placesContext = activePlaces
+            .slice(0, 10)
+            .map((p) => `- ${p.name}: ${p.address || "A Lưới"}, giá: ${p.priceLabel || "Liên hệ"}, xem tại: /places/${p.slug}`)
+            .join("\n");
+        }
+        if (publicProducts.length > 0) {
+          productsContext = publicProducts
+            .slice(0, 10)
+            .map((p) => `- ${p.name}: ${Number(p.price).toLocaleString("vi-VN")}đ/${p.unit || "sản phẩm"}, xem tại: /products/${p.slug}`)
+            .join("\n");
+        }
+      } catch (ctxErr) {
+        console.warn("[CHAT_CONTEXT_ERR]", ctxErr);
+      }
+
+      const aiAnalysis = await generateGeminiConciergeResponse({
+        userText: trimmedText,
+        guestName: session.guestName,
+        conversationHistory: session.messages.slice(-5),
+        placesContext,
+        productsContext
+      });
 
       // A. Nếu phát hiện Số Điện Thoại
       if (aiAnalysis.isPhoneDetected && aiAnalysis.detectedPhone) {

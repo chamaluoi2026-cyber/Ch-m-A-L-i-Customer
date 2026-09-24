@@ -11,7 +11,9 @@ import {
   Send,
   Sparkles,
   User,
-  X
+  X,
+  Copy,
+  Check
 } from "lucide-react";
 import {
   getChatSessionAction,
@@ -43,8 +45,108 @@ const QUICK_PROMPTS = [
   { label: "🏡 Giá phòng homestay?", prompt: "Giá phòng homestay bao nhiêu một đêm và có những loại phòng nào ạ?" },
   { label: "🍗 Đặc sản có gì ngon?", prompt: "Đặc sản A Lưới có món gì ngon và menu ăn uống ra sao ạ?" },
   { label: "🌿 Lịch trình Tour 2N1Đ?", prompt: "Tư vấn cho mình lịch trình Tour trải nghiệm 2N1Đ trọn gói với ạ" },
-  { label: "🎁 Nhận Voucher giảm 10%", prompt: "Cho mình xin mã Voucher ưu đãi giảm giá 10% với nhé!" }
+  { label: "🎁 Nhận Voucher giảm 10%", prompt: "Cho mình xin mã Voucher ưu đãi giảm giá 10% với nhé!" },
+  { label: "🏔️ Điểm đi chơi đẹp?", prompt: "A Lưới mùa này đi thác suối hay săn mây ở đâu đẹp nhất ạ?" }
 ];
+
+function renderMessageContent(
+  text: string,
+  copiedVoucher: string | null,
+  onCopyVoucher: (code: string) => void
+) {
+  const voucherMatch = text.match(/(CAL-[A-Z0-9-]+)/);
+  const voucherCode = voucherMatch ? voucherMatch[1] : null;
+
+  const lines = text.split("\n");
+
+  return (
+    <div className="space-y-1.5">
+      {lines.map((line, lIdx) => {
+        if (!line.trim()) {
+          return <div key={lIdx} className="h-1.5" />;
+        }
+
+        const parts = line.split(/(\*\*.*?\*\*|\[.*?\]\(.*?\)|\/(?:places|products)\/[a-z0-9-]+)/g);
+
+        return (
+          <p key={lIdx} className="leading-relaxed">
+            {parts.map((part, pIdx) => {
+              if (part.startsWith("**") && part.endsWith("**")) {
+                return (
+                  <strong key={pIdx} className="font-bold text-ink">
+                    {part.slice(2, -2)}
+                  </strong>
+                );
+              }
+              const linkMatch = part.match(/^\[(.*?)\]\((.*?)\)$/);
+              if (linkMatch) {
+                return (
+                  <a
+                    key={pIdx}
+                    href={linkMatch[2]}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-bold text-forest underline hover:text-emerald-700 mx-0.5"
+                  >
+                    {linkMatch[1]}
+                  </a>
+                );
+              }
+              if (part.startsWith("/places/") || part.startsWith("/products/")) {
+                return (
+                  <a
+                    key={pIdx}
+                    href={part}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-bold text-forest underline hover:text-emerald-700 mx-0.5 inline-flex items-center gap-0.5"
+                  >
+                    {part.startsWith("/places/") ? "👉 Xem điểm đến" : "👉 Xem đặc sản"}
+                  </a>
+                );
+              }
+              return part;
+            })}
+          </p>
+        );
+      })}
+
+      {voucherCode && (
+        <div className="mt-2.5 p-2.5 rounded-xl bg-gradient-to-r from-amber-50 to-emerald-50 border border-amber-300 flex items-center justify-between gap-2 shadow-xs">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-lg">🎟️</span>
+            <div className="min-w-0">
+              <span className="text-[10px] text-amber-800 font-bold uppercase tracking-wider block">
+                Mã ưu đãi độc quyền 10%
+              </span>
+              <strong className="font-mono text-xs text-forest select-all">{voucherCode}</strong>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onCopyVoucher(voucherCode);
+            }}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-forest text-white text-[10px] font-bold shrink-0 hover:bg-forest/90 transition shadow-xs"
+          >
+            {copiedVoucher === voucherCode ? (
+              <>
+                <Check size={12} className="text-emerald-200" />
+                <span>Đã chép</span>
+              </>
+            ) : (
+              <>
+                <Copy size={12} />
+                <span>Sao chép</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function getOrCreateSessionId(): string {
   if (typeof window === "undefined") return "";
@@ -73,6 +175,15 @@ export function CustomerChatbox() {
   const [isSending, setIsSending] = useState(false);
   const [isAiTyping, setIsAiTyping] = useState(false);
   const [messages, setMessages] = useState<Message[]>([DEFAULT_WELCOME_MSG]);
+  const [copiedVoucher, setCopiedVoucher] = useState<string | null>(null);
+
+  const handleCopyVoucher = (code: string) => {
+    if (typeof window !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(code);
+      setCopiedVoucher(code);
+      setTimeout(() => setCopiedVoucher(null), 2500);
+    }
+  };
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -401,10 +512,12 @@ export function CustomerChatbox() {
                     className={
                       isGuest
                         ? "max-w-[85%] rounded-2xl rounded-tr-xs bg-forest px-4 py-2.5 text-xs leading-5 text-white shadow-sm whitespace-pre-line"
-                        : "max-w-[88%] rounded-2xl rounded-tl-xs bg-white border border-black/5 px-4 py-3 text-xs leading-relaxed text-ink shadow-sm whitespace-pre-line"
+                        : "max-w-[88%] rounded-2xl rounded-tl-xs bg-white border border-black/5 px-4 py-3 text-xs leading-relaxed text-ink shadow-sm"
                     }
                   >
-                    {messageText}
+                    {isGuest
+                      ? messageText
+                      : renderMessageContent(messageText, copiedVoucher, handleCopyVoucher)}
                   </div>
                   {timeStr && (
                     <span className="mt-1 text-[10px] text-ink/40 px-1 flex items-center gap-1">

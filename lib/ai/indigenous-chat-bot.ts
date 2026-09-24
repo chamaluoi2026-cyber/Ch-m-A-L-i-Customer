@@ -221,3 +221,105 @@ export function generateIndigenousAIResponse(
       `📲 **Dạ để em gửi thông tin chi tiết và voucher giảm 10% cho chuyến đi, ${displayName} cho em xin số điện thoại hoặc Zalo nhé ạ! Nhân viên sẽ nhắn hỗ trợ mình ngay sau 1 phút ạ.**`
   };
 }
+
+/**
+ * Trợ lý AI Concierge Google Gemini (Grounding với dữ liệu địa điểm & đặc sản thực tế)
+ * Tự động dự phòng về Local Domain Engine nếu Gemini bận / quá tải
+ */
+export async function generateGeminiConciergeResponse({
+  userText,
+  guestName,
+  conversationHistory = [],
+  placesContext = "",
+  productsContext = ""
+}: {
+  userText: string;
+  guestName?: string;
+  conversationHistory?: { role: "staff" | "guest"; text: string }[];
+  placesContext?: string;
+  productsContext?: string;
+}): Promise<AIAnalysisResult> {
+  const detectedPhone = extractVietnamesePhone(userText);
+  if (detectedPhone) {
+    return generateIndigenousAIResponse(userText, guestName);
+  }
+
+  const apiKey = process.env.GEMINI_API_KEY || "";
+  if (!apiKey || apiKey.length < 10) {
+    return generateIndigenousAIResponse(userText, guestName);
+  }
+
+  try {
+    const model = "gemini-flash-latest";
+    const displayName = guestName && guestName !== "Khách truy cập" ? guestName : "quý khách";
+
+    const systemPrompt = `Bạn là "Già Làng AI" kiêm Trợ lý Concierge Thổ Địa 24/7 của nền tảng du lịch cộng đồng Chạm A Lưới (huyện A Lưới, Thừa Thiên Huế).
+Phong cách của bạn:
+- Xưng hô: "Em" hoặc "Già Làng AI", gọi khách là "bạn", "${displayName}" hoặc "quý khách".
+- Giọng văn: Ấm áp, chân thành, hiếu khách của người đồng bào Pa Cô - Tà Ôi, nhưng thông tin tư vấn cực kỳ chính xác, gãy gọn, thiết thực và có tâm.
+- Hiểu biết sâu sắc về các điểm đến (Thác A Nôr, Suối Pâr Le, Suối khoáng nóng A Roàng, Đồi thông A Ngo, địa đạo A Đon) và ẩm thực (gà nướng, cơm lam, cá suối, bò gác bếp, rượu đoác, nếp than).
+- Luôn chủ động tặng mã Voucher ưu đãi: "CAL-AI-10OFF" (giảm 10% toàn bộ dịch vụ homestay, ăn uống hoặc tour).
+- Kêu gọi hành động: Khéo léo nhắc khách để lại Số Điện Thoại / Zalo để chuyên viên gửi hình ảnh phòng thực tế, menu mâm cỗ hoặc giữ chỗ.
+- Format: Dùng gạch đầu dòng rõ ràng, icon sinh động, xuống dòng dễ đọc. Trả lời súc tích dưới 220 từ để hiển thị đẹp trên điện thoại.
+
+DỮ LIỆU ĐIỂM ĐẾN & HOMESTAY THỰC TẾ ĐANG MỞ TẠI A LƯỚI:
+${placesContext || "- Homestay A Nôr: Thác A Nôr, Hồng Kim, giá từ 250.000đ - 450.000đ/đêm\n- Suối Pâr Le: Hồng Hạ, tắm suối mát, chòi tre gà nướng cơm lam\n- Suối khoáng nóng A Roàng: Tắm khoáng nóng thiên nhiên phục hồi sức khỏe\n- Đồi thông A Ngo: Săn mây bình minh, cắm trại lều chill"}
+
+DỮ LIỆU ĐẶC SẢN OCOP THỰC TẾ ĐANG BÁN:
+${productsContext || "- Thịt bò gác bếp A Lưới: 220.000đ/gói 500g tiêu rừng\n- Mật ong rừng già nguyên chất: 150.000đ/chai 500ml\n- Trà thảo mộc thanh nhiệt A Lưới: 95.000đ/hộp\n- Thổ cẩm Dèng dệt tay thủ công A Roàng: từ 180.000đ\n- Rượu cần men lá truyền thống: 220.000đ/bình"}
+`;
+
+    const recentHistory = conversationHistory.slice(-4).map((msg) => ({
+      role: msg.role === "guest" ? "user" : "model",
+      parts: [{ text: msg.text }]
+    }));
+
+    const contents = [
+      ...recentHistory,
+      {
+        role: "user",
+        parts: [{ text: userText }]
+      }
+    ];
+
+    const bodyData = JSON.stringify({
+      systemInstruction: {
+        parts: [{ text: systemPrompt }]
+      },
+      contents,
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 600
+      }
+    });
+
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: bodyData,
+        cache: "no-store"
+      }
+    );
+
+    if (res.ok) {
+      const data = await res.json();
+      const aiReply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (aiReply && aiReply.trim()) {
+        return {
+          replyText: aiReply.trim(),
+          isPhoneDetected: false,
+          detectedPhone: null,
+          intent: "general"
+        };
+      }
+    }
+  } catch (err) {
+    console.warn("[GEMINI_CONCIERGE_ERR] Falling back to local indigenous rule engine:", err);
+  }
+
+  // Fallback sang Local Rule Engine bản địa
+  return generateIndigenousAIResponse(userText, guestName);
+}
+
