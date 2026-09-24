@@ -61,28 +61,66 @@ export function BlogListClientView({ publishedPosts }: BlogListClientViewProps) 
           })}
         </nav>
 
-        <section className="mt-12 grid gap-6 md:grid-cols-3">
-          {publishedPosts.map((post) => {
-            const bTrans = blogTranslations[post.slug];
-            const title = isEn ? (post.enTitle || bTrans?.title || post.title) : post.title;
-            const excerpt = isEn ? (post.enExcerpt || bTrans?.excerpt || post.excerpt) : post.excerpt;
-            const category = isEn ? (post.enCategory || bTrans?.category || post.category) : post.category;
-            const readingTime = isEn ? (bTrans?.readingTime || post.readingTime.replace("phút đọc", "min read")) : post.readingTime;
+        {(() => {
+          const filteredPosts = publishedPosts.filter((post) => {
+            if (selectedCategory === "All" || selectedCategory === "Tất cả") return true;
+            const cat = (post.category || "").toLowerCase();
+            const enCat = (post.enCategory || "").toLowerCase();
+            const target = selectedCategory.toLowerCase();
 
+            if (target === "cẩm nang" || target === "travel guide") {
+              return cat.includes("cẩm nang") || enCat.includes("travel") || enCat.includes("guide");
+            }
+            if (target === "văn hóa" || target === "culture") {
+              return cat.includes("văn hóa") || enCat.includes("culture");
+            }
+            if (target === "ẩm thực" || target === "cuisine") {
+              return cat.includes("ẩm thực") || enCat.includes("cuisine") || enCat.includes("food");
+            }
+            if (target === "trải nghiệm" || target === "experiences") {
+              return cat.includes("trải nghiệm") || enCat.includes("experience");
+            }
+            if (target === "tin tức" || target === "news") {
+              return cat.includes("tin tức") || enCat.includes("news");
+            }
+            return cat === target || enCat === target;
+          });
+
+          if (filteredPosts.length === 0) {
             return (
-              <ImageCard
-                key={post.slug}
-                href={`/blog/${post.slug}`}
-                image={post.image}
-                alt={title}
-                title={title}
-                subtitle={excerpt}
-                meta={`${category} · ${readingTime}`}
-                cta={tPage.readGuide}
-              />
+              <div className="mt-16 text-center py-12 rounded-2xl bg-white border border-stone-200">
+                <p className="text-base text-ink/60 font-medium">
+                  {isEn ? "No articles found in this category." : "Chưa có bài viết nào trong danh mục này."}
+                </p>
+              </div>
             );
-          })}
-        </section>
+          }
+
+          return (
+            <section className="mt-12 grid gap-6 md:grid-cols-3">
+              {filteredPosts.map((post) => {
+                const bTrans = blogTranslations[post.slug];
+                const title = isEn ? (post.enTitle || bTrans?.title || post.title) : post.title;
+                const excerpt = isEn ? (post.enExcerpt || bTrans?.excerpt || post.excerpt) : post.excerpt;
+                const category = isEn ? (post.enCategory || bTrans?.category || post.category) : post.category;
+                const readingTime = isEn ? (bTrans?.readingTime || (post.readingTime ? post.readingTime.replace("phút đọc", "min read") : "5 min read")) : (post.readingTime || "5 phút đọc");
+
+                return (
+                  <ImageCard
+                    key={post.slug}
+                    href={`/blog/${post.slug}`}
+                    image={post.image}
+                    alt={title}
+                    title={title}
+                    subtitle={excerpt}
+                    meta={`${category} · ${readingTime}`}
+                    cta={tPage.readGuide}
+                  />
+                );
+              })}
+            </section>
+          );
+        })()}
       </section>
     </main>
   );

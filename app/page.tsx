@@ -20,6 +20,7 @@ export default async function HomePage() {
   const activeHeroImage = siteSettings.heroImage || heroImage;
   const publishedBlogs = cloudBlogs
     .filter((p) => p.status === "published" && !p.isDeleted)
+    .sort((a, b) => new Date(b.date || b.createdAt).getTime() - new Date(a.date || a.createdAt).getTime())
     .slice(0, 3);
 
   return (

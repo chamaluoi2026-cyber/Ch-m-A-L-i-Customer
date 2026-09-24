@@ -764,25 +764,39 @@ export function HomeClientView({
           <div className="grid gap-6 md:grid-cols-3">
             {publishedBlogs.map((post) => {
               const bTrans = blogTranslations[post.slug];
-              const title = isEn && bTrans ? bTrans.title : post.title;
-              const category = isEn && bTrans ? bTrans.category : post.category;
-              const excerpt = isEn && bTrans ? bTrans.excerpt : post.excerpt;
+              const title = isEn ? (post.enTitle || bTrans?.title || post.title) : post.title;
+              const category = isEn ? (post.enCategory || bTrans?.category || post.category) : post.category;
+              const excerpt = isEn ? (post.enExcerpt || bTrans?.excerpt || post.excerpt) : post.excerpt;
 
               return (
-                <article key={post.slug} className="rounded-2xl bg-white/10 p-5 backdrop-blur transition hover:-translate-y-1">
-                  <figure className="relative aspect-[4/3] overflow-hidden rounded-xl">
-                    <AppImage src={post.image} alt={title} fill className="object-cover" />
-                  </figure>
-                  <p className="mt-5 text-xs font-bold uppercase tracking-[0.18em] text-white/60">{category}</p>
-                  <h3 className="mt-2 text-xl font-bold">{title}</h3>
-                  <p className="mt-3 text-sm leading-6 text-white/70">{excerpt}</p>
-                  <Link href={`/blog/${post.slug}`} className="mt-5 inline-flex items-center gap-2 text-sm font-bold hover:underline">
+                <article key={post.slug} className="group relative flex flex-col justify-between rounded-2xl bg-white/10 p-5 backdrop-blur transition hover:-translate-y-1 hover:bg-white/15">
+                  <div>
+                    <Link href={`/blog/${post.slug}`} className="block">
+                      <figure className="relative aspect-[4/3] overflow-hidden rounded-xl">
+                        <AppImage src={post.image} alt={title} fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
+                      </figure>
+                      <p className="mt-5 text-xs font-bold uppercase tracking-[0.18em] text-white/60">{category}</p>
+                      <h3 className="mt-2 text-xl font-bold group-hover:text-amber-300 transition-colors">{title}</h3>
+                    </Link>
+                    <p className="mt-3 text-sm leading-6 text-white/70 line-clamp-2">{excerpt}</p>
+                  </div>
+                  <Link href={`/blog/${post.slug}`} className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-amber-300 hover:text-white hover:underline">
                     {t.home.readArticle}
                     <ArrowRight className="size-4" />
                   </Link>
                 </article>
               );
             })}
+          </div>
+
+          <div className="mt-12 text-center">
+            <Link
+              href="/blog"
+              className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-6 py-3 text-sm font-bold text-white backdrop-blur hover:bg-white hover:text-forest transition shadow-sm hover:shadow-md"
+            >
+              {isEn ? "View all stories" : "Xem tất cả bài viết"}
+              <ArrowRight className="size-4" />
+            </Link>
           </div>
         </div>
       </section>
