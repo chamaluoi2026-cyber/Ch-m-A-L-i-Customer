@@ -701,8 +701,8 @@ export function HomeClientView({
             {homestays.map((item) => {
               const hsTrans = homestayTranslations[item.id || item.slug];
               const title = (isEn && hsTrans ? hsTrans.name : (item.name || item.title)) || "Homestay A Lưới";
-              const village = isEn && hsTrans ? hsTrans.village : item.village;
-              const capacity = isEn && hsTrans ? hsTrans.capacity : item.capacity;
+              const village = isEn && hsTrans ? hsTrans.village : (item.village || item.address || "Huyện A Lưới");
+              const capacity = isEn && hsTrans ? hsTrans.capacity : (item.capacity || item.maxGuests || "Nhà sàn cộng đồng");
               const meta = `${item.rating} ${isEn ? "rating" : "điểm đánh giá"}`;
 
               return (
@@ -714,7 +714,8 @@ export function HomeClientView({
                   title={title}
                   subtitle={`${village} · ${capacity}`}
                   meta={meta}
-                  price={item.price}
+                  price={typeof item.price === "number" ? item.price : undefined}
+                  priceLabel={item.priceLabel || (typeof item.price !== "number" ? item.price : undefined)}
                   cta={isEn ? "View Details" : "Xem chi tiết"}
                 />
               );

@@ -16,6 +16,7 @@ export function ImageCard({
   subtitle,
   meta,
   price,
+  priceLabel,
   cta
 }: {
   href: string;
