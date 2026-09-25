@@ -105,9 +105,9 @@ export function ProductDetailClientView({
                 </span>
               )}
             </div>
-            <p className="mt-6 text-lg leading-8 text-ink/65">
+            <div className="mt-6 text-base md:text-lg leading-8 text-ink/75 whitespace-pre-line space-y-3">
               {description}
-            </p>
+            </div>
             <div className="mt-7 grid gap-3 sm:grid-cols-3">
               {[
                 [Leaf, isEn ? "Indigenous" : "Bản địa"],
