@@ -297,10 +297,6 @@ export function HomeClientView({
         </aside>
       </section>
 
-      {/* BẢN TIN THỰC ĐỊA A LƯỚI HÔM NAY (TRAVEL CONDITIONS) */}
-      <div className="section-shell -mt-10 sm:-mt-14 relative z-20 mb-6">
-        <TravelConditionsBanner conditions={settings?.travelConditions || defaultTravelConditions} />
-      </div>
 
       {/* 2. CHOOSE DESTINATION & CLAIM VOUCHER */}
       <section className="section-shell py-20">
@@ -349,6 +345,24 @@ export function HomeClientView({
             </Link>
           </Button>
         </div>
+      </section>
+
+      {/* BẢN TIN THỰC ĐỊA A LƯỚI HÔM NAY — CƠ SỞ THỰC TẾ CHO TRỢ LÝ AI */}
+      <section className="section-shell pt-12 pb-6">
+        <MotionReveal>
+          <div className="mb-4">
+            <div className="flex items-center gap-2">
+              <span className="size-2 rounded-full bg-emerald-500 animate-ping" />
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-forest">
+                {isEn ? "Live Field Conditions & Weather Data" : "Bản tin thực địa — Căn cứ thời tiết cho AI lập lịch trình"}
+              </p>
+            </div>
+            <h3 className="text-xl sm:text-2xl font-black text-ink mt-1">
+              {isEn ? "Today's Mountain Pass & Destination Conditions" : "Tình hình đèo QL49, thác nước & thời tiết A Lưới hôm nay"}
+            </h3>
+          </div>
+          <TravelConditionsBanner conditions={settings?.travelConditions || defaultTravelConditions} />
+        </MotionReveal>
       </section>
 
       {/* ✨ AI LỊCH TRÌNH — SECTION HIGHLIGHT */}

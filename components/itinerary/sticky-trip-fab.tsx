@@ -18,7 +18,7 @@ export function StickyTripFab() {
   return (
     <aside
       aria-label="AI Trip Planner Quick Access"
-      className="fixed bottom-6 left-6 z-40 hidden sm:block md:bottom-8 md:left-8"
+      className="fixed bottom-5 sm:bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 z-40 select-none print:hidden pointer-events-auto"
     >
       <Link
         href="/itinerary"
