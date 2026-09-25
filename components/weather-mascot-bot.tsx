@@ -315,7 +315,7 @@ export function WeatherMascotBot() {
 
   // Fetch Live Weather from Open-Meteo A Luoi (Current + 5 Days Daily)
   useEffect(() => {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${A_LUOI_LAT}&longitude=${A_LUOI_LON}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FHo_Chi_Minh&forecast_days=5`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${A_LUOI_LAT}&longitude=${A_LUOI_LON}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_mean,precipitation_probability_max&timezone=Asia%2FHo_Chi_Minh&forecast_days=5`;
     
     fetch(url)
       .then((r) => r.json())
@@ -336,36 +336,74 @@ export function WeatherMascotBot() {
           });
         }
 
-        // 2. Parse 5-Day Forecast
+        // 2. Parse 5-Day Forecast với xác suất mưa thực tế theo điều kiện du lịch ban ngày
         if (data?.daily?.time) {
-          const { time, weather_code, temperature_2m_max, temperature_2m_min, precipitation_probability_max } = data.daily;
+          const {
+            time,
+            weather_code,
+            temperature_2m_max,
+            temperature_2m_min,
+            precipitation_sum,
+            precipitation_probability_mean,
+            precipitation_probability_max,
+          } = data.daily;
+
           const parsed: DayForecast[] = time.map((dateStr: string, i: number) => {
-            const code = weather_code[i];
-            const { label, enLabel } = wmoToDisplay(code);
+            const rawCode = weather_code[i];
+            const maxTemp = Math.round(temperature_2m_max[i]);
+            const minTemp = Math.round(temperature_2m_min[i]);
+            const precip = precipitation_sum?.[i] ?? 0;
+            const probMean = precipitation_probability_mean?.[i];
+            const probMax = precipitation_probability_max?.[i] ?? 0;
+
+            // Tính toán xác suất mưa thực tế cho hoạt động du lịch ban ngày:
+            // Tránh việc lấy xác suất mưa cực đại 100% gây hiểu lầm là mưa lũ cả ngày
+            let rainChance = Math.round((probMean ?? (probMax * 0.4)) * 1.1);
+            if (precip < 1) rainChance = Math.min(rainChance, 15);
+            else if (precip < 5) rainChance = Math.min(rainChance, 35);
+            else if (precip < 10) rainChance = Math.min(rainChance, 50);
+            else if (precip < 20) rainChance = Math.min(rainChance, 70);
+            else rainChance = Math.min(rainChance, 90);
+
+            // Xác định thời tiết chủ đạo ban ngày cho khách du lịch:
+            // Ở vùng núi Trường Sơn, nếu nhiệt độ ban ngày cao (>= 30°C) và lượng mưa thấp (< 10mm),
+            // thời tiết chủ đạo ban ngày là trời nắng ấm xen mây (Partly cloudy - code 2 hoặc code 1),
+            // chỉ có dông nhiệt thoáng qua vào chiều. Tránh hiển thị biểu tượng giông bão đen kịt cả ngày.
+            let displayCode = rawCode;
+            if (rawCode >= 95) {
+              if (precip < 5 && maxTemp >= 29) {
+                displayCode = 2; // Nắng ấm, mây bồng bềnh
+              } else if (precip < 12) {
+                displayCode = 80; // Mưa rào rải rác
+              }
+            } else if (rawCode >= 51 && rawCode <= 65 && precip < 3 && maxTemp >= 29) {
+              displayCode = 2;
+            }
+
+            const { label, enLabel } = wmoToDisplay(displayCode);
             const { dayName, enDayName } = getDayName(dateStr);
-            const rainChance = precipitation_probability_max[i] ?? 0;
-            const isCloudHuntingGood = code === 45 || code === 48 || (code >= 1 && code <= 3 && rainChance < 30);
+            const isCloudHuntingGood = displayCode === 45 || displayCode === 48 || (displayCode <= 3 && rainChance < 35);
 
             let specialNote: string | undefined;
             let enSpecialNote: string | undefined;
-            if (code === 45 || code === 48) {
+            if (precip >= 15) {
+              specialNote = "Có mưa rào lớn vùng núi, đường đèo trơn trượt, nên hạn chế qua đèo sau 16:30 🌧️";
+              enSpecialNote = "Heavy mountain rain expected, pass roads may be slick, avoid late travel 🌧️";
+            } else if (rawCode >= 95 && precip >= 4) {
+              specialNote = "Ban ngày nắng ấm, chiều có thể có dông nhiệt ngắn. Sáng tắm suối A Nôr rất đẹp ⚡";
+              enSpecialNote = "Sunny daytime, brief afternoon thermal shower. Great morning at A Nor Waterfall ⚡";
+            } else if (displayCode === 45 || displayCode === 48) {
               specialNote = "Săn mây đỉnh Đồi Thông lúc 06:15 sáng nha! Sương mù thung lũng rất thơ mộng ✨";
               enSpecialNote = "Prime cloud-hunting at Pine Hill 06:15 AM! Dreamy mountain mist ✨";
             } else if (isCloudHuntingGood) {
               specialNote = "Sáng sớm có biển mây bồng bềnh, check-in đèo A Co & Đồi Thông tuyệt đẹp!";
               enSpecialNote = "Early morning sea of clouds, incredible photo spots at A Co Pass & Pine Hill!";
-            } else if (code === 0) {
-              specialNote = "Trời nắng trong veo! Rất lý tưởng tắm suối Pâr Le & thác A Nôr ☀️";
-              enSpecialNote = "Crystal sunny day! Perfect for Par Le Stream & A Nor Waterfall ☀️";
-            } else if (code === 95 || code >= 96) {
-              specialNote = "Chiều tối có thể có dông rải rác. Du khách nên qua đèo QL49 trước 16:30 để an toàn ⚡";
-              enSpecialNote = "Scattered thunderstorms possible in afternoon. Cross Pass 49 before 16:30 for safety ⚡";
-            } else if (code >= 80) {
-              specialNote = "Có mưa rào vùng cao, đường đèo trơn trượt hãy chạy xe cẩn thận nhé 🌧️";
-              enSpecialNote = "Mountain showers, roads are slick along the pass, drive carefully 🌧️";
+            } else if (maxTemp >= 30) {
+              specialNote = "Trời nắng ấm trong lành! Rất lý tưởng tắm suối Pâr Le, thác A Nôr & chèo thuyền ☀️";
+              enSpecialNote = "Warm sunny weather! Perfect for Par Le Stream, A Nor Waterfall & boating ☀️";
             } else {
               specialNote = "Khí hậu mát mẻ 700m, trải nghiệm văn hóa dệt Zèng và ẩm thực nhà sàn cực ấm áp!";
-              enSpecialNote = "Pleasant 700m climate, ideal for Zeng brocade craft villages and stilt house culinary experiences!";
+              enSpecialNote = "Pleasant 700m climate, ideal for Zeng brocade craft villages and stilt house cuisine!";
             }
 
             const d = new Date(dateStr);
@@ -373,11 +411,11 @@ export function WeatherMascotBot() {
               date: `${d.getDate()}/${d.getMonth() + 1}`,
               dayName,
               enDayName,
-              weatherCode: code,
+              weatherCode: displayCode,
               label,
               enLabel,
-              tempMax: Math.round(temperature_2m_max[i]),
-              tempMin: Math.round(temperature_2m_min[i]),
+              tempMax: maxTemp,
+              tempMin: minTemp,
               rainChance,
               isCloudHuntingGood,
               specialNote,
