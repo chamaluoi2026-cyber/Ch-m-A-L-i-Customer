@@ -61,28 +61,70 @@ export function ProductsClientView({ products }: ProductsClientViewProps) {
           })}
         </nav>
 
-        <section className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {products.map((product) => {
-            const prodTrans = productTranslations[product.slug];
-            const title = isEn ? (product.enName || prodTrans?.name || product.name) : product.name;
-            const subtitle = isEn ? (product.enDescription || prodTrans?.description || product.description) : product.description;
-            const meta = isEn ? (product.enCategory || prodTrans?.category || product.category) : product.category;
+        {(() => {
+          const filteredProducts = products.filter((product) => {
+            if (selectedCategory === "All" || selectedCategory === "Tất cả") return true;
+            const cat = (product.category || "").toLowerCase();
+            const enCat = (product.enCategory || "").toLowerCase();
+            const name = (product.name || "").toLowerCase();
+            const target = selectedCategory.toLowerCase();
 
+            if (target === "zèng truyền thống" || target === "traditional brocade") {
+              return cat.includes("zèng") || cat.includes("dệt") || enCat.includes("brocade") || name.includes("zèng");
+            }
+            if (target === "mật ong rừng" || target === "wild forest honey") {
+              return cat.includes("mật ong") || enCat.includes("honey") || name.includes("mật ong");
+            }
+            if (target === "trà núi" || target === "mountain herbal tea") {
+              return cat.includes("trà") || enCat.includes("tea") || name.includes("trà");
+            }
+            if (target === "thủ công tre" || target === "bamboo crafts") {
+              return cat.includes("tre") || cat.includes("mây") || enCat.includes("bamboo") || name.includes("tre") || name.includes("mây");
+            }
+            if (target === "ocop" || target === "ocop certified") {
+              return cat.includes("ocop") || enCat.includes("ocop") || name.includes("ocop");
+            }
+            if (target === "quà lưu niệm" || target === "souvenirs") {
+              return cat.includes("lưu niệm") || enCat.includes("souvenir") || name.includes("lưu niệm");
+            }
+            return cat === target || enCat === target;
+          });
+
+          if (filteredProducts.length === 0) {
             return (
-              <ImageCard
-                key={product.slug}
-                href={`/products/${product.slug}#dat-hang`}
-                image={product.image}
-                alt={title}
-                title={title}
-                subtitle={subtitle}
-                meta={meta}
-                price={product.price}
-                cta={tPage.orderNow}
-              />
+              <div className="mt-12 text-center py-16 rounded-2xl bg-white border border-stone-200/80 shadow-sm">
+                <p className="text-base text-ink/65 font-medium">
+                  {isEn ? "No products found in this category." : "Chưa có sản phẩm nào trong danh mục này."}
+                </p>
+              </div>
             );
-          })}
-        </section>
+          }
+
+          return (
+            <section className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4 items-stretch">
+              {filteredProducts.map((product) => {
+                const prodTrans = productTranslations[product.slug];
+                const title = isEn ? (product.enName || prodTrans?.name || product.name) : product.name;
+                const subtitle = isEn ? (product.enDescription || prodTrans?.description || product.description) : product.description;
+                const meta = isEn ? (product.enCategory || prodTrans?.category || product.category) : product.category;
+
+                return (
+                  <ImageCard
+                    key={product.slug}
+                    href={`/products/${product.slug}#dat-hang`}
+                    image={product.image}
+                    alt={title}
+                    title={title}
+                    subtitle={subtitle}
+                    meta={meta}
+                    price={product.price}
+                    cta={tPage.orderNow}
+                  />
+                );
+              })}
+            </section>
+          );
+        })()}
       </section>
     </main>
   );
