@@ -1,27 +1,27 @@
 ﻿export interface TravelConditions {
-  updatedAt: string;
   temperature: string;
   weatherState: "sunny" | "cloudy" | "cool" | "light_rain" | "rainy";
   weatherLabel: string;
-  roadStatus: "good" | "caution" | "maintenance";
+  roadStatus: "normal" | "foggy" | "slippery" | "maintenance";
   roadLabel: string;
-  waterfallStatus: "open" | "high_water_warning";
+  waterfallStatus: "open" | "closed" | "caution";
   waterfallLabel: string;
   hotSpringStatus: "active" | "maintenance";
   hotSpringLabel: string;
   advisoryNote: string;
+  updatedAt: string;
 }
 
 export const defaultTravelConditions: TravelConditions = {
-  updatedAt: new Date().toISOString(),
   temperature: "24°C",
-  weatherState: "light_rain",
-  weatherLabel: "Mưa nhẹ đầu mùa, se lạnh",
-  roadStatus: "good",
-  roadLabel: "QL49 thông thoáng, đèo êm",
+  weatherState: "cool",
+  weatherLabel: "Tiết trời mát mẻ vùng cao, se lạnh về đêm",
+  roadStatus: "normal",
+  roadLabel: "Đèo QL49 thông thoáng, mặt đường khô ráo, chạy tốt",
   waterfallStatus: "open",
-  waterfallLabel: "Thác A Nôr nước trong, mở đón khách",
+  waterfallLabel: "Thác A Nôr & Pâr Le mở cửa, nước trong mát",
   hotSpringStatus: "active",
-  hotSpringLabel: "Suối nước nóng A Roàng hoạt động tốt",
-  advisoryNote: "Thời tiết miền núi se lạnh về chiều, nên mang áo khoác mỏng hoặc áo mưa nhẹ khi đi xe máy."
+  hotSpringLabel: "Suối khoáng nóng A Roàng đang hoạt động bình thường",
+  advisoryNote: "Nên mang theo áo khoác mỏng và dép chống trượt khi tắm suối",
+  updatedAt: new Date().toISOString()
 };

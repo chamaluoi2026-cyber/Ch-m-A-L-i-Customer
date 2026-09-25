@@ -31,7 +31,7 @@ export const defaultTravelConditions: TravelConditions = {
 };
 
 interface TravelConditionsBannerProps {
-  conditions?: TravelConditions;
+  conditions?: any;
 }
 
 export function TravelConditionsBanner({ conditions = defaultTravelConditions }: TravelConditionsBannerProps) {

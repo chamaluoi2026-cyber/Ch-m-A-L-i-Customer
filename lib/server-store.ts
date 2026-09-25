@@ -3,6 +3,7 @@ import path from "path";
 import type { LeadRecord, Voucher, TransactionRecord, LeadPayload, LeadStatus, LeadTimelineEvent } from "@/lib/leads";
 import { createLeadCode, createVoucherCode, calculateCommission } from "@/lib/leads";
 import { places, type PlaceCategory, type Place } from "@/data/places";
+import type { TravelConditions } from "@/data/travel-conditions";
 
 export type BusinessRecord = {
   id: string;
@@ -178,33 +179,8 @@ export type SiteSettings = {
   updatedAt?: string;
 };
 
-export type TravelConditions = {
-  temperature: string;
-  weatherState: "sunny" | "cloudy" | "cool" | "light_rain" | "rainy";
-  weatherLabel: string;
-  roadStatus: "normal" | "foggy" | "slippery" | "maintenance";
-  roadLabel: string;
-  waterfallStatus: "open" | "closed" | "caution";
-  waterfallLabel: string;
-  hotSpringStatus: "active" | "maintenance";
-  hotSpringLabel: string;
-  advisoryNote: string;
-  updatedAt: string;
-};
+export * from "@/data/travel-conditions";
 
-export const defaultTravelConditions: TravelConditions = {
-  temperature: "24°C",
-  weatherState: "cool",
-  weatherLabel: "Tiết trời mát mẻ vùng cao, se lạnh về đêm",
-  roadStatus: "normal",
-  roadLabel: "Đèo QL49 thông thoáng, mặt đường khô ráo, chạy tốt",
-  waterfallStatus: "open",
-  waterfallLabel: "Thác A Nôr & Pâr Le mở cửa, nước trong mát",
-  hotSpringStatus: "active",
-  hotSpringLabel: "Suối khoáng nóng A Roàng đang hoạt động bình thường",
-  advisoryNote: "Nên mang theo áo khoác mỏng và dép chống trượt khi tắm suối",
-  updatedAt: new Date().toISOString()
-};
 
 export type BlogContentBlock =
   | { id: string; type: "paragraph"; content: string; align?: "left" | "center" | "right" }
