@@ -37,6 +37,23 @@ interface TravelConditionsBannerProps {
 export function TravelConditionsBanner({ conditions = defaultTravelConditions }: TravelConditionsBannerProps) {
   const { language } = useLanguage();
   const isEn = language === "en";
+  const [currentConditions, setCurrentConditions] = useState(conditions);
+
+  // Tự động đồng bộ thời tiết vệ tinh Open-Meteo A Lưới thời gian thực
+  React.useEffect(() => {
+    let isMounted = true;
+    fetch("/api/travel-conditions")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (isMounted && json?.success && json?.data) {
+          setCurrentConditions(json.data);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const getRoadBadge = (status: string) => {
     switch (status) {
@@ -53,7 +70,7 @@ export function TravelConditionsBanner({ conditions = defaultTravelConditions }:
     }
   };
 
-  const road = getRoadBadge(conditions.roadStatus);
+  const road = getRoadBadge(currentConditions.roadStatus);
 
   const formatUpdateHour = (isoStr: string) => {
     try {
@@ -63,6 +80,8 @@ export function TravelConditionsBanner({ conditions = defaultTravelConditions }:
       return "07:00";
     }
   };
+
+  const isLiveSatellite = currentConditions.source !== "admin_override";
 
   return (
     <div className="relative overflow-hidden rounded-3xl border border-emerald-300/40 bg-gradient-to-r from-[#113B2C] via-[#1B4E3B] to-[#2D3E33] text-white shadow-xl">
@@ -83,7 +102,9 @@ export function TravelConditionsBanner({ conditions = defaultTravelConditions }:
                 {isEn ? "Live A Luoi Travel Advisory" : "Bản Tin Thực Địa A Lưới Hôm Nay"}
               </span>
               <span className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-bold text-white/90">
-                {isEn ? "Official Local Report" : "Ban Quản Trị Xác Thực"}
+                {isLiveSatellite
+                  ? (isEn ? "📡 Live Satellite 24/7" : "📡 Vệ Tinh Khí Tượng Live")
+                  : (isEn ? "🛡️ Admin Verified" : "🛡️ BQT Xác Thực")}
               </span>
             </div>
           </div>
@@ -91,7 +112,7 @@ export function TravelConditionsBanner({ conditions = defaultTravelConditions }:
           <div className="flex items-center gap-3 text-xs text-white/75">
             <span className="flex items-center gap-1 font-mono text-[11px]">
               <Clock size={12} className="text-amber-300" />
-              {isEn ? `Updated ${formatUpdateHour(conditions.updatedAt)} today` : `Cập nhật lúc ${formatUpdateHour(conditions.updatedAt)} hôm nay`}
+              {isEn ? `Updated ${formatUpdateHour(currentConditions.updatedAt)} today` : `Cập nhật lúc ${formatUpdateHour(currentConditions.updatedAt)} hôm nay`}
             </span>
           </div>
         </div>
@@ -105,8 +126,8 @@ export function TravelConditionsBanner({ conditions = defaultTravelConditions }:
               {isEn ? "Mountain Weather" : "Thời tiết & Nhiệt độ"}
             </span>
             <div className="mt-1.5 flex items-baseline gap-2">
-              <span className="text-2xl font-black text-white">{conditions.temperature}</span>
-              <span className="text-xs font-bold text-amber-200 line-clamp-1">{conditions.weatherLabel}</span>
+              <span className="text-2xl font-black text-white">{currentConditions.temperature}</span>
+              <span className="text-xs font-bold text-amber-200 line-clamp-1">{currentConditions.weatherLabel}</span>
             </div>
           </div>
 
@@ -121,7 +142,7 @@ export function TravelConditionsBanner({ conditions = defaultTravelConditions }:
                 {road.text}
               </span>
             </div>
-            <p className="mt-1 text-[11px] text-white/80 line-clamp-1">{conditions.roadLabel}</p>
+            <p className="mt-1 text-[11px] text-white/80 line-clamp-1">{currentConditions.roadLabel}</p>
           </div>
 
           {/* 3. Thác A Nôr */}
@@ -133,17 +154,17 @@ export function TravelConditionsBanner({ conditions = defaultTravelConditions }:
             <div className="mt-1.5 flex items-center gap-2">
               <span
                 className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
-                  conditions.waterfallStatus === "open"
+                  currentConditions.waterfallStatus === "open"
                     ? "bg-emerald-500/30 text-emerald-200 border border-emerald-400/40"
                     : "bg-amber-500/30 text-amber-200 border border-amber-400/40"
                 }`}
               >
-                {conditions.waterfallStatus === "open"
+                {currentConditions.waterfallStatus === "open"
                   ? (isEn ? "Open for Swimming" : "Mở cửa đón khách")
                   : (isEn ? "Caution: High Water" : "Cảnh báo nước lớn")}
               </span>
             </div>
-            <p className="mt-1 text-[11px] text-white/80 line-clamp-1">{conditions.waterfallLabel}</p>
+            <p className="mt-1 text-[11px] text-white/80 line-clamp-1">{currentConditions.waterfallLabel}</p>
           </div>
 
           {/* 4. Suối khoáng nóng */}
@@ -155,17 +176,17 @@ export function TravelConditionsBanner({ conditions = defaultTravelConditions }:
             <div className="mt-1.5 flex items-center gap-2">
               <span
                 className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
-                  conditions.hotSpringStatus === "active"
+                  currentConditions.hotSpringStatus === "active"
                     ? "bg-emerald-500/30 text-emerald-200 border border-emerald-400/40"
                     : "bg-amber-500/30 text-amber-200 border border-amber-400/40"
                 }`}
               >
-                {conditions.hotSpringStatus === "active"
+                {currentConditions.hotSpringStatus === "active"
                   ? (isEn ? "Open & Mineral Warm" : "Đang hoạt động")
                   : (isEn ? "Maintenance" : "Tạm bảo trì")}
               </span>
             </div>
-            <p className="mt-1 text-[11px] text-white/80 line-clamp-1">{conditions.hotSpringLabel}</p>
+            <p className="mt-1 text-[11px] text-white/80 line-clamp-1">{currentConditions.hotSpringLabel}</p>
           </div>
         </div>
 
@@ -175,7 +196,7 @@ export function TravelConditionsBanner({ conditions = defaultTravelConditions }:
             <AlertCircle size={16} className="text-amber-300 shrink-0" />
             <span>
               <strong className="text-amber-200">{isEn ? "Local tip today:" : "Khuyến nghị hôm nay:"}</strong>{" "}
-              {conditions.advisoryNote}
+              {currentConditions.advisoryNote}
             </span>
           </div>
 

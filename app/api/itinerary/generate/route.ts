@@ -10,6 +10,7 @@ import {
 } from "@/lib/highland-itinerary-engine";
 import { getActivePlacesAsync } from "@/lib/places";
 import { getSiteSettingsAsync } from "@/lib/server-store";
+import { getLiveTravelConditionsAsync } from "@/lib/travel-conditions-engine";
 
 export async function POST(req: NextRequest) {
   try {
@@ -85,15 +86,17 @@ export async function POST(req: NextRequest) {
       if (!apiKey && settings.geminiApiKey) {
         apiKey = settings.geminiApiKey;
       }
-      if (settings.travelConditions) {
-        const tc = settings.travelConditions;
+      const liveConditions = await getLiveTravelConditionsAsync(settings?.travelConditions);
+      if (liveConditions) {
+        const tc = liveConditions;
+        const sourceLabel = tc.source === "admin_override" ? "DO BAN QUẢN TRỊ CẬP NHẬT TRỰC TIẾP" : "TRẠM VỆ TINH KHÍ TƯỢNG A LƯỚI TỰ ĐỘNG CẬP NHẬT 24/7";
         travelConditionsText = `
-- BẢN TIN THỰC ĐỊA A LƯỚI HÔM NAY (DO BAN QUẢN TRỊ CẬP NHẬT TRỰC TIẾP):
+- BẢN TIN THỰC ĐỊA A LƯỚI HÔM NAY (${sourceLabel}):
   + Thời tiết thực tế: ${tc.temperature}, ${tc.weatherLabel} (${tc.weatherState})
   + Tuyến đèo QL49: ${tc.roadLabel} (${tc.roadStatus})
   + Thác suối: ${tc.waterfallLabel} (${tc.waterfallStatus})
   + Suối khoáng nóng: ${tc.hotSpringLabel} (${tc.hotSpringStatus})
-  + Khuyến cáo hôm nay: ${tc.advisoryNote}`;
+  + Khuyến cáo thực địa: ${tc.advisoryNote}`;
       }
     } catch {}
 
