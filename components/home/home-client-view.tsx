@@ -26,6 +26,7 @@ import { imageFor } from "@/data/site";
 import { useLanguage } from "@/components/i18n-provider";
 import type { Place } from "@/data/places";
 import type { PlaceRecord, SiteSettings } from "@/lib/server-store";
+import { TravelConditionsBanner, defaultTravelConditions } from "./travel-conditions-banner";
 import {
   homestayTranslations,
   productTranslations,
@@ -296,8 +297,13 @@ export function HomeClientView({
         </aside>
       </section>
 
+      {/* BẢN TIN THỰC ĐỊA A LƯỚI HÔM NAY (TRAVEL CONDITIONS) */}
+      <div className="section-shell -mt-10 sm:-mt-14 relative z-20 mb-6">
+        <TravelConditionsBanner conditions={settings?.travelConditions || defaultTravelConditions} />
+      </div>
+
       {/* 2. CHOOSE DESTINATION & CLAIM VOUCHER */}
-      <section className="section-shell py-24">
+      <section className="section-shell py-20">
         <MotionReveal>
           <SectionHeading
             eyebrow={t.home.featuredEyebrow}

@@ -6,18 +6,27 @@ import { AnimatedWeatherIcon, getWeatherTheme } from "@/components/ui/animated-w
 import {
   X,
   Sparkles,
-  ChevronDown,
-  AlertTriangle,
-  Compass,
   Droplets,
-  Calendar,
+  Compass,
+  AlertTriangle,
   ShieldAlert,
-  Volume2,
-  VolumeX,
+  Wind
 } from "lucide-react";
 
-const A_LUOI_LAT = 16.22;
-const A_LUOI_LON = 107.31;
+// Tọa độ trung tâm thị trấn A Lưới, Thừa Thiên Huế (Độ cao ~700m)
+const A_LUOI_LAT = 16.2268;
+const A_LUOI_LON = 107.3425;
+
+interface CurrentWeather {
+  temp: number;
+  apparentTemp: number;
+  humidity: number;
+  weatherCode: number;
+  windSpeed: number;
+  isDay: boolean;
+  label: string;
+  enLabel: string;
+}
 
 interface DayForecast {
   date: string;
@@ -35,17 +44,18 @@ interface DayForecast {
 }
 
 function wmoToDisplay(code: number): { label: string; enLabel: string } {
-  if (code === 0) return { label: "Nắng đẹp rực rỡ", enLabel: "Clear Sunny" };
-  if (code === 1) return { label: "Ít mây dịu mát", enLabel: "Mostly Sunny" };
+  if (code === 0) return { label: "Nắng đẹp trong lành", enLabel: "Clear Sunny" };
+  if (code === 1) return { label: "Nắng nhẹ dịu mát", enLabel: "Mostly Sunny" };
   if (code === 2) return { label: "Nhiều mây bồng bềnh", enLabel: "Partly Cloudy" };
-  if (code === 3) return { label: "Trời xám đại ngàn", enLabel: "Overcast" };
-  if (code === 45 || code === 48) return { label: "Sương mù đèo ✨", enLabel: "Mountain Mist ✨" };
-  if (code >= 51 && code <= 55) return { label: "Mưa phùn bay", enLabel: "Drizzle" };
-  if (code >= 61 && code <= 65) return { label: "Mưa ngàn", enLabel: "Rain" };
-  if (code >= 71 && code <= 77) return { label: "Mưa đá nhẹ", enLabel: "Light Sleet" };
+  if (code === 3) return { label: "Nhiều mây dịu mát", enLabel: "Overcast" };
+  if (code === 45 || code === 48) return { label: "Sương mù mây bay ✨", enLabel: "Mountain Mist ✨" };
+  if (code >= 51 && code <= 55) return { label: "Mưa phùn bay", enLabel: "Light Drizzle" };
+  if (code >= 61 && code <= 65) return { label: "Mưa rào vùng cao", enLabel: "Mountain Rain" };
+  if (code >= 71 && code <= 77) return { label: "Mưa lạnh vùng cao", enLabel: "Cold Highland Rain" };
   if (code >= 80 && code <= 82) return { label: "Mưa rào lớn", enLabel: "Heavy Showers" };
-  if (code === 95) return { label: "Giông bão đèo cao", enLabel: "Highland Storm" };
-  return { label: "Biến thiên cao nguyên", enLabel: "Variable Highland" };
+  if (code === 95) return { label: "Có dông rải rác", enLabel: "Thunderstorm" };
+  if (code >= 96) return { label: "Dông sét mạnh", enLabel: "Severe Storm" };
+  return { label: "Mát mẻ vùng cao", enLabel: "Highland Breeze" };
 }
 
 function getDayName(dateStr: string): { dayName: string; enDayName: string } {
@@ -62,7 +72,7 @@ function getDayName(dateStr: string): { dayName: string; enDayName: string } {
 
 /**
  * Animated Mascot SVG: Bé Mây A Lưới (Highland Cloud Bot)
- * Changes facial expressions, accessories, and elemental weather effects dynamically!
+ * Biểu cảm và hiệu ứng thay đổi linh hoạt theo thời tiết thực tế
  */
 function CloudBotMascot({
   weatherCode,
@@ -71,14 +81,13 @@ function CloudBotMascot({
   weatherCode: number;
   isHappy?: boolean;
 }) {
-  const isThunder = weatherCode === 95;
+  const isThunder = weatherCode >= 95;
   const isSunny = weatherCode === 0;
   const isFog = weatherCode === 45 || weatherCode === 48;
   const isRain = weatherCode >= 51 && weatherCode <= 82;
 
   return (
     <div className="relative flex items-center justify-center select-none">
-      {/* SVG Canvas for Cloud Bot */}
       <svg
         viewBox="0 0 100 100"
         width="68"
@@ -88,7 +97,6 @@ function CloudBotMascot({
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
-          {/* Cloud Body Gradient */}
           <linearGradient id="botCloudBody" x1="20" y1="20" x2="80" y2="85" gradientUnits="userSpaceOnUse">
             {isThunder ? (
               <>
@@ -111,13 +119,11 @@ function CloudBotMascot({
             )}
           </linearGradient>
 
-          {/* Golden Aura for Lightning / Sun */}
           <linearGradient id="goldGradient" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stopColor="#FEF08A" />
             <stop offset="100%" stopColor="#F59E0B" />
           </linearGradient>
 
-          {/* Keyframe Styles for Bot Animations */}
           <style>{`
             @keyframes bot-bob {
               0%, 100% { transform: translateY(0px) rotate(0deg); }
@@ -172,8 +178,6 @@ function CloudBotMascot({
           `}</style>
         </defs>
 
-        {/* WEATHER BACKGROUND ACCESSORIES */}
-        {/* 1. Sunny: Mini Orbiting Sun */}
         {isSunny && (
           <g className="anim-bot-sun">
             {[0, 45, 90, 135, 180, 225, 270, 315].map((ang, i) => (
@@ -193,7 +197,6 @@ function CloudBotMascot({
           </g>
         )}
 
-        {/* 2. Fog/Mist: Cloud-Hunting Sparkle Stars */}
         {isFog && (
           <>
             <g style={{ transformOrigin: "82px 20px", animation: "bot-sparkle 2.2s infinite ease-in-out" }}>
@@ -205,7 +208,6 @@ function CloudBotMascot({
           </>
         )}
 
-        {/* 3. Raindrops below the Bot */}
         {isRain && (
           <g>
             <line x1="36" y1="78" x2="33" y2="86" stroke="#38BDF8" strokeWidth="2.5" strokeLinecap="round" className="anim-bot-drop-1" />
@@ -214,9 +216,7 @@ function CloudBotMascot({
           </g>
         )}
 
-        {/* MAIN BOT BODY (Bobbing Motion) */}
         <g className="anim-bot-body">
-          {/* Weather Antenna on top */}
           <line x1="50" y1="28" x2="50" y2="17" stroke={isThunder ? "#FACC15" : "#94A3B8"} strokeWidth="2.5" strokeLinecap="round" />
           <circle
             cx="50"
@@ -226,7 +226,6 @@ function CloudBotMascot({
             className="animate-pulse"
           />
 
-          {/* Thunderstorm Lightning Horn/Bolt on Antenna */}
           {isThunder && (
             <g className="anim-bot-lightning">
               <polygon
@@ -238,7 +237,6 @@ function CloudBotMascot({
             </g>
           )}
 
-          {/* Fluffy Cloud Body */}
           <path
             d="M74 70H26C18.27 70 12 63.73 12 56C12 49.19 16.85 43.51 23.37 42.24C25.68 32.1 34.69 24.5 45.5 24.5C57.65 24.5 67.72 33.56 69.11 45.4C75.24 46.46 80 51.78 80 58.1C80 64.67 74.67 70 74 70Z"
             fill="url(#botCloudBody)"
@@ -246,7 +244,6 @@ function CloudBotMascot({
             strokeWidth="2"
           />
 
-          {/* Bot Belly Specular Highlight */}
           <path
             d="M28 66C22 66 18 62 18 57"
             stroke="#FFFFFF"
@@ -255,11 +252,8 @@ function CloudBotMascot({
             opacity="0.6"
           />
 
-          {/* CUTE BOT FACE */}
-          {/* Eyes (With Blinking Animation) */}
           <g className="anim-bot-eye">
             {isSunny ? (
-              /* Sunglasses for sunny weather! */
               <g>
                 <rect x="33" y="44" width="14" height="9" rx="3.5" fill="#1E293B" />
                 <rect x="53" y="44" width="14" height="9" rx="3.5" fill="#1E293B" />
@@ -268,29 +262,21 @@ function CloudBotMascot({
                 <line x1="55" y1="46" x2="61" y2="46" stroke="#94A3B8" strokeWidth="1.5" strokeLinecap="round" />
               </g>
             ) : (
-              /* Big cute shiny eyes */
               <>
-                {/* Left Eye */}
                 <circle cx="39" cy="48" r="4" fill="#0F172A" />
                 <circle cx="40.5" cy="46.5" r="1.5" fill="#FFFFFF" />
-
-                {/* Right Eye */}
                 <circle cx="61" cy="48" r="4" fill="#0F172A" />
                 <circle cx="62.5" cy="46.5" r="1.5" fill="#FFFFFF" />
               </>
             )}
           </g>
 
-          {/* Rosy Cheeks (Blushing) */}
           <ellipse cx="31" cy="54" rx="4" ry="2.2" fill="#FB7185" opacity="0.65" />
           <ellipse cx="69" cy="54" rx="4" ry="2.2" fill="#FB7185" opacity="0.65" />
 
-          {/* Smiling Mouth */}
           {isHappy ? (
-            /* Open happy mouth */
             <path d="M44 54 Q50 63 56 54 Z" fill="#E11D48" />
           ) : (
-            /* Sweet smile */
             <path
               d="M44 54 Q50 60 56 54"
               stroke="#0F172A"
@@ -300,7 +286,6 @@ function CloudBotMascot({
             />
           )}
 
-          {/* Highland Scarf (when fog or mist) */}
           {isFog && (
             <path
               d="M36 67C42 70 58 70 64 67C64 69 58 73 50 73C42 73 36 69 36 67Z"
@@ -319,66 +304,89 @@ export function WeatherMascotBot() {
   const { language } = useLanguage();
   const isEn = language === "en";
 
+  const [currentWeather, setCurrentWeather] = useState<CurrentWeather | null>(null);
   const [forecasts, setForecasts] = useState<DayForecast[]>([]);
   const [loading, setLoading] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showSpeechBubble, setShowSpeechBubble] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Fetch Live Weather from Open-Meteo A Luoi
+  // Fetch Live Weather from Open-Meteo A Luoi (Current + 5 Days Daily)
   useEffect(() => {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${A_LUOI_LAT}&longitude=${A_LUOI_LON}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FHo_Chi_Minh&forecast_days=5`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${A_LUOI_LAT}&longitude=${A_LUOI_LON}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FHo_Chi_Minh&forecast_days=5`;
+    
     fetch(url)
       .then((r) => r.json())
       .then((data) => {
-        if (!data?.daily?.time) throw new Error("No data");
-        const { time, weathercode, temperature_2m_max, temperature_2m_min, precipitation_probability_max } = data.daily;
-        const parsed: DayForecast[] = time.map((dateStr: string, i: number) => {
-          const code = weathercode[i];
-          const { label, enLabel } = wmoToDisplay(code);
-          const { dayName, enDayName } = getDayName(dateStr);
-          const rainChance = precipitation_probability_max[i] ?? 0;
-          const isCloudHuntingGood = code === 45 || code === 48 || (code >= 1 && code <= 3 && rainChance < 30);
-
-          let specialNote: string | undefined;
-          let enSpecialNote: string | undefined;
-          if (code === 45 || code === 48) {
-            specialNote = "Săn mây đỉnh Đồi Thông lúc 06:15 sáng nha! Sương mù đèo rất thơ mộng ✨";
-            enSpecialNote = "Prime cloud-hunting at Pine Hill 06:15 AM! Dreamy mountain mist ✨";
-          } else if (isCloudHuntingGood) {
-            specialNote = "Sáng sớm có biển mây bồng bềnh, chụp ảnh lưu niệm bao đẹp!";
-            enSpecialNote = "Early morning sea of clouds, incredible photo opportunities!";
-          } else if (code === 0) {
-            specialNote = "Nắng trong veo ấm áp! Rất lý tưởng tắm suối Pâr Le & thác A Nôr ☀️";
-            enSpecialNote = "Crystal sunny day! Perfect for Par Le Stream & A Nor Waterfall ☀️";
-          } else if (code === 95) {
-            specialNote = "A Lưới đang giông bão! Du khách nên qua đèo QL49 trước 16:30 để an toàn ⚡";
-            enSpecialNote = "Highland thunderstorm active! Cross Pass 49 before 16:30 for safety ⚡";
-          } else if (code >= 80) {
-            specialNote = "Trời mưa lớn vùng núi, đường đèo trơn trượt hãy chạy xe cẩn thận nhé 🌧️";
-            enSpecialNote = "Heavy mountain rain, roads are slick along the pass, drive carefully 🌧️";
-          }
-
-          const d = new Date(dateStr);
-          return {
-            date: `${d.getDate()}/${d.getMonth() + 1}`,
-            dayName,
-            enDayName,
-            weatherCode: code,
+        // 1. Parse Current Weather (Thời gian thực chính xác theo giờ)
+        if (data?.current) {
+          const c = data.current;
+          const { label, enLabel } = wmoToDisplay(c.weather_code);
+          setCurrentWeather({
+            temp: Math.round(c.temperature_2m),
+            apparentTemp: Math.round(c.apparent_temperature),
+            humidity: c.relative_humidity_2m,
+            weatherCode: c.weather_code,
+            windSpeed: Math.round(c.wind_speed_10m),
+            isDay: Boolean(c.is_day),
             label,
             enLabel,
-            tempMax: Math.round(temperature_2m_max[i]),
-            tempMin: Math.round(temperature_2m_min[i]),
-            rainChance,
-            isCloudHuntingGood,
-            specialNote,
-            enSpecialNote,
-          };
-        });
-        setForecasts(parsed);
+          });
+        }
+
+        // 2. Parse 5-Day Forecast
+        if (data?.daily?.time) {
+          const { time, weather_code, temperature_2m_max, temperature_2m_min, precipitation_probability_max } = data.daily;
+          const parsed: DayForecast[] = time.map((dateStr: string, i: number) => {
+            const code = weather_code[i];
+            const { label, enLabel } = wmoToDisplay(code);
+            const { dayName, enDayName } = getDayName(dateStr);
+            const rainChance = precipitation_probability_max[i] ?? 0;
+            const isCloudHuntingGood = code === 45 || code === 48 || (code >= 1 && code <= 3 && rainChance < 30);
+
+            let specialNote: string | undefined;
+            let enSpecialNote: string | undefined;
+            if (code === 45 || code === 48) {
+              specialNote = "Săn mây đỉnh Đồi Thông lúc 06:15 sáng nha! Sương mù thung lũng rất thơ mộng ✨";
+              enSpecialNote = "Prime cloud-hunting at Pine Hill 06:15 AM! Dreamy mountain mist ✨";
+            } else if (isCloudHuntingGood) {
+              specialNote = "Sáng sớm có biển mây bồng bềnh, check-in đèo A Co & Đồi Thông tuyệt đẹp!";
+              enSpecialNote = "Early morning sea of clouds, incredible photo spots at A Co Pass & Pine Hill!";
+            } else if (code === 0) {
+              specialNote = "Trời nắng trong veo! Rất lý tưởng tắm suối Pâr Le & thác A Nôr ☀️";
+              enSpecialNote = "Crystal sunny day! Perfect for Par Le Stream & A Nor Waterfall ☀️";
+            } else if (code === 95 || code >= 96) {
+              specialNote = "Chiều tối có thể có dông rải rác. Du khách nên qua đèo QL49 trước 16:30 để an toàn ⚡";
+              enSpecialNote = "Scattered thunderstorms possible in afternoon. Cross Pass 49 before 16:30 for safety ⚡";
+            } else if (code >= 80) {
+              specialNote = "Có mưa rào vùng cao, đường đèo trơn trượt hãy chạy xe cẩn thận nhé 🌧️";
+              enSpecialNote = "Mountain showers, roads are slick along the pass, drive carefully 🌧️";
+            } else {
+              specialNote = "Khí hậu mát mẻ 700m, trải nghiệm văn hóa dệt Zèng và ẩm thực nhà sàn cực ấm áp!";
+              enSpecialNote = "Pleasant 700m climate, ideal for Zeng brocade craft villages and stilt house culinary experiences!";
+            }
+
+            const d = new Date(dateStr);
+            return {
+              date: `${d.getDate()}/${d.getMonth() + 1}`,
+              dayName,
+              enDayName,
+              weatherCode: code,
+              label,
+              enLabel,
+              tempMax: Math.round(temperature_2m_max[i]),
+              tempMin: Math.round(temperature_2m_min[i]),
+              rainChance,
+              isCloudHuntingGood,
+              specialNote,
+              enSpecialNote,
+            };
+          });
+          setForecasts(parsed);
+        }
+
         setLoading(false);
       })
       .catch(() => {
@@ -408,37 +416,48 @@ export function WeatherMascotBot() {
   }, [isExpanded]);
 
   const today = forecasts[0];
-  const currentCode = today?.weatherCode ?? 95; // Default to current condition (thunderstorm in screenshot)
+  // Ưu tiên mã thời tiết thực tế hiện tại, fallback là mã 2 (Nhiều mây mát mẻ) chứ không gán 95 (Giông bão)
+  const currentCode = currentWeather?.weatherCode ?? today?.weatherCode ?? 2;
+  const currentTemp = currentWeather?.temp ?? today?.tempMax ?? 22;
+  const currentLabel = currentWeather ? (isEn ? currentWeather.enLabel : currentWeather.label) : (today ? (isEn ? today.enLabel : today.label) : "Dịu mát");
   const theme = getWeatherTheme(currentCode);
 
   // Dynamic Bot Voice Message
   const botGreeting = () => {
     if (loading) return isEn ? "Updating A Luoi mountain weather..." : "Đang cập nhật thời tiết A Lưới...";
-    if (!today) return isEn ? "Highland air is fresh and cool!" : "Khí hậu A Lưới luôn dịu mát 18–24°C!";
+    if (!currentWeather && !today) return isEn ? "Highland air is fresh and cool!" : "Khí hậu A Lưới luôn dịu mát 18–24°C!";
 
-    if (currentCode === 95) {
+    const temp = currentTemp;
+    const isDay = currentWeather?.isDay ?? true;
+
+    if (!isDay && temp <= 22) {
       return isEn
-        ? `⚡ Storm Alert (${today.tempMax}°/${today.tempMin}°C): Cross Pass 49 before 16:30 for safety!`
-        : `⚡ Cảnh báo giông bão (${today.tempMax}°/${today.tempMin}°C): Du khách nên vượt đèo QL49 trước 16:30 nhé!`;
+        ? `🌙 Highland Night (${temp}°C): Cool and crisp mountain air! Remember to wear a warm jacket.`
+        : `🌙 Đêm vùng cao (${temp}°C): Trời se lạnh sương mù nhẹ, nhớ mang áo ấm khi đi dạo bản làng nhé!`;
+    }
+    if (currentCode >= 95) {
+      return isEn
+        ? `⚡ Thunderstorm Notice (${temp}°C): Showers in afternoon/evening, take caution crossing Pass 49.`
+        : `⚡ Lưu ý có dông rải rác (${temp}°C): Du khách nên qua đèo QL49 sớm trước chiều tối để an toàn!`;
     }
     if (currentCode === 45 || currentCode === 48) {
       return isEn
-        ? `🌫️ Highland Mist (${today.tempMax}°C): Prime cloud-hunting at Pine Hill 06:15 AM!`
-        : `🌫️ Sương mù bồng bềnh (${today.tempMax}°C): Sáng mai 06:15 săn mây Đồi Thông tuyệt đỉnh nha!`;
+        ? `🌫️ Highland Mist (${temp}°C): Prime cloud-hunting at Pine Hill 06:15 AM!`
+        : `🌫️ Sương mù bồng bềnh (${temp}°C): Sáng sớm 06:00 - 07:15 săn biển mây Đồi Thông bao đẹp nha!`;
     }
     if (currentCode === 0) {
       return isEn
-        ? `☀️ Sunny & Bright (${today.tempMax}°C): Par Le Stream & A Nor Waterfall are crystal clear today!`
-        : `☀️ Nắng đẹp trong veo (${today.tempMax}°C): Suối Pâr Le & Thác A Nôr trong xanh mát rượi, đi ngay thôi!`;
+        ? `☀️ Sunny & Bright (${temp}°C): Par Le Stream & A Nor Waterfall are crystal clear today!`
+        : `☀️ Nắng đẹp trong veo (${temp}°C): Suối Pâr Le & Thác A Nôr trong xanh mát rượi, đi ngay thôi!`;
     }
     if (currentCode >= 80) {
       return isEn
-        ? `🌧️ Mountain Rain (${today.tempMax}°C): Keep warm and take a steaming coffee cup!`
-        : `🌧️ Mưa rừng se lạnh (${today.tempMax}°C): Mang áo ấm và thưởng thức ly cà phê A Lưới nóng nhé!`;
+        ? `🌧️ Mountain Rain (${temp}°C): Keep warm and take a steaming coffee cup!`
+        : `🌧️ Mưa rừng se lạnh (${temp}°C): Mang áo ấm và thưởng thức ly cà phê A Lưới nóng nhé!`;
     }
     return isEn
-      ? `🌤️ A Luoi Highland (${today.tempMax}°/${today.tempMin}°C): Pleasant weather, ready to explore!`
-      : `🌤️ Cao nguyên A Lưới (${today.tempMax}°/${today.tempMin}°C): Mát mẻ trong lành, sẵn sàng khám phá!`;
+      ? `🌤️ A Luoi Highland (${temp}°C): Fresh, pleasant weather, ready to explore!`
+      : `🌤️ Cao nguyên A Lưới (${temp}°C): Không khí mát mẻ trong lành, sẵn sàng khám phá!`;
   };
 
   return (
@@ -451,7 +470,6 @@ export function WeatherMascotBot() {
       {!isDismissed && (showSpeechBubble || isHovered) && !isExpanded && (
         <div className="absolute bottom-20 left-0 w-[280px] sm:w-[320px] ios-speech">
           <div className="relative rounded-[24px] ios-glass p-3.5 ring-1 ring-black/5 dark:ring-white/10 shadow-[0_16px_36px_rgba(0,0,0,0.16)]">
-            {/* iOS Notification Header */}
             <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-black/5 dark:border-white/10">
               <div className="flex items-center gap-2">
                 <div className="flex h-5 w-5 items-center justify-center rounded-lg bg-gradient-to-tr from-sky-400 to-indigo-500 shadow-2xs">
@@ -480,12 +498,10 @@ export function WeatherMascotBot() {
               </button>
             </div>
 
-            {/* Notification Body Text */}
             <p className="text-xs font-semibold text-gray-800 dark:text-gray-100 leading-snug">
               {botGreeting()}
             </p>
 
-            {/* iOS Action Button Pill */}
             <div className="mt-2.5 flex items-center justify-between pt-1">
               <button
                 type="button"
@@ -498,13 +514,12 @@ export function WeatherMascotBot() {
               <span className="text-[10px] font-bold text-gray-400">700m</span>
             </div>
 
-            {/* iOS Bubble Pointer */}
             <div className="absolute -bottom-2 left-8 h-3.5 w-3.5 rotate-45 border-b border-r border-black/5 bg-white/95 dark:bg-slate-900/95" />
           </div>
         </div>
       )}
 
-      {/* 2. THE FLOATING CLOUD BOT WITH iOS HAPTIC TAP */}
+      {/* 2. THE FLOATING CLOUD BOT WITH REALTIME TEMPERATURE */}
       {!isExpanded && (
         <div
           className="group relative flex items-center gap-2 cursor-pointer ios-haptic-tap"
@@ -512,46 +527,39 @@ export function WeatherMascotBot() {
           onMouseLeave={() => setIsHovered(false)}
           onClick={() => setIsExpanded(true)}
         >
-          {/* Weather Reactive Ambient Glow Aura */}
           <div
             className="absolute -inset-2 rounded-full blur-lg opacity-70 group-hover:opacity-100 transition-opacity duration-500 animate-pulse"
             style={{ backgroundColor: theme.glowColor }}
           />
 
-          {/* iOS Continuous Squircle Container */}
           <div
             className={`relative flex items-center justify-center rounded-[28px] ios-glass p-1.5 ring-1 ${theme.borderGlow} shadow-[0_12px_32px_rgba(0,0,0,0.18)]`}
           >
-            {/* The SVG Cloud Mascot */}
             <CloudBotMascot weatherCode={currentCode} isHappy={isHovered} />
 
-            {/* iOS Dynamic Island Style Temperature Pill */}
-            {!loading && today && (
-              <div className="absolute -bottom-1 -right-1 flex items-center gap-1 rounded-full bg-forest px-2 py-0.5 text-[10px] font-black text-white shadow-md ring-1.5 ring-white">
-                <span>{today.tempMax}°C</span>
+            {!loading && (
+              <div className="absolute -bottom-1 -right-1 flex items-center gap-0.5 rounded-full bg-forest px-2 py-0.5 text-[10px] font-black text-white shadow-md ring-1.5 ring-white">
+                <span>{currentTemp}°C</span>
               </div>
             )}
           </div>
 
-          {/* Quick Label pill beside Bot */}
           <div className="hidden sm:flex flex-col rounded-[20px] ios-glass px-3 py-1.5 shadow-sm text-left pointer-events-none group-hover:ring-1 group-hover:ring-forest/30 transition-all">
             <span className="text-[10px] font-black uppercase tracking-tight text-forest">Bé Mây A Lưới</span>
             <span className="text-[10px] font-bold text-gray-700 dark:text-gray-200">
-              {today ? `${today.label} · ${today.tempMax}°C` : "Thời tiết 700m"}
+              {currentLabel} · {currentTemp}°C
             </span>
           </div>
         </div>
       )}
 
-      {/* 3. EXPANDED iOS SHEET MODAL (Spring Bloom from Bot Origin) */}
+      {/* 3. EXPANDED iOS SHEET MODAL */}
       {isExpanded && (
         <div className="w-[340px] sm:w-[380px] overflow-hidden rounded-[32px] ios-glass ios-spring ring-1 ring-black/5 dark:ring-white/10 shadow-[0_25px_70px_rgba(0,0,0,0.3)]">
-          {/* iOS Sheet Grabber Bar */}
           <div className="pt-2.5 pb-1 flex justify-center bg-gradient-to-r from-transparent via-black/5 to-transparent">
             <div className="h-1.5 w-10 rounded-full bg-gray-400/40" />
           </div>
 
-          {/* Card Header with Mascot & Dynamic Weather Gradient */}
           <div className={`relative overflow-hidden bg-gradient-to-br ${theme.cardHeaderGradient} px-5 py-4 text-white shadow-md`}>
             <div className="relative z-10 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -566,12 +574,11 @@ export function WeatherMascotBot() {
                     <span className="rounded-full bg-white/20 px-2 py-0.5 text-[9px] font-bold">700m</span>
                   </div>
                   <p className="text-xs text-white/90 font-medium">
-                    {isEn ? "Open-Meteo Highland Station" : "Trạm khí tượng vùng cao 24/7"}
+                    {isEn ? "Live Highland Station (Open-Meteo)" : "Trạm khí tượng vùng cao trực tiếp"}
                   </p>
                 </div>
               </div>
 
-              {/* iOS Circular Close Button */}
               <button
                 type="button"
                 onClick={() => setIsExpanded(false)}
@@ -582,29 +589,48 @@ export function WeatherMascotBot() {
               </button>
             </div>
 
-            {/* Today status banner */}
-            {!loading && today && (
-              <div className="mt-3 flex items-center justify-between rounded-2xl bg-black/20 px-3.5 py-2 backdrop-blur-md ring-1 ring-white/10">
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-2xl font-black">{today.tempMax}°</span>
-                  <span className="text-xs text-white/80">/ {today.tempMin}°C</span>
-                  <span className="ml-1 text-xs font-bold text-amber-200">
-                    {isEn ? today.enLabel : today.label}
-                  </span>
-                </div>
-                {today.rainChance > 0 && (
-                  <div className="flex items-center gap-1 text-xs text-sky-200">
-                    <Droplets className="h-3.5 w-3.5" />
-                    <span className="font-bold">{today.rainChance}%</span>
+            {/* Realtime Status Banner */}
+            {!loading && (
+              <div className="mt-3.5 rounded-2xl bg-black/20 p-3 backdrop-blur-md ring-1 ring-white/10">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-2xl font-black">{currentTemp}°C</span>
+                    {today && (
+                      <span className="text-[11px] text-white/80">
+                        ({today.tempMin}° - {today.tempMax}°C)
+                      </span>
+                    )}
+                    <span className="ml-1 text-xs font-bold text-amber-200">
+                      {currentLabel}
+                    </span>
                   </div>
+
+                  <div className="flex items-center gap-2 text-xs text-sky-200 font-bold">
+                    <div className="flex items-center gap-0.5">
+                      <Droplets className="h-3.5 w-3.5" />
+                      <span>{currentWeather ? `${currentWeather.humidity}%` : (today ? `${today.rainChance}%` : "--")}</span>
+                    </div>
+                    {currentWeather && (
+                      <div className="flex items-center gap-0.5 text-[10px] text-white/80 font-normal">
+                        <Wind className="h-3 w-3" />
+                        <span>{currentWeather.windSpeed}km/h</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {currentWeather && (
+                  <p className="text-[10px] text-white/75 mt-1 font-medium">
+                    {isEn
+                      ? `Feels like ${currentWeather.apparentTemp}°C · ${currentWeather.isDay ? "Daytime" : "Nighttime in highland"}`
+                      : `Cảm giác nhiệt như ${currentWeather.apparentTemp}°C · ${currentWeather.isDay ? "Ban ngày vùng cao" : "Đêm vùng cao se lạnh"}`}
+                  </p>
                 )}
               </div>
             )}
           </div>
 
-          {/* Card Body */}
           <div className="p-4 space-y-3.5">
-            {/* 5-Day Forecast Grid */}
             <div>
               <p className="text-[11px] font-extrabold uppercase tracking-wider text-gray-400 mb-2">
                 {isEn ? "5-Day Highland Forecast" : "Dự báo thời tiết 5 ngày tới"}
@@ -640,11 +666,10 @@ export function WeatherMascotBot() {
               </div>
             </div>
 
-            {/* Special Bot Travel Tip */}
             {today?.specialNote && (
               <div
                 className={`rounded-2xl p-3 text-xs leading-relaxed border ${
-                  currentCode === 95
+                  currentCode >= 95
                     ? "bg-amber-500/10 text-amber-950 dark:text-amber-200 border-amber-300/40"
                     : today.isCloudHuntingGood
                     ? "bg-purple-500/10 text-purple-950 dark:text-purple-200 border-purple-300/40"
@@ -652,7 +677,7 @@ export function WeatherMascotBot() {
                 }`}
               >
                 <div className="flex items-start gap-2">
-                  {currentCode === 95 ? (
+                  {currentCode >= 95 ? (
                     <ShieldAlert className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
                   ) : today.isCloudHuntingGood ? (
                     <Sparkles className="h-4 w-4 shrink-0 text-purple-600 mt-0.5" />
@@ -671,7 +696,6 @@ export function WeatherMascotBot() {
               </div>
             )}
 
-            {/* Pass 49 Warning Banner */}
             <div className="rounded-2xl bg-black/[0.03] dark:bg-white/[0.04] p-3 text-[11px] text-gray-600 dark:text-gray-300 space-y-1">
               <div className="flex items-center gap-1.5 font-bold text-gray-800 dark:text-gray-100">
                 <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
@@ -679,14 +703,13 @@ export function WeatherMascotBot() {
               </div>
               <p className="text-[10px] leading-relaxed">
                 {isEn
-                  ? "Dense fog rolls over Pass 49 after 16:30. Night temperatures drop to 17–19°C — always keep a light windbreaker in your bag!"
-                  : "Sương mù hạ thấp đèo QL49 sau 16:30. Nhiệt độ ban đêm hạ xuống 17–19°C (se lạnh), nhớ mang theo áo khoác gió nhẹ bạn nhé!"}
+                  ? "Dense fog rolls over Pass 49 after 16:30. Night temperatures drop to 17–20°C — always keep a light windbreaker in your bag!"
+                  : "Sương mù hạ thấp đèo QL49 sau 16:30. Nhiệt độ ban đêm hạ xuống 17–20°C (se lạnh), nhớ mang theo áo khoác gió nhẹ bạn nhé!"}
               </p>
             </div>
 
-            {/* iOS Footer */}
             <div className="flex items-center justify-between text-[9px] text-gray-400 pt-1">
-              <span>Trạm Open-Meteo · 16.22°N, 107.31°E</span>
+              <span>Trạm Open-Meteo · 16.23°N, 107.34°E · 700m</span>
               <button
                 type="button"
                 onClick={() => {

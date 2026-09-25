@@ -24,7 +24,8 @@ import {
   TicketCheck,
   Users,
   X,
-  ZoomIn
+  ZoomIn,
+  BedDouble
 } from "lucide-react";
 import { BlogVideoEmbed, parseYouTubeVideoId, isDirectVideoUrl } from "@/components/blog/blog-video-embed";
 import { PlaceLeadForm } from "@/components/place-lead-form";
@@ -268,6 +269,28 @@ export function PlaceDetailClientView({
                     {isEn ? "Draft / Hidden" : "Bản nháp / Đang ẩn"}
                   </span>
                 )}
+                {place.status === "active" && (place.category === "stay" || (place as any).availabilityStatus) && (
+                  <span
+                    className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-bold shadow-sm backdrop-blur ${
+                      (place as any).availabilityStatus === "sold_out"
+                        ? "bg-rose-600/90 text-white"
+                        : (place as any).availabilityStatus === "few_left"
+                        ? "bg-amber-500/90 text-white animate-pulse"
+                        : (place as any).availabilityStatus === "on_request"
+                        ? "bg-blue-600/90 text-white"
+                        : "bg-emerald-600/90 text-white"
+                    }`}
+                  >
+                    <BedDouble className="size-3.5" />
+                    {(place as any).availabilityStatus === "sold_out"
+                      ? isEn ? "Sold Out Today" : "Hết phòng hôm nay"
+                      : (place as any).availabilityStatus === "few_left"
+                      ? isEn ? "Only 1-2 Rooms Left!" : "Chỉ còn 1-2 phòng!"
+                      : (place as any).availabilityStatus === "on_request"
+                      ? isEn ? "Contact Host" : "Liên hệ xác nhận"
+                      : isEn ? "Rooms Available Today" : "Còn phòng hôm nay"}
+                  </span>
+                )}
               </div>
               <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight">{displayName}</h1>
               <p className="mt-2.5 max-w-2xl text-white/85 text-sm md:text-base leading-relaxed">{displaySummary}</p>
@@ -332,6 +355,44 @@ export function PlaceDetailClientView({
             {isEn ? "Local Partner" : "Cơ sở địa phương"}
           </p>
           <h2 className="mt-2 text-2xl font-extrabold text-ink">{place.businessName}</h2>
+
+          {place.category === "stay" && (
+            <div
+              className={`mt-4 rounded-2xl p-4 border transition ${
+                (place as any).availabilityStatus === "sold_out"
+                  ? "bg-rose-50 border-rose-200 text-rose-950"
+                  : (place as any).availabilityStatus === "few_left"
+                  ? "bg-amber-50 border-amber-300 text-amber-950"
+                  : (place as any).availabilityStatus === "on_request"
+                  ? "bg-blue-50 border-blue-200 text-blue-950"
+                  : "bg-emerald-50 border-emerald-200 text-emerald-950"
+              }`}
+            >
+              <div className="flex items-center justify-between text-xs font-bold">
+                <span className="flex items-center gap-1.5">
+                  <BedDouble className="size-4" />
+                  {isEn ? "Room Availability" : "Tình trạng phòng:"}
+                </span>
+                <span className="text-[11px] opacity-75 font-mono">
+                  {isEn ? "Updated today" : "Cập nhật hôm nay"}
+                </span>
+              </div>
+              <p className="mt-1.5 font-extrabold text-sm md:text-base">
+                {(place as any).availabilityStatus === "sold_out"
+                  ? isEn ? "🔴 Sold out for today" : "🔴 Đã kín phòng hôm nay"
+                  : (place as any).availabilityStatus === "few_left"
+                  ? isEn ? "⚡ Only 1-2 rooms left (Book fast)" : "⚡ Chỉ còn 1-2 phòng (Nên giữ chỗ sớm)"
+                  : (place as any).availabilityStatus === "on_request"
+                  ? isEn ? "📞 Call host to check" : "📞 Liên hệ chủ homestay để kiểm tra"
+                  : isEn ? "🟢 Rooms available for booking" : "🟢 Còn phòng đón khách hôm nay"}
+              </p>
+              {(place as any).availabilityNote && (
+                <p className="mt-1 text-xs opacity-85 italic">
+                  * {(place as any).availabilityNote}
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="mt-5 grid gap-2.5 text-sm">
             <div className="flex items-center gap-3 rounded-2xl bg-beige p-3.5 font-bold text-ink">

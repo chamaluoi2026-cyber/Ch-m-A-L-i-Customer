@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { AppImage } from "@/components/ui/app-image";
 import Link from "next/link";
@@ -56,7 +56,25 @@ export function PlaceCard({ place }: { place: Place | PlaceRecord }) {
             <span className="rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-forest shadow-md backdrop-blur">
               {categoryLabel}
             </span>
-            {isActive ? (
+            {place.category === "stay" ? (
+              place.availabilityStatus === "few_left" ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-500 text-white px-2.5 py-1 text-[11px] font-bold shadow-md backdrop-blur animate-pulse">
+                  🔥 {isEn ? "Only 1-2 Left" : "Chỉ còn 1-2 phòng"}
+                </span>
+              ) : place.availabilityStatus === "sold_out" ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-rose-600 text-white px-2.5 py-1 text-[11px] font-bold shadow-md backdrop-blur">
+                  ❌ {isEn ? "Sold Out" : "Hết phòng"}
+                </span>
+              ) : place.availabilityStatus === "on_request" ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-600 text-white px-2.5 py-1 text-[11px] font-bold shadow-md backdrop-blur">
+                  📞 {isEn ? "Inquire First" : "Liên hệ trước"}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-700/90 px-2.5 py-1 text-[11px] font-bold text-white shadow-md backdrop-blur">
+                  <CheckCircle2 className="size-3" /> {isEn ? "Rooms Available" : "Còn phòng hôm nay"}
+                </span>
+              )
+            ) : isActive ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-700/90 px-2.5 py-1 text-[11px] font-bold text-white shadow-md backdrop-blur">
                 <CheckCircle2 className="size-3" /> {isEn ? "Open Now" : "Đang hoạt động"}
               </span>

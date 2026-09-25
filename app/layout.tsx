@@ -3,6 +3,7 @@ import "@/styles/globals.css";
 import { Footer } from "@/components/footer";
 import { CustomerChatbox } from "@/components/customer-chatbox";
 import { WeatherMascotBot } from "@/components/weather-mascot-bot";
+import { StickyTripFab } from "@/components/itinerary/sticky-trip-fab";
 import { Navbar } from "@/components/navbar";
 import { siteUrl } from "@/lib/utils";
 import { getSiteSettingsAsync } from "@/lib/server-store";
@@ -82,6 +83,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             settings={settings}
           />
           {children}
+          <StickyTripFab />
           <CustomerChatbox />
           <WeatherMascotBot />
           <Footer settings={settings} />

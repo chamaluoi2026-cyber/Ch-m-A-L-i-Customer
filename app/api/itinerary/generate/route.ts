@@ -77,16 +77,27 @@ export async function POST(req: NextRequest) {
     // Đồng bộ toàn bộ thông tin thực tế mới nhất (ảnh, tên, mô tả, ưu đãi, điểm đặc sắc)
     const basePlan = enrichPlanWithPlaces(rawPlan, activePlaces);
 
-    // 3. Nạp API Key Gemini từ biến môi trường hoặc cấu hình hệ thống trên Cloud
+    // 3. Nạp API Key Gemini & Bản tin thực địa từ Cloud Database
     let apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      try {
-        const settings = await getSiteSettingsAsync();
+    let travelConditionsText = "";
+    try {
+      const settings = await getSiteSettingsAsync();
+      if (!apiKey && settings.geminiApiKey) {
         apiKey = settings.geminiApiKey;
-      } catch {}
-    }
+      }
+      if (settings.travelConditions) {
+        const tc = settings.travelConditions;
+        travelConditionsText = `
+- BẢN TIN THỰC ĐỊA A LƯỚI HÔM NAY (DO BAN QUẢN TRỊ CẬP NHẬT TRỰC TIẾP):
+  + Thời tiết thực tế: ${tc.temperature}, ${tc.weatherLabel} (${tc.weatherState})
+  + Tuyến đèo QL49: ${tc.roadLabel} (${tc.roadStatus})
+  + Thác suối: ${tc.waterfallLabel} (${tc.waterfallStatus})
+  + Suối khoáng nóng: ${tc.hotSpringLabel} (${tc.hotSpringStatus})
+  + Khuyến cáo hôm nay: ${tc.advisoryNote}`;
+      }
+    } catch {}
 
-    // 4. Nếu có Gemini API Key: Kích hoạt Gemini 2.5 Flash làm Chuyên Gia Cố Vấn Khí Hậu & Lịch Trình
+    // 4. Nếu có Gemini API Key: Kích hoạt Gemini làm Chuyên Gia Cố Vấn Khí Hậu & Lịch Trình
     if (apiKey) {
       try {
         const placesCatalog = activePlaces
@@ -106,7 +117,7 @@ Khách hàng vừa gửi yêu cầu:
 - Ngày khởi hành dự kiến: ${departureDate || "Hôm nay"}
 - Thích: ${likes.join(", ") || "Khám phá tự nhiên"}
 - Tránh: ${dislikes.join(", ") || "Không có"}
-- Dự báo thời tiết A Lưới cho ngày khởi hành: ${weatherForecast.condition}, nhiệt độ ${weatherForecast.tempMin}°C - ${weatherForecast.tempMax}°C, xác suất mưa ${weatherForecast.rainChance}%
+- Dự báo thời tiết A Lưới cho ngày khởi hành: ${weatherForecast.condition}, nhiệt độ ${weatherForecast.tempMin}°C - ${weatherForecast.tempMax}°C, xác suất mưa ${weatherForecast.rainChance}%${travelConditionsText}
 - Yêu cầu riêng: "${customRequest || "Không có"}"
 
 Cấu trúc lịch trình cơ bản:
@@ -154,7 +165,7 @@ Trả về duy nhất định dạng JSON:
 }
 `;
 
-        const modelsToTry = ["gemini-flash-latest", "gemini-2.5-flash-lite", "gemini-2.5-flash"];
+        const modelsToTry = ["gemini-3.1-flash-lite", "gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-flash-latest"];
         let rawText: string | null = null;
 
         for (const model of modelsToTry) {

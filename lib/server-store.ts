@@ -172,7 +172,38 @@ export type SiteSettings = {
   // Cấu hình Trí tuệ nhân tạo (Google Gemini)
   geminiApiKey?: string;
 
+  // Bản tin điều kiện thực tế du lịch A Lưới hôm nay
+  travelConditions?: TravelConditions;
+
   updatedAt?: string;
+};
+
+export type TravelConditions = {
+  temperature: string;
+  weatherState: "sunny" | "cloudy" | "cool" | "light_rain" | "rainy";
+  weatherLabel: string;
+  roadStatus: "normal" | "foggy" | "slippery" | "maintenance";
+  roadLabel: string;
+  waterfallStatus: "open" | "closed" | "caution";
+  waterfallLabel: string;
+  hotSpringStatus: "active" | "maintenance";
+  hotSpringLabel: string;
+  advisoryNote: string;
+  updatedAt: string;
+};
+
+export const defaultTravelConditions: TravelConditions = {
+  temperature: "24°C",
+  weatherState: "cool",
+  weatherLabel: "Tiết trời mát mẻ vùng cao, se lạnh về đêm",
+  roadStatus: "normal",
+  roadLabel: "Đèo QL49 thông thoáng, mặt đường khô ráo, chạy tốt",
+  waterfallStatus: "open",
+  waterfallLabel: "Thác A Nôr & Pâr Le mở cửa, nước trong mát",
+  hotSpringStatus: "active",
+  hotSpringLabel: "Suối khoáng nóng A Roàng đang hoạt động bình thường",
+  advisoryNote: "Nên mang theo áo khoác mỏng và dép chống trượt khi tắm suối",
+  updatedAt: new Date().toISOString()
 };
 
 export type BlogContentBlock =
@@ -292,6 +323,11 @@ export type PlaceRecord = {
   seoKeywords?: string;
   ogImage?: string;
 
+  // Availability (Homestay & Điểm đến)
+  availabilityStatus?: "available" | "few_left" | "sold_out" | "on_request";
+  availabilityNote?: string;
+  availabilityUpdatedAt?: string;
+
   // Ratings & Metadata
   rating: number;
   reviewCount: number;
@@ -300,7 +336,7 @@ export type PlaceRecord = {
 };
 
 
-export type BookingType = "tour" | "homestay" | "product";
+export type BookingType = "tour" | "homestay" | "product" | "itinerary";
 export type BookingStatus = "pending" | "confirmed" | "completed" | "cancelled";
 export type PaymentMethod = "vietqr" | "bank_transfer" | "cash_on_delivery";
 export type PaymentStatus = "unpaid" | "paid" | "partially_paid" | "refunded" | "failed" | "PENDING" | "PROCESSING" | "PAID" | "FAILED" | "CANCELLED" | "REFUNDED" | "PARTIALLY_REFUNDED";
