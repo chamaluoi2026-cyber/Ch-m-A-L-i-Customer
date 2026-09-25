@@ -13,8 +13,11 @@ import {
   User,
   X,
   Copy,
-  Check
+  Check,
+  Compass
 } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   getChatSessionAction,
   sendGuestMessageAction
@@ -163,6 +166,8 @@ function getOrCreateSessionId(): string {
 }
 
 export function CustomerChatbox() {
+  const pathname = usePathname();
+  const isItineraryPage = pathname?.startsWith("/itinerary") || pathname?.startsWith("/admin");
   const { language } = useLanguage();
   const isEn = language === "en";
 
@@ -408,9 +413,32 @@ export function CustomerChatbox() {
   };
 
   return (
-    <aside className="fixed bottom-5 right-5 z-[60]" aria-label="Chat hỗ trợ khách hàng">
+    <aside
+      className="fixed bottom-5 right-5 z-[60] flex flex-col items-end gap-2.5 pointer-events-none select-none print:hidden"
+      aria-label="Chat hỗ trợ & Lên chuyến đi AI"
+    >
+      {/* Nút Lên chuyến đi với AI: nằm trực tiếp phía trên ô Tư vấn, tự động nhích lên khi ô tư vấn mở rộng */}
+      {!isItineraryPage && (
+        <div className="pointer-events-auto transition-all duration-300 ease-out">
+          <Link
+            href="/itinerary"
+            className="group relative flex items-center gap-2.5 rounded-full bg-gradient-to-r from-forest via-emerald-700 to-teal-800 px-4 py-2.5 sm:px-5 sm:py-3 text-xs md:text-sm font-extrabold text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 border border-white/25 ring-4 ring-emerald-500/20 backdrop-blur-md whitespace-nowrap"
+          >
+            <span className="relative flex size-2.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
+              <span className="relative inline-flex size-2.5 rounded-full bg-amber-400" />
+            </span>
+            <Sparkles className="size-4 text-amber-300 animate-spin-slow group-hover:rotate-45 transition-transform" />
+            <span className="tracking-wide">
+              {isEn ? "Plan Trip with AI" : "✨ Lên chuyến đi với AI"}
+            </span>
+            <Compass className="size-4 opacity-75 group-hover:translate-x-0.5 transition-transform" />
+          </Link>
+        </div>
+      )}
+
       {open ? (
-        <section className="mb-4 flex h-[540px] w-[min(400px,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl border border-forest/15 bg-white shadow-2xl transition-all animate-in fade-in zoom-in-95 duration-200">
+        <section className="pointer-events-auto flex h-[540px] max-h-[calc(100vh-140px)] w-[min(400px,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl border border-forest/15 bg-white shadow-2xl transition-all animate-in fade-in zoom-in-95 duration-200">
           {/* Header */}
           <header className="flex items-center justify-between bg-[#0F382E] px-4 py-3.5 text-white shadow-md">
             <div className="flex items-center gap-2.5">
@@ -614,7 +642,7 @@ export function CustomerChatbox() {
       <button
         type="button"
         onClick={() => handleToggleOpen(!open)}
-        className="group relative ml-auto flex items-center gap-3 rounded-full bg-forest px-5 py-3.5 font-bold text-white shadow-soft transition hover:-translate-y-0.5 hover:bg-ink hover:shadow-xl active:scale-95"
+        className="pointer-events-auto group relative ml-auto flex items-center gap-3 rounded-full bg-forest px-5 py-3.5 font-bold text-white shadow-soft transition hover:-translate-y-0.5 hover:bg-ink hover:shadow-xl active:scale-95"
         aria-label={isEn ? "Open live support chat" : "Mở chat hỗ trợ khách hàng"}
       >
         <span className="relative">
