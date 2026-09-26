@@ -5,8 +5,9 @@ import { useLanguage } from "@/components/i18n-provider";
 import { AnimatedWeatherIcon, getWeatherTheme } from "@/components/ui/animated-weather-icon";
 import { ChevronUp, X, Sparkles, AlertTriangle, Compass, Droplets, Wind, ShieldAlert, Minimize2, Maximize2 } from "lucide-react";
 
-const A_LUOI_LAT = 16.22;
-const A_LUOI_LON = 107.31;
+const A_LUOI_LAT = 16.232;
+const A_LUOI_LON = 107.261;
+const A_LUOI_ELEVATION = 620;
 
 interface DayForecast {
   date: string;
@@ -60,7 +61,7 @@ export function WeatherWidget() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${A_LUOI_LAT}&longitude=${A_LUOI_LON}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FHo_Chi_Minh&forecast_days=5`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${A_LUOI_LAT}&longitude=${A_LUOI_LON}&elevation=${A_LUOI_ELEVATION}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FHo_Chi_Minh&forecast_days=5`;
     fetch(url)
       .then((r) => r.json())
       .then((data) => {

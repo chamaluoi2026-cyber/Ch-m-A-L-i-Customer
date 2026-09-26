@@ -13,9 +13,10 @@ import {
   Wind
 } from "lucide-react";
 
-// Tọa độ trung tâm thị trấn A Lưới, Thừa Thiên Huế (Độ cao ~700m)
-const A_LUOI_LAT = 16.2268;
-const A_LUOI_LON = 107.3425;
+// Tọa độ trung tâm thị trấn A Lưới, Thừa Thiên Huế (Độ cao thực tế 620m)
+const A_LUOI_LAT = 16.232;
+const A_LUOI_LON = 107.261;
+const A_LUOI_ELEVATION = 620;
 
 interface CurrentWeather {
   temp: number;
@@ -315,7 +316,7 @@ export function WeatherMascotBot() {
 
   // Fetch Live Weather from Open-Meteo A Luoi (Current + 5 Days Daily)
   useEffect(() => {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${A_LUOI_LAT}&longitude=${A_LUOI_LON}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_mean,precipitation_probability_max&timezone=Asia%2FHo_Chi_Minh&forecast_days=5`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${A_LUOI_LAT}&longitude=${A_LUOI_LON}&elevation=${A_LUOI_ELEVATION}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_mean,precipitation_probability_max&timezone=Asia%2FHo_Chi_Minh&forecast_days=5`;
     
     fetch(url)
       .then((r) => r.json())

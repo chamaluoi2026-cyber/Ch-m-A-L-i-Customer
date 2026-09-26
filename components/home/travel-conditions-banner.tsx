@@ -190,8 +190,48 @@ export function TravelConditionsBanner({ conditions = defaultTravelConditions }:
           </div>
         </div>
 
+        {/* 3 Khung Giờ Thực Tế Trong Ngày (Sáng / Chiều / Tối) */}
+        {currentConditions.timeWindows && (
+          <div className="mt-3.5 grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            {[
+              currentConditions.timeWindows.morning,
+              currentConditions.timeWindows.afternoon,
+              currentConditions.timeWindows.evening
+            ].map((win: any, idx: number) => (
+              <div
+                key={idx}
+                className="flex items-center justify-between rounded-xl bg-black/25 p-2.5 px-3 border border-white/10 text-xs backdrop-blur-sm"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-lg shrink-0">{win.icon}</span>
+                  <div className="min-w-0">
+                    <span className="font-bold text-white block text-[11px] leading-tight truncate">
+                      {isEn ? win.enTitle : win.title}
+                    </span>
+                    <span className="text-[10px] text-white/75 truncate block">
+                      {isEn ? win.enCondition : win.condition}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-right shrink-0 pl-2">
+                  <span className="font-black text-amber-300 text-xs block">{win.temp}</span>
+                  <span className="text-[9px] text-white/60 block font-mono">{win.timeRange}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Cloud hunting tip nếu có */}
+        {currentConditions.cloudHuntingTip && (
+          <div className="mt-2.5 flex items-center gap-2 text-[11px] text-emerald-200/90 bg-emerald-950/40 px-3 py-1.5 rounded-xl border border-emerald-500/20">
+            <span className="shrink-0">⛰️</span>
+            <span>{currentConditions.cloudHuntingTip}</span>
+          </div>
+        )}
+
         {/* Advisory Tip & CTA Button */}
-        <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl bg-white/10 p-3.5 border border-white/10">
+        <div className="mt-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl bg-white/10 p-3.5 border border-white/10">
           <div className="flex items-center gap-2.5 text-xs text-white/90">
             <AlertCircle size={16} className="text-amber-300 shrink-0" />
             <span>

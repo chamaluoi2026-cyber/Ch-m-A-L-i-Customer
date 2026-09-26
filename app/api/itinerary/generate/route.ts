@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
       language = "vi"
     } = body;
 
-    // 1. Lấy dữ liệu dự báo thời tiết 7 ngày từ Open-Meteo (A Lưới: 16.22°N, 107.31°E)
+    // 1. Lấy dữ liệu dự báo thời tiết 7 ngày từ Open-Meteo chuẩn độ cao A Lưới 620m
     let isRainy = false;
     let weatherForecast = {
       condition: "Thời tiết mát mẻ vùng cao",
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
 
     try {
       const weatherRes = await fetch(
-        "https://api.open-meteo.com/v1/forecast?latitude=16.22&longitude=107.31&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FHo_Chi_Minh&forecast_days=7",
+        "https://api.open-meteo.com/v1/forecast?latitude=16.232&longitude=107.261&elevation=620&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FHo_Chi_Minh&forecast_days=7",
         { signal: AbortSignal.timeout(3500) }
       );
       if (weatherRes.ok) {
@@ -89,13 +89,22 @@ export async function POST(req: NextRequest) {
       const liveConditions = await getLiveTravelConditionsAsync(settings?.travelConditions);
       if (liveConditions) {
         const tc = liveConditions;
-        const sourceLabel = tc.source === "admin_override" ? "DO BAN QUẢN TRỊ CẬP NHẬT TRỰC TIẾP" : "TRẠM VỆ TINH KHÍ TƯỢNG A LƯỚI TỰ ĐỘNG CẬP NHẬT 24/7";
+        const sourceLabel = tc.source === "admin_override" ? "DO BAN QUẢN TRỊ CẬP NHẬT TRỰC TIẾP" : "TRẠM VỆ TINH KHÍ TƯỢNG A LƯỚI (ĐỘ CAO 620M)";
+        const windowBreakdown = tc.timeWindows
+          ? `
+  + Phân tích vi khí hậu 3 buổi:
+    * Sáng (${tc.timeWindows.morning.timeRange}): ${tc.timeWindows.morning.temp}, ${tc.timeWindows.morning.condition} (Khuyên: ${tc.timeWindows.morning.advice})
+    * Chiều (${tc.timeWindows.afternoon.timeRange}): ${tc.timeWindows.afternoon.temp}, ${tc.timeWindows.afternoon.condition} (Khuyên: ${tc.timeWindows.afternoon.advice})
+    * Tối & Đêm (${tc.timeWindows.evening.timeRange}): ${tc.timeWindows.evening.temp}, ${tc.timeWindows.evening.condition} (Khuyên: ${tc.timeWindows.evening.advice})`
+          : "";
+
         travelConditionsText = `
 - BẢN TIN THỰC ĐỊA A LƯỚI HÔM NAY (${sourceLabel}):
   + Thời tiết thực tế: ${tc.temperature}, ${tc.weatherLabel} (${tc.weatherState})
   + Tuyến đèo QL49: ${tc.roadLabel} (${tc.roadStatus})
   + Thác suối: ${tc.waterfallLabel} (${tc.waterfallStatus})
-  + Suối khoáng nóng: ${tc.hotSpringLabel} (${tc.hotSpringStatus})
+  + Suối khoáng nóng: ${tc.hotSpringLabel} (${tc.hotSpringStatus})${windowBreakdown}
+  + Săn mây Đồi Thông: ${tc.cloudHuntingTip || "Bình thường"}
   + Khuyến cáo thực địa: ${tc.advisoryNote}`;
       }
     } catch {}
