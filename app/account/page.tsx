@@ -31,6 +31,7 @@ import { fetchAllLeadsAction } from "@/app/actions/leads";
 import { fetchAllBookingsAction, fetchCustomerBookingsAction } from "@/app/actions/bookings";
 import { fetchReviewByBookingIdAction } from "@/app/actions/reviews";
 import { ReviewFormModal } from "@/components/review-form-modal";
+import { CancellationModal } from "@/components/booking/cancellation-modal";
 import type { LeadRecord } from "@/lib/leads";
 import type { BookingRecord, ReviewRecord } from "@/lib/server-store";
 
@@ -44,6 +45,7 @@ export default function AccountPage() {
   const [bookings, setBookings] = useState<BookingRecord[]>([]);
   const [bookingReviews, setBookingReviews] = useState<Record<string, ReviewRecord | null>>({});
   const [reviewingBooking, setReviewingBooking] = useState<BookingRecord | null>(null);
+  const [cancellingBooking, setCancellingBooking] = useState<BookingRecord | null>(null);
 
   // Phone edit state
   const [isEditingPhone, setIsEditingPhone] = useState(false);
@@ -560,25 +562,28 @@ export default function AccountPage() {
                         </div>
 
                         <div className="text-right">
-                          <span
-                            className={`inline-block rounded-full px-3 py-1 text-xs font-bold ${
-                              b.status === "confirmed"
-                                ? "bg-emerald-100 text-emerald-800"
-                                : b.status === "completed"
-                                ? "bg-teal-100 text-teal-800"
-                                : b.status === "cancelled"
-                                ? "bg-red-100 text-red-800"
-                                : "bg-amber-100 text-amber-800"
-                            }`}
-                          >
-                            {b.status === "confirmed"
-                              ? "Đã xác nhận"
-                              : b.status === "completed"
-                              ? "Hoàn tất"
-                              : b.status === "cancelled"
-                              ? "Đã hủy"
-                              : "Chờ xác nhận"}
-                          </span>
+                          {(() => {
+                            switch (b.status) {
+                              case "confirmed":
+                                return <span className="inline-block rounded-full px-3 py-1 text-xs font-bold bg-emerald-100 text-emerald-800">Đã xác nhận</span>;
+                              case "completed":
+                                return <span className="inline-block rounded-full px-3 py-1 text-xs font-bold bg-teal-100 text-teal-800">Hoàn tất</span>;
+                              case "cancellation_requested":
+                                return <span className="inline-block rounded-full px-3 py-1 text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300">Đang chờ xử lý hủy</span>;
+                              case "cancellation_approved":
+                                return <span className="inline-block rounded-full px-3 py-1 text-xs font-bold bg-blue-100 text-blue-800">Đã duyệt hủy</span>;
+                              case "refund_processing":
+                                return <span className="inline-block rounded-full px-3 py-1 text-xs font-bold bg-indigo-100 text-indigo-800">Đang hoàn tiền</span>;
+                              case "refunded":
+                                return <span className="inline-block rounded-full px-3 py-1 text-xs font-bold bg-emerald-100 text-emerald-800">Đã hoàn tiền</span>;
+                              case "cancellation_rejected":
+                                return <span className="inline-block rounded-full px-3 py-1 text-xs font-bold bg-rose-100 text-rose-800">Từ chối hủy</span>;
+                              case "cancelled":
+                                return <span className="inline-block rounded-full px-3 py-1 text-xs font-bold bg-red-100 text-red-800">Đã hủy</span>;
+                              default:
+                                return <span className="inline-block rounded-full px-3 py-1 text-xs font-bold bg-amber-100 text-amber-800">Chờ xác nhận</span>;
+                            }
+                          })()}
                           <p className="mt-1 font-mono text-base font-black text-forest">
                             {b.finalAmount.toLocaleString("vi-VN")} đ
                           </p>
@@ -611,12 +616,44 @@ export default function AccountPage() {
                                 ? "Đã hoàn tiền"
                                 : "Chưa thanh toán"}
                             </p>
-                            {b.paymentStatus !== "paid" && b.paymentStatus !== "refunded" && b.status !== "cancelled" && (
+                            {b.paymentStatus !== "paid" && b.paymentStatus !== "refunded" && b.status !== "cancelled" && b.status !== "cancellation_requested" && (
                               <Button asChild size="sm" className="h-6 px-2 text-[10px] bg-forest text-white font-bold">
                                 <Link href={`/payment/${b.id}`}>Thanh toán →</Link>
                               </Button>
                             )}
                           </div>
+                        </div>
+                      </div>
+
+                      {/* Card Action Footer: Verify Badge & Cancel Action */}
+                      <div className="mt-4 pt-3 border-t border-forest/10 flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href={`/verify-booking?id=${b.id}`}
+                            className="inline-flex items-center gap-1.5 font-bold text-forest hover:underline bg-forest/5 px-2.5 py-1 rounded-lg transition"
+                          >
+                            <ShieldCheckIcon className="size-3.5 text-emerald-700" />
+                            <span>Tra cứu & Xác minh booking</span>
+                          </Link>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          {(b.status === "pending" || b.status === "confirmed") && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setCancellingBooking(b)}
+                              className="h-7 px-3 text-[11px] font-bold text-rose-700 border-rose-300 hover:bg-rose-50 hover:text-rose-900"
+                            >
+                              Yêu cầu hủy tour
+                            </Button>
+                          )}
+                          {b.status === "cancellation_requested" && (
+                            <span className="text-[11px] text-amber-700 italic">
+                              Hệ thống đang đối soát hoàn tiền ({b.cancellationReason || "Đang xử lý"})
+                            </span>
+                          )}
                         </div>
                       </div>
 
@@ -711,6 +748,18 @@ export default function AccountPage() {
                 setBookingReviews((prev) => ({ ...prev, [reviewingBooking.id]: rev }));
               });
             }
+          }}
+        />
+      )}
+
+      {/* Cancellation Request Modal */}
+      {cancellingBooking && (
+        <CancellationModal
+          isOpen={true}
+          booking={cancellingBooking}
+          onClose={() => setCancellingBooking(null)}
+          onSuccess={(updated) => {
+            setBookings((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
           }}
         />
       )}

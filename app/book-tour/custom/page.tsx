@@ -43,6 +43,7 @@ import { formatCurrency, cn } from "@/lib/utils";
 import { getCurrentUser, type AuthUser } from "@/lib/supabase/browser";
 import { submitBookingAction } from "@/app/actions/bookings";
 import { fetchAllPlacesAction } from "@/app/actions/places";
+import { resolveZaloCoordinator } from "@/lib/zalo-helper";
 import {
   ItineraryPlan,
   LIKE_CHOICES,
@@ -442,9 +443,15 @@ export default function CustomItineraryBookingPage() {
 
   // SUCCESS SCREEN
   if (bookingSuccess) {
-    const vietQrUrl = `https://img.vietqr.io/image/970422-0905000118-compact2.png?amount=${bookingSuccess.depositAmount}&addInfo=${encodeURIComponent(
+    const vietQrUrl = `https://img.vietqr.io/image/MB-0825497468-compact2.png?amount=${bookingSuccess.depositAmount}&addInfo=${encodeURIComponent(
       `COC ${bookingSuccess.id} ${bookingSuccess.phone}`
-    )}&accountName=${encodeURIComponent("CHAM A LUOI TRAVEL")}`;
+    )}&accountName=${encodeURIComponent("VO QUANG HUY")}`;
+
+    const zaloCoord = resolveZaloCoordinator(
+      null,
+      { bookingId: bookingSuccess.id, customerName: bookingSuccess.customerName },
+      `Xin chào Chạm A Lưới, tôi vừa đặt tour theo lịch trình AI (Mã đơn: ${bookingSuccess.id} - SĐT: ${bookingSuccess.phone}). Nhờ bên mình kiểm tra và hỗ trợ xác nhận giúp tôi!`
+    );
 
     return (
       <main className="min-h-screen bg-[#F8F7F2] pt-28 pb-20">
@@ -586,10 +593,8 @@ export default function CustomItineraryBookingPage() {
             {/* ACTIONS BUTTONS */}
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
               <a
-                href={`https://zalo.me/0905000118?text=${encodeURIComponent(
-                  `Xin chào Chạm A Lưới, tôi vừa đặt tour theo lịch trình AI (Mã đơn: ${bookingSuccess.id} - SĐT: ${bookingSuccess.phone}). Nhờ bên mình kiểm tra và hỗ trợ xác nhận giúp tôi!`
-                )}`}
-                target="_blank"
+                href={zaloCoord.zaloUrl || `tel:${zaloCoord.fallbackHotline.replace(/\s+/g, "")}`}
+                target={zaloCoord.zaloUrl ? "_blank" : undefined}
                 rel="noopener noreferrer"
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-[#0068FF] hover:bg-[#0055d4] px-6 py-3 text-xs font-bold text-white shadow-md transition"
               >

@@ -269,6 +269,18 @@ export function PlaceDetailClientView({
                     {isEn ? "Draft / Hidden" : "Bản nháp / Đang ẩn"}
                   </span>
                 )}
+
+                {/* Verified by Cham A Luoi Trust Badge */}
+                {place.status === "active" && (
+                  <Link
+                    href="/trust"
+                    title={isEn ? "Verified by Cham A Luoi" : "Đã kiểm tra thực tế & thẩm định an toàn bởi Chạm A Lưới"}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/90 text-white border border-white/30 px-3.5 py-1 text-xs font-bold shadow-sm backdrop-blur hover:bg-emerald-600 transition"
+                  >
+                    <ShieldCheck className="size-3.5 text-amber-300" />
+                    <span>{isEn ? "Verified Partner" : "✓ Đã xác minh bởi Chạm A Lưới"}</span>
+                  </Link>
+                )}
                 {place.status === "active" && (place.category === "stay" || (place as any).availabilityStatus) && (
                   <span
                     className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-bold shadow-sm backdrop-blur ${
@@ -423,6 +435,24 @@ export function PlaceDetailClientView({
                 <span>{isEn ? "Capacity:" : "Sức chứa đoàn:"} <strong>{place.maxGuests}</strong></span>
               </div>
             )}
+
+            {/* Verified by Cham A Luoi Assurance Box */}
+            <div className="rounded-2xl bg-emerald-50/80 border border-emerald-200/80 p-3.5 flex items-start gap-2.5 text-xs text-emerald-950">
+              <ShieldCheck className="size-5 text-emerald-700 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-extrabold text-emerald-900 flex items-center gap-1">
+                  <span>{isEn ? "Verified by Cham A Luoi" : "Đã xác minh bởi Chạm A Lưới"}</span>
+                </p>
+                <p className="mt-0.5 text-[11px] text-emerald-800/90 leading-relaxed">
+                  {isEn
+                    ? "Inspected on-site for safety, hygiene, and authentic community standard. 100% transparent pricing."
+                    : "Cơ sở đã được thẩm định thực địa, cam kết niêm yết giá minh bạch và đối soát bảo vệ quyền lợi du khách 100%."}{" "}
+                  <Link href="/trust" className="underline font-bold hover:text-emerald-950">
+                    {isEn ? "Learn more →" : "Tìm hiểu thêm →"}
+                  </Link>
+                </p>
+              </div>
+            </div>
 
             <div className="rounded-2xl bg-forest/10 p-4 border border-forest/20">
               <p className="text-xs font-bold text-forest uppercase tracking-wider flex items-center gap-1.5">

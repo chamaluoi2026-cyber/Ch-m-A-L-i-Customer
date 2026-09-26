@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { initiatePaymentAction, verifyPaymentCallbackAction, submitPaymentProofAction } from "@/app/actions/payments";
 import { fetchBookingByIdAction } from "@/app/actions/bookings";
 import type { BookingRecord, PaymentRecord, PaymentMethodType } from "@/lib/server-store";
+import { resolveZaloCoordinator } from "@/lib/zalo-helper";
 
 export default function PaymentCheckoutPage() {
   const params = useParams();
@@ -649,17 +650,24 @@ export default function PaymentCheckoutPage() {
                         )}
                       </Button>
 
-                      <a
-                        href={`https://zalo.me/0905000118?text=${encodeURIComponent(
+                      {(() => {
+                        const zaloCoord = resolveZaloCoordinator(
+                          null,
+                          { bookingId: booking.id, customerName: booking.customerName },
                           `Chào Chạm A Lưới, tôi vừa chuyển khoản cho đơn hàng ${booking.id} (${booking.customerName} - SĐT: ${booking.phone}). Tôi gửi ảnh biên lai qua Zalo này để bên mình đối soát duyệt giúp tôi nhé!`
-                        )}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-2 text-xs font-bold transition"
-                      >
-                        <MessageCircle className="size-3.5" />
-                        <span>Hoặc gửi ảnh bill qua Zalo</span>
-                      </a>
+                        );
+                        return (
+                          <a
+                            href={zaloCoord.zaloUrl || `tel:${zaloCoord.fallbackHotline.replace(/\s+/g, "")}`}
+                            target={zaloCoord.zaloUrl ? "_blank" : undefined}
+                            rel="noopener noreferrer"
+                            className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-2 text-xs font-bold transition"
+                          >
+                            <MessageCircle className="size-3.5" />
+                            <span>Hoặc gửi ảnh bill qua Zalo</span>
+                          </a>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>

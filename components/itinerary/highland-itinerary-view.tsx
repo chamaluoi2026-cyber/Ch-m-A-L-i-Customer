@@ -40,6 +40,7 @@ import { formatCurrency } from "@/lib/utils";
 import { places as staticPlaces, type Place } from "@/data/places";
 import { fetchAllPlacesAction } from "@/app/actions/places";
 import { PlaceSelectorModal } from "./place-selector-modal";
+import { resolveZaloCoordinator } from "@/lib/zalo-helper";
 
 interface HighlandItineraryViewProps {
   plan: ItineraryPlan;
@@ -548,14 +549,23 @@ export function HighlandItineraryView({ plan, onReset }: HighlandItineraryViewPr
                 </>
               )}
             </button>
-            <a
-              href="https://zalo.me/0905000118"
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition shadow-sm"
-            >
-              Đặt tour Zalo
-            </a>
+            {(() => {
+              const zaloCoord = resolveZaloCoordinator(
+                null,
+                undefined,
+                `Xin chào Chạm A Lưới, tôi muốn tư vấn tour theo lịch trình AI: ${currentPlan.title}.`
+              );
+              return (
+                <a
+                  href={zaloCoord.zaloUrl || `tel:${zaloCoord.fallbackHotline.replace(/\s+/g, "")}`}
+                  target={zaloCoord.zaloUrl ? "_blank" : undefined}
+                  rel="noreferrer"
+                  className="flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition shadow-sm"
+                >
+                  Đặt tour Zalo
+                </a>
+              );
+            })()}
           </div>
         </div>
       </div>

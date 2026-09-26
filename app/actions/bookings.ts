@@ -388,3 +388,85 @@ export async function fetchBookingByIdAction(id: string): Promise<BookingRecord 
     return null;
   }
 }
+
+export interface VerifiedBookingDetails {
+  id: string;
+  itemTitle: string;
+  itemSlug?: string;
+  businessName: string;
+  type: string;
+  status: string;
+  paymentStatus: string;
+  finalAmount: number;
+  customerName: string;
+  maskedPhone: string;
+  experienceDate: string;
+  numberOfPeople: number;
+  isVerified: boolean;
+  verifiedAt: string;
+  leadId?: string;
+  refundStatus?: string;
+}
+
+export async function verifyBookingLookupAction(
+  bookingId: string
+): Promise<{ success: boolean; data?: VerifiedBookingDetails; error?: string }> {
+  try {
+    const cleanId = bookingId.trim();
+    if (!cleanId) {
+      return { success: false, error: "Vui lòng nhập mã booking cần tra cứu." };
+    }
+
+    const all = await fetchBookingsFromCloud();
+    const booking = all.find((b) => b.id.toLowerCase() === cleanId.toLowerCase()) || getBookingById(cleanId);
+
+    if (!booking) {
+      return {
+        success: false,
+        error: "Không tìm thấy mã đơn đặt này trong hệ thống xác thực Chạm A Lưới. Vui lòng kiểm tra lại mã hoặc liên hệ hotline để được hỗ trợ."
+      };
+    }
+
+    // Mask phone number for privacy (e.g. 0918112233 -> 091****233)
+    const rawPhone = booking.phone || "";
+    let maskedPhone = "Chưa cung cấp";
+    if (rawPhone.length >= 7) {
+      maskedPhone = `${rawPhone.slice(0, 3)}****${rawPhone.slice(-3)}`;
+    } else if (rawPhone.length > 0) {
+      maskedPhone = `${rawPhone.slice(0, 2)}***`;
+    }
+
+    // Mask customer name (e.g. Nguyễn Hoàng Nam -> Nguyễn H*** N**)
+    const nameWords = (booking.customerName || "Khách hàng").trim().split(" ");
+    const maskedName = nameWords
+      .map((w, idx) => (idx === 0 ? w : `${w[0]}***`))
+      .join(" ");
+
+    return {
+      success: true,
+      data: {
+        id: booking.id,
+        itemTitle: booking.itemTitle,
+        itemSlug: booking.itemSlug,
+        businessName: booking.businessName || "Cơ sở đối tác Chạm A Lưới",
+        type: booking.type,
+        status: booking.status || booking.bookingStatus || "pending",
+        paymentStatus: booking.paymentStatus || "pending",
+        finalAmount: booking.finalAmount || 0,
+        customerName: maskedName,
+        maskedPhone,
+        experienceDate: booking.experienceDate || booking.startDate || "Linh hoạt",
+        numberOfPeople: booking.numberOfPeople || booking.quantity || 1,
+        isVerified: true,
+        verifiedAt: new Date().toISOString(),
+        leadId: booking.leadId,
+        refundStatus: booking.refundStatus
+      }
+    };
+  } catch (err) {
+    return {
+      success: false,
+      error: "Không thể kết nối đến máy chủ tra cứu. Vui lòng thử lại sau ít phút."
+    };
+  }
+}

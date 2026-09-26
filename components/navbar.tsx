@@ -12,6 +12,7 @@ import { WeatherNavBadge } from "@/components/weather-nav-badge";
 import { useLanguage } from "@/components/i18n-provider";
 import { navItems, siteConfig } from "@/data/site";
 import { cn } from "@/lib/utils";
+import { BRAND_CONFIG } from "@/lib/brand.config";
 import type { SiteSettings } from "@/lib/server-store";
 
 interface NavbarProps {
@@ -36,17 +37,8 @@ export function Navbar({
   const { language, t } = useLanguage();
 
   const isEn = language === "en";
-  const activeLogo = settings?.logo || initialLogo || siteConfig.logo;
-  const activeMobileLogo = settings?.logoMobile || initialMobileLogo || activeLogo;
-
-  // Kích thước Logo cân đối, hài hòa với thanh header cao 80px (không làm tràn các nút bên phải)
-  const rawScale = ((settings?.logoScale ?? logoScale) || 100) / 100;
-  const scale = Math.min(Math.max(rawScale, 0.8), 1.3);
-  const rawW = (settings?.logoWidth ?? logoWidth) || 180;
-  const rawH = (settings?.logoHeight ?? logoHeight) || 48;
-
-  const displayH = Math.min(Math.max(Math.round(rawH * scale), 36), 54);
-  const displayW = Math.min(Math.max(Math.round(rawW * scale), 120), 205);
+  // Single Source of Truth: Desktop và Mobile luôn dùng cùng một logo chính thức
+  const brandLogo = BRAND_CONFIG.logoLight;
 
   function isActive(href: string) {
     if (href === "/") return pathname === "/";
@@ -56,42 +48,18 @@ export function Navbar({
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-forest/10 bg-beige/95 shadow-[0_6px_28px_rgba(22,33,30,0.06)] backdrop-blur-xl">
       <nav className="mx-auto flex h-20 w-full max-w-[1600px] items-center justify-between px-3 sm:px-5 lg:px-6 xl:px-8 gap-2 xl:gap-4" aria-label="Điều hướng chính">
-        {/* Logo */}
-        <Link href="/" className="focus-ring flex shrink-0 items-center gap-2 transition hover:opacity-90">
-          <div
-            className={cn("relative transition-all duration-200 flex items-center shrink-0", activeMobileLogo !== activeLogo ? "hidden sm:flex" : "flex")}
-            style={{
-              height: `${displayH}px`,
-              width: `${displayW}px`
-            }}
-          >
+        {/* Logo — Single Source of Truth */}
+        <Link href="/" className="focus-ring flex shrink-0 items-center gap-2 transition hover:opacity-90" aria-label="Trang chủ Chạm A Lưới">
+          <div className="relative transition-all duration-200 flex items-center shrink-0 h-10 w-36 sm:h-11 sm:w-44 md:h-12 md:w-48">
             <AppImage
-              src={activeLogo}
-              alt="Logo Chạm A Lưới"
+              src={brandLogo}
+              alt="Logo Chạm A Lưới — Lên Bản Du lịch cộng đồng"
               fill
               className="object-contain object-left"
               fallbackSrc="/images/logo.svg"
               priority
             />
           </div>
-          {activeMobileLogo !== activeLogo && (
-            <div
-              className="relative transition-all duration-200 sm:hidden flex items-center shrink-0"
-              style={{
-                height: `${Math.min(displayH, 44)}px`,
-                width: `${Math.min(displayW, 160)}px`
-              }}
-            >
-              <AppImage
-                src={activeMobileLogo}
-                alt="Logo Chạm A Lưới"
-                fill
-                className="object-contain object-left"
-                fallbackSrc="/images/logo.svg"
-                priority
-              />
-            </div>
-          )}
         </Link>
 
         {/* Desktop Navigation Links */}
