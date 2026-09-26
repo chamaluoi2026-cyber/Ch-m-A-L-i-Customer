@@ -151,14 +151,18 @@ export async function getLiveTravelConditionsAsync(
 
         // Tình trạng tuyến đèo QL49 theo giờ thực tế và mưa
         const currentHour = new Date().getHours();
+        const isRainWCode = [51, 53, 55, 61, 63, 65, 80, 81, 82, 95].includes(wCode);
         let roadStatus: TravelConditions["roadStatus"] = "normal";
         let roadLabel = "Đèo QL49 thông thoáng, mặt đường khô, chạy tốt";
-        if (currentHour < 8 || currentHour >= 17) {
-          roadStatus = "foggy";
-          roadLabel = "Đèo QL49 (đoạn A Co & Mỏ Quạ) có sương sớm/chiều, bật đèn gầm, giữ cự ly an toàn";
-        } else if (precip > 1.5 || afternoonRain > 2.5) {
+        if (wCode === 95) {
+          roadStatus = "slippery";
+          roadLabel = "Có dông sét vùng cao, mặt đèo ướt trơn, tránh vượt đèo lúc mưa dông";
+        } else if (isRainWCode || precip > 0.5 || afternoonRain > 1.5) {
           roadStatus = "slippery";
           roadLabel = "Mưa rừng làm mặt đèo ướt trơn, giảm tốc độ ở các khúc cua tay áo";
+        } else if (currentHour < 8 || currentHour >= 17 || wCode === 45 || wCode === 48) {
+          roadStatus = "foggy";
+          roadLabel = "Đèo QL49 (đoạn A Co & Mỏ Quạ) có sương sớm/chiều, bật đèn gầm, giữ cự ly an toàn";
         }
 
         // Tình trạng thác nước
@@ -188,21 +192,33 @@ export async function getLiveTravelConditionsAsync(
 
         let weatherState: TravelConditions["weatherState"] = "cool";
         let weatherLabel = "Tiết trời mát mẻ vùng cao";
-        if (wCode === 0) {
+        if (wCode === 95) {
+          weatherState = "rainy";
+          weatherLabel = "Dông sét vùng cao";
+        } else if (wCode >= 80 && wCode <= 82) {
+          weatherState = "rainy";
+          weatherLabel = "Mưa rào vùng cao";
+        } else if (wCode >= 61 && wCode <= 65) {
+          weatherState = "rainy";
+          weatherLabel = "Mưa rừng Trường Sơn";
+        } else if (wCode >= 51 && wCode <= 55) {
+          weatherState = "light_rain";
+          weatherLabel = "Mưa phùn lất phất";
+        } else if (wCode === 45 || wCode === 48) {
+          weatherState = "cool";
+          weatherLabel = "Sương mù mây vắt ngang đèo";
+        } else if (wCode === 0) {
           weatherState = "sunny";
           weatherLabel = "Nắng ấm vùng cao trong lành";
         } else if (wCode >= 1 && wCode <= 3) {
           weatherState = temp <= 22 ? "cool" : "cloudy";
           weatherLabel = temp <= 22 ? "Se lạnh dịu mát, sương mây bao phủ" : "Nhiều mây mát dịu, khí hậu vùng cao";
-        } else if (wCode === 45 || wCode === 48) {
-          weatherState = "cool";
-          weatherLabel = "Sương mù mây vắt ngang đèo";
-        } else if (precip > 0 && precip <= 2) {
-          weatherState = "light_rain";
-          weatherLabel = "Mưa phùn / mưa dông thoáng qua";
         } else if (precip > 2) {
           weatherState = "rainy";
           weatherLabel = "Mưa rừng Trường Sơn";
+        } else if (precip > 0) {
+          weatherState = "light_rain";
+          weatherLabel = "Mưa phùn / mưa dông thoáng qua";
         }
 
         const autoResult: ExtendedTravelConditions = {

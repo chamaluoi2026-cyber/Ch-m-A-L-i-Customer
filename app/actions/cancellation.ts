@@ -102,7 +102,7 @@ export async function requestBookingCancellationAction(
     let cloudBookings: BookingRecord[] = [];
     if (url && key) {
       try {
-        const res = await fetch(`${url}/rest/v1/system_store?id=eq.system_bookings&select=*`, {
+        const res = await fetch(`${url}/rest/v1/system_store?id=eq.bookings_store&select=*`, {
           headers: { apikey: key, Authorization: `Bearer ${key}` },
           cache: "no-store"
         });
@@ -182,7 +182,7 @@ export async function requestBookingCancellationAction(
           Prefer: "resolution=merge-duplicates"
         },
         body: JSON.stringify({
-          id: "system_bookings",
+          id: "bookings_store",
           data: cloudBookings,
           updated_at: nowIso
         })

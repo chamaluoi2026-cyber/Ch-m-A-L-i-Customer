@@ -125,6 +125,31 @@ export default function ItineraryPage() {
     }
 
     // Fallback if API is offline or returns error
+    let fallbackWeather;
+    let isRainyFallback = false;
+    try {
+      const wRes = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=16.232&longitude=107.261&elevation=620&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FHo_Chi_Minh&forecast_days=7`
+      );
+      if (wRes.ok) {
+        const wData = await wRes.json();
+        const times: string[] = wData.daily?.time || [];
+        let targetIdx = departureDate ? times.indexOf(departureDate) : 0;
+        if (targetIdx < 0) targetIdx = 0;
+        const maxT = Math.round(wData.daily?.temperature_2m_max?.[targetIdx] ?? 26);
+        const minT = Math.round(wData.daily?.temperature_2m_min?.[targetIdx] ?? 18);
+        const rain = wData.daily?.precipitation_probability_max?.[targetIdx] ?? 20;
+        const wCode = wData.daily?.weathercode?.[targetIdx] ?? 0;
+        isRainyFallback = rain >= 50 || [51, 53, 55, 61, 63, 65, 80, 81, 82, 95].includes(wCode);
+        fallbackWeather = {
+          condition: isRainyFallback ? "Độ ẩm cao, có mưa/sương mù" : (wCode === 0 ? "Nắng đẹp" : "Nhiều mây mát mẻ"),
+          tempMax: maxT,
+          tempMin: minT,
+          rainChance: rain
+        };
+      }
+    } catch {}
+
     const generated = generateHighlandItinerary({
       duration,
       transport,
@@ -132,7 +157,9 @@ export default function ItineraryPage() {
       departureTime,
       departureDate,
       likes: selectedLikes,
-      dislikes: selectedDislikes
+      dislikes: selectedDislikes,
+      isRainy: isRainyFallback,
+      weatherForecast: fallbackWeather
     });
     setPlan(generated);
     setIsGenerating(false);
