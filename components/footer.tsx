@@ -13,12 +13,12 @@ interface FooterProps {
   settings?: SiteSettings;
 }
 
-export function Footer({ settings }: FooterProps = {}) {
+export function Footer({ settings, logo }: FooterProps = {}) {
   const { language, t } = useLanguage();
   const isEn = language === "en";
 
-  // Single Source of Truth: Logo footer dùng logoDark chính thức
-  const brandDarkLogo = BRAND_CONFIG.logoDark;
+  // Ưu tiên logoDark do Admin cấu hình trong settings, nếu không có thì dùng logo chính, nếu không có fallback về BRAND_CONFIG.logoDark
+  const brandDarkLogo = settings?.logoDark || settings?.logo || logo || BRAND_CONFIG.logoDark;
   const address = settings?.contactAddress || BRAND_CONFIG.contact.address;
   const phone = settings?.contactPhone || BRAND_CONFIG.contact.hotline;
   const email = settings?.contactEmail || BRAND_CONFIG.contact.email;
