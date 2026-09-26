@@ -13,63 +13,7 @@ import {
   Wind
 } from "lucide-react";
 
-// Tọa độ trung tâm thị trấn A Lưới, Thừa Thiên Huế (Độ cao thực tế 620m)
-const A_LUOI_LAT = 16.232;
-const A_LUOI_LON = 107.261;
-const A_LUOI_ELEVATION = 620;
-
-interface CurrentWeather {
-  temp: number;
-  apparentTemp: number;
-  humidity: number;
-  weatherCode: number;
-  windSpeed: number;
-  isDay: boolean;
-  label: string;
-  enLabel: string;
-}
-
-interface DayForecast {
-  date: string;
-  dayName: string;
-  enDayName: string;
-  weatherCode: number;
-  label: string;
-  enLabel: string;
-  tempMax: number;
-  tempMin: number;
-  rainChance: number;
-  isCloudHuntingGood: boolean;
-  specialNote?: string;
-  enSpecialNote?: string;
-}
-
-function wmoToDisplay(code: number): { label: string; enLabel: string } {
-  if (code === 0) return { label: "Nắng đẹp trong lành", enLabel: "Clear Sunny" };
-  if (code === 1) return { label: "Nắng nhẹ dịu mát", enLabel: "Mostly Sunny" };
-  if (code === 2) return { label: "Nhiều mây bồng bềnh", enLabel: "Partly Cloudy" };
-  if (code === 3) return { label: "Nhiều mây dịu mát", enLabel: "Overcast" };
-  if (code === 45 || code === 48) return { label: "Sương mù mây bay ✨", enLabel: "Mountain Mist ✨" };
-  if (code >= 51 && code <= 55) return { label: "Mưa phùn bay", enLabel: "Light Drizzle" };
-  if (code >= 61 && code <= 65) return { label: "Mưa rào vùng cao", enLabel: "Mountain Rain" };
-  if (code >= 71 && code <= 77) return { label: "Mưa lạnh vùng cao", enLabel: "Cold Highland Rain" };
-  if (code >= 80 && code <= 82) return { label: "Mưa rào lớn", enLabel: "Heavy Showers" };
-  if (code === 95) return { label: "Có dông rải rác", enLabel: "Thunderstorm" };
-  if (code >= 96) return { label: "Dông sét mạnh", enLabel: "Severe Storm" };
-  return { label: "Mát mẻ vùng cao", enLabel: "Highland Breeze" };
-}
-
-function getDayName(dateStr: string): { dayName: string; enDayName: string } {
-  const date = new Date(dateStr);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const diff = Math.round((date.getTime() - today.getTime()) / 86400000);
-  if (diff === 0) return { dayName: "Hôm nay", enDayName: "Today" };
-  if (diff === 1) return { dayName: "Ngày mai", enDayName: "Tomorrow" };
-  const viDays = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
-  const enDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  return { dayName: viDays[date.getDay()], enDayName: enDays[date.getDay()] };
-}
+import { getUnifiedWeatherData, type DayForecast, type CurrentWeather } from "@/lib/weather-service";
 
 /**
  * Animated Mascot SVG: Bé Mây A Lưới (Highland Cloud Bot)
@@ -307,6 +251,7 @@ export function WeatherMascotBot() {
 
   const [currentWeather, setCurrentWeather] = useState<CurrentWeather | null>(null);
   const [forecasts, setForecasts] = useState<DayForecast[]>([]);
+  const [selectedDayIndex, setSelectedDayIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showSpeechBubble, setShowSpeechBubble] = useState(true);
@@ -314,123 +259,25 @@ export function WeatherMascotBot() {
   const [isDismissed, setIsDismissed] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Fetch Live Weather from Open-Meteo A Luoi (Current + 5 Days Daily)
   useEffect(() => {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${A_LUOI_LAT}&longitude=${A_LUOI_LON}&elevation=${A_LUOI_ELEVATION}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_mean,precipitation_probability_max&timezone=Asia%2FHo_Chi_Minh&forecast_days=5`;
-    
-    fetch(url)
-      .then((r) => r.json())
+    let isMounted = true;
+    getUnifiedWeatherData()
       .then((data) => {
-        // 1. Parse Current Weather (Thời gian thực chính xác theo giờ)
-        if (data?.current) {
-          const c = data.current;
-          const { label, enLabel } = wmoToDisplay(c.weather_code);
-          setCurrentWeather({
-            temp: Math.round(c.temperature_2m),
-            apparentTemp: Math.round(c.apparent_temperature),
-            humidity: c.relative_humidity_2m,
-            weatherCode: c.weather_code,
-            windSpeed: Math.round(c.wind_speed_10m),
-            isDay: Boolean(c.is_day),
-            label,
-            enLabel,
-          });
+        if (!isMounted) return;
+        if (data.current) {
+          setCurrentWeather(data.current);
         }
-
-        // 2. Parse 5-Day Forecast với xác suất mưa thực tế theo điều kiện du lịch ban ngày
-        if (data?.daily?.time) {
-          const {
-            time,
-            weather_code,
-            temperature_2m_max,
-            temperature_2m_min,
-            precipitation_sum,
-            precipitation_probability_mean,
-            precipitation_probability_max,
-          } = data.daily;
-
-          const parsed: DayForecast[] = time.map((dateStr: string, i: number) => {
-            const rawCode = weather_code[i];
-            const maxTemp = Math.round(temperature_2m_max[i]);
-            const minTemp = Math.round(temperature_2m_min[i]);
-            const precip = precipitation_sum?.[i] ?? 0;
-            const probMean = precipitation_probability_mean?.[i];
-            const probMax = precipitation_probability_max?.[i] ?? 0;
-
-            // Tính toán xác suất mưa thực tế cho hoạt động du lịch ban ngày:
-            // Tránh việc lấy xác suất mưa cực đại 100% gây hiểu lầm là mưa lũ cả ngày
-            let rainChance = Math.round((probMean ?? (probMax * 0.4)) * 1.1);
-            if (precip < 1) rainChance = Math.min(rainChance, 15);
-            else if (precip < 5) rainChance = Math.min(rainChance, 35);
-            else if (precip < 10) rainChance = Math.min(rainChance, 50);
-            else if (precip < 20) rainChance = Math.min(rainChance, 70);
-            else rainChance = Math.min(rainChance, 90);
-
-            // Xác định thời tiết chủ đạo ban ngày cho khách du lịch:
-            // Ở vùng núi Trường Sơn, nếu nhiệt độ ban ngày cao (>= 30°C) và lượng mưa thấp (< 10mm),
-            // thời tiết chủ đạo ban ngày là trời nắng ấm xen mây (Partly cloudy - code 2 hoặc code 1),
-            // chỉ có dông nhiệt thoáng qua vào chiều. Tránh hiển thị biểu tượng giông bão đen kịt cả ngày.
-            let displayCode = rawCode;
-            if (rawCode >= 95) {
-              if (precip < 5 && maxTemp >= 29) {
-                displayCode = 2; // Nắng ấm, mây bồng bềnh
-              } else if (precip < 12) {
-                displayCode = 80; // Mưa rào rải rác
-              }
-            } else if (rawCode >= 51 && rawCode <= 65 && precip < 3 && maxTemp >= 29) {
-              displayCode = 2;
-            }
-
-            const { label, enLabel } = wmoToDisplay(displayCode);
-            const { dayName, enDayName } = getDayName(dateStr);
-            const isCloudHuntingGood = displayCode === 45 || displayCode === 48 || (displayCode <= 3 && rainChance < 35);
-
-            let specialNote: string | undefined;
-            let enSpecialNote: string | undefined;
-            if (precip >= 15) {
-              specialNote = "Có mưa rào lớn vùng núi, đường đèo trơn trượt, nên hạn chế qua đèo sau 16:30 🌧️";
-              enSpecialNote = "Heavy mountain rain expected, pass roads may be slick, avoid late travel 🌧️";
-            } else if (rawCode >= 95 && precip >= 4) {
-              specialNote = "Ban ngày nắng ấm, chiều có thể có dông nhiệt ngắn. Sáng tắm suối A Nôr rất đẹp ⚡";
-              enSpecialNote = "Sunny daytime, brief afternoon thermal shower. Great morning at A Nor Waterfall ⚡";
-            } else if (displayCode === 45 || displayCode === 48) {
-              specialNote = "Săn mây đỉnh Đồi Thông lúc 06:15 sáng nha! Sương mù thung lũng rất thơ mộng ✨";
-              enSpecialNote = "Prime cloud-hunting at Pine Hill 06:15 AM! Dreamy mountain mist ✨";
-            } else if (isCloudHuntingGood) {
-              specialNote = "Sáng sớm có biển mây bồng bềnh, check-in đèo A Co & Đồi Thông tuyệt đẹp!";
-              enSpecialNote = "Early morning sea of clouds, incredible photo spots at A Co Pass & Pine Hill!";
-            } else if (maxTemp >= 30) {
-              specialNote = "Trời nắng ấm trong lành! Rất lý tưởng tắm suối Pâr Le, thác A Nôr & chèo thuyền ☀️";
-              enSpecialNote = "Warm sunny weather! Perfect for Par Le Stream, A Nor Waterfall & boating ☀️";
-            } else {
-              specialNote = "Khí hậu mát mẻ 700m, trải nghiệm văn hóa dệt Zèng và ẩm thực nhà sàn cực ấm áp!";
-              enSpecialNote = "Pleasant 700m climate, ideal for Zeng brocade craft villages and stilt house cuisine!";
-            }
-
-            const d = new Date(dateStr);
-            return {
-              date: `${d.getDate()}/${d.getMonth() + 1}`,
-              dayName,
-              enDayName,
-              weatherCode: displayCode,
-              label,
-              enLabel,
-              tempMax: maxTemp,
-              tempMin: minTemp,
-              rainChance,
-              isCloudHuntingGood,
-              specialNote,
-              enSpecialNote,
-            };
-          });
-          setForecasts(parsed);
+        if (data.forecasts?.length) {
+          setForecasts(data.forecasts);
         }
-
         setLoading(false);
       })
       .catch(() => {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       });
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Auto-hide speech bubble after 10s to keep UI clean, reopen on hover
@@ -455,7 +302,7 @@ export function WeatherMascotBot() {
   }, [isExpanded]);
 
   const today = forecasts[0];
-  // Ưu tiên mã thời tiết thực tế hiện tại, fallback là mã 2 (Nhiều mây mát mẻ) chứ không gán 95 (Giông bão)
+  const activeDay = forecasts[selectedDayIndex] || today;
   const currentCode = currentWeather?.weatherCode ?? today?.weatherCode ?? 2;
   const currentTemp = currentWeather?.temp ?? today?.tempMax ?? 22;
   const currentLabel = currentWeather ? (isEn ? currentWeather.enLabel : currentWeather.label) : (today ? (isEn ? today.enLabel : today.label) : "Dịu mát");
@@ -675,75 +522,94 @@ export function WeatherMascotBot() {
                 {isEn ? "5-Day Highland Forecast" : "Dự báo thời tiết 5 ngày tới"}
               </p>
               <div className="grid grid-cols-5 gap-1.5">
-                {forecasts.map((f, i) => (
-                  <div
-                    key={i}
-                    className={`ios-haptic-tap flex flex-col items-center rounded-2xl p-2 text-center transition-all ${
-                      i === 0
-                        ? "bg-forest/10 ring-1.5 ring-forest/30 shadow-xs"
-                        : "bg-black/[0.02] dark:bg-white/[0.02] hover:bg-black/[0.05]"
-                    }`}
-                  >
-                    <p className={`text-[10px] font-black uppercase ${i === 0 ? "text-forest" : "text-gray-400"}`}>
-                      {isEn ? f.enDayName : f.dayName}
-                    </p>
-                    <p className="text-[9px] text-gray-400">{f.date}</p>
+                {forecasts.map((f, i) => {
+                  const isSelected = i === selectedDayIndex;
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setSelectedDayIndex(i)}
+                      className={`ios-haptic-tap flex flex-col items-center rounded-2xl p-2 text-center transition-all cursor-pointer ${
+                        isSelected
+                          ? "bg-forest/15 ring-2 ring-forest shadow-xs"
+                          : "bg-black/[0.02] dark:bg-white/[0.02] hover:bg-black/[0.05]"
+                      }`}
+                    >
+                      <p className={`text-[10px] font-black uppercase ${isSelected ? "text-forest" : "text-gray-400"}`}>
+                        {isEn ? f.enDayName : f.dayName}
+                      </p>
+                      <p className="text-[9px] text-gray-400">{f.date}</p>
 
-                    <div className="my-1 flex h-7 w-7 items-center justify-center">
-                      <AnimatedWeatherIcon weatherCode={f.weatherCode} size={26} showGlow={false} />
-                    </div>
+                      <div className="my-1 flex h-7 w-7 items-center justify-center">
+                        <AnimatedWeatherIcon weatherCode={f.weatherCode} size={26} showGlow={false} />
+                      </div>
 
-                    <p className="text-[11px] font-black text-amber-600 leading-tight">{f.tempMax}°</p>
-                    <p className="text-[10px] font-bold text-sky-600 leading-tight">{f.tempMin}°</p>
-                    {f.rainChance > 0 ? (
-                      <p className="mt-0.5 text-[8px] font-bold text-sky-500">💧{f.rainChance}%</p>
-                    ) : (
-                      <p className="mt-0.5 text-[8px] font-bold text-emerald-500">☀️ Khô</p>
-                    )}
-                  </div>
-                ))}
+                      <p className="text-[11px] font-black text-amber-600 leading-tight">{f.tempMax}°</p>
+                      <p className="text-[10px] font-bold text-sky-600 leading-tight">{f.tempMin}°</p>
+                      {f.rainChance > 0 ? (
+                        <p className="mt-0.5 text-[8px] font-bold text-sky-500">💧{f.rainChance}%</p>
+                      ) : (
+                        <p className="mt-0.5 text-[8px] font-bold text-emerald-500">☀️ Khô</p>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            {today?.specialNote && (
+            {activeDay?.specialNote && (
               <div
                 className={`rounded-2xl p-3 text-xs leading-relaxed border ${
-                  currentCode >= 95
+                  activeDay.weatherCode >= 95 || activeDay.passStatus === "warning"
                     ? "bg-amber-500/10 text-amber-950 dark:text-amber-200 border-amber-300/40"
-                    : today.isCloudHuntingGood
+                    : activeDay.isCloudHuntingGood
                     ? "bg-purple-500/10 text-purple-950 dark:text-purple-200 border-purple-300/40"
                     : "bg-emerald-500/10 text-emerald-950 dark:text-emerald-200 border-emerald-300/40"
                 }`}
               >
                 <div className="flex items-start gap-2">
-                  {currentCode >= 95 ? (
+                  {activeDay.weatherCode >= 95 ? (
                     <ShieldAlert className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
-                  ) : today.isCloudHuntingGood ? (
+                  ) : activeDay.isCloudHuntingGood ? (
                     <Sparkles className="h-4 w-4 shrink-0 text-purple-600 mt-0.5" />
                   ) : (
                     <Compass className="h-4 w-4 shrink-0 text-emerald-600 mt-0.5" />
                   )}
                   <div>
                     <p className="font-bold">
-                      {isEn ? "Bé Mây's Advice Today:" : "Lời dặn của Bé Mây hôm nay:"}
+                      {isEn
+                        ? (selectedDayIndex === 0 ? "Bé Mây's Advice Today:" : `Bé Mây's Advice for ${activeDay.enDayName} (${activeDay.date}):`)
+                        : (selectedDayIndex === 0 ? "Lời dặn của Bé Mây hôm nay:" : `Lời dặn của Bé Mây ${activeDay.dayName.toLowerCase()} (${activeDay.date}):`)}
                     </p>
                     <p className="mt-0.5 text-[11px] opacity-90">
-                      {isEn ? today.enSpecialNote : today.specialNote}
+                      {isEn ? activeDay.enSpecialNote : activeDay.specialNote}
                     </p>
                   </div>
                 </div>
               </div>
             )}
 
-            <div className="rounded-2xl bg-black/[0.03] dark:bg-white/[0.04] p-3 text-[11px] text-gray-600 dark:text-gray-300 space-y-1">
-              <div className="flex items-center gap-1.5 font-bold text-gray-800 dark:text-gray-100">
+            <div
+              className={`rounded-2xl p-3 text-[11px] space-y-1 border ${
+                activeDay?.passStatus === "warning"
+                  ? "bg-rose-500/10 border-rose-300/40 text-rose-950 dark:text-rose-200"
+                  : activeDay?.passStatus === "slippery"
+                  ? "bg-amber-500/10 border-amber-300/40 text-amber-950 dark:text-amber-200"
+                  : activeDay?.passStatus === "foggy"
+                  ? "bg-sky-500/10 border-sky-300/40 text-sky-950 dark:text-sky-200"
+                  : "bg-black/[0.03] dark:bg-white/[0.04] border-transparent text-gray-600 dark:text-gray-300"
+              }`}
+            >
+              <div className="flex items-center gap-1.5 font-bold">
                 <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                <span>{isEn ? "Pass 49 & Highland Weather Advisory:" : "Lưu ý vượt đèo QL49 & Đêm vùng cao:"}</span>
+                <span>
+                  {isEn
+                    ? `Pass 49 Advisory (${selectedDayIndex === 0 ? "Today" : activeDay?.enDayName}):`
+                    : `Cung đèo QL49 (${selectedDayIndex === 0 ? "Hôm nay" : activeDay?.dayName}):`}
+                </span>
               </div>
               <p className="text-[10px] leading-relaxed">
-                {isEn
-                  ? "Dense fog rolls over Pass 49 after 16:30. Night temperatures drop to 17–20°C — always keep a light windbreaker in your bag!"
-                  : "Sương mù hạ thấp đèo QL49 sau 16:30. Nhiệt độ ban đêm hạ xuống 17–20°C (se lạnh), nhớ mang theo áo khoác gió nhẹ bạn nhé!"}
+                {isEn ? activeDay?.enPassAlert : activeDay?.passAlert}
               </p>
             </div>
 

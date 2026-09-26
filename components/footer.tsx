@@ -1,12 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { Facebook, Instagram, Mail, MapPin, Phone, ShieldCheck, Heart, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Facebook, Instagram, Mail, MapPin, Phone, ShieldCheck, Heart, AlertTriangle, CheckCircle2, Youtube } from "lucide-react";
 import { AppImage } from "@/components/ui/app-image";
 import { navItems } from "@/data/site";
 import { useLanguage } from "@/components/i18n-provider";
 import { BRAND_CONFIG } from "@/lib/brand.config";
 import type { SiteSettings } from "@/lib/server-store";
+
+
+function TikTokIcon({ className = "size-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z" />
+    </svg>
+  );
+}
 
 interface FooterProps {
   logo?: string;
@@ -24,6 +33,8 @@ export function Footer({ settings, logo }: FooterProps = {}) {
   const email = settings?.contactEmail || BRAND_CONFIG.contact.email;
   const facebookUrl = settings?.facebookUrl || BRAND_CONFIG.social.facebook;
   const instagramUrl = settings?.instagramUrl || BRAND_CONFIG.social.instagram;
+  const tiktokUrl = settings?.tiktokUrl;
+  const youtubeUrl = settings?.youtubeUrl;
   const zaloUrl = settings?.zaloUrl || (settings?.zaloPhone ? `https://zalo.me/${settings.zaloPhone.replace(/[^0-9]/g, "")}` : `https://zalo.me/0825497468`);
   const description = isEn
     ? "A community-based tourism platform connecting travelers with verified local homestays, traditional craft villages, authentic cuisine, and pristine mountain wonders in A Luoi, Thua Thien Hue."
@@ -170,10 +181,32 @@ export function Footer({ settings, logo }: FooterProps = {}) {
                   href={instagramUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="size-8 rounded-lg bg-white/10 hover:bg-white/20 transition grid place-items-center text-white"
+                  className="size-8 rounded-lg bg-white/10 hover:bg-white/20 hover:text-pink-400 transition grid place-items-center text-white"
                   aria-label="Instagram Chạm A Lưới"
                 >
                   <Instagram className="size-4" aria-hidden="true" />
+                </a>
+              )}
+              {tiktokUrl && (
+                <a
+                  href={tiktokUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="size-8 rounded-lg bg-white/10 hover:bg-white/20 hover:text-emerald-300 transition grid place-items-center text-white"
+                  aria-label="TikTok Chạm A Lưới"
+                >
+                  <TikTokIcon className="size-4" />
+                </a>
+              )}
+              {youtubeUrl && (
+                <a
+                  href={youtubeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="size-8 rounded-lg bg-white/10 hover:bg-white/20 hover:text-red-500 transition grid place-items-center text-white"
+                  aria-label="YouTube Chạm A Lưới"
+                >
+                  <Youtube className="size-4" aria-hidden="true" />
                 </a>
               )}
               <a
