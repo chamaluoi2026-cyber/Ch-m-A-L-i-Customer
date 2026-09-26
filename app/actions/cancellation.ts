@@ -102,7 +102,8 @@ export async function requestBookingCancellationAction(
     let cloudBookings: BookingRecord[] = [];
     if (url && key) {
       try {
-        const res = await fetch(`${url}/rest/v1/system_store?id=eq.bookings_store&select=*`, {
+        // Ưu tiên đọc từ bookings_store
+        let res = await fetch(`${url}/rest/v1/system_store?id=eq.bookings_store&select=*`, {
           headers: { apikey: key, Authorization: `Bearer ${key}` },
           cache: "no-store"
         });
@@ -111,6 +112,23 @@ export async function requestBookingCancellationAction(
           if (rows?.[0]?.data && Array.isArray(rows[0].data)) {
             cloudBookings = rows[0].data;
             booking = cloudBookings.find((b) => b.id === bookingId) || null;
+          }
+        }
+
+        // Dự phòng đọc từ system_bookings nếu chưa tìm thấy
+        if (!booking) {
+          res = await fetch(`${url}/rest/v1/system_store?id=eq.system_bookings&select=*`, {
+            headers: { apikey: key, Authorization: `Bearer ${key}` },
+            cache: "no-store"
+          });
+          if (res.ok) {
+            const rows = await res.json();
+            if (rows?.[0]?.data && Array.isArray(rows[0].data)) {
+              booking = rows[0].data.find((b: any) => b.id === bookingId) || null;
+              if (booking && cloudBookings.length === 0) {
+                cloudBookings = rows[0].data;
+              }
+            }
           }
         }
       } catch {}
@@ -164,7 +182,7 @@ export async function requestBookingCancellationAction(
       updatedAt: nowIso
     };
 
-    // 4. Lưu lại vào Store và Supabase Cloud
+    // 4. Lưu lại vào Store và Supabase Cloud (đồng bộ cả bookings_store và system_bookings)
     if (cloudBookings.length > 0) {
       const idx = cloudBookings.findIndex((b) => b.id === bookingId);
       if (idx >= 0) {
@@ -173,20 +191,36 @@ export async function requestBookingCancellationAction(
         cloudBookings.unshift(updatedBooking);
       }
 
-      await fetch(`${url}/rest/v1/system_store`, {
-        method: "POST",
-        headers: {
-          apikey: key,
-          Authorization: `Bearer ${key}`,
-          "Content-Type": "application/json",
-          Prefer: "resolution=merge-duplicates"
-        },
-        body: JSON.stringify({
-          id: "bookings_store",
-          data: cloudBookings,
-          updated_at: nowIso
+      await Promise.allSettled([
+        fetch(`${url}/rest/v1/system_store`, {
+          method: "POST",
+          headers: {
+            apikey: key,
+            Authorization: `Bearer ${key}`,
+            "Content-Type": "application/json",
+            Prefer: "resolution=merge-duplicates"
+          },
+          body: JSON.stringify({
+            id: "bookings_store",
+            data: cloudBookings,
+            updated_at: nowIso
+          })
+        }),
+        fetch(`${url}/rest/v1/system_store`, {
+          method: "POST",
+          headers: {
+            apikey: key,
+            Authorization: `Bearer ${key}`,
+            "Content-Type": "application/json",
+            Prefer: "resolution=merge-duplicates"
+          },
+          body: JSON.stringify({
+            id: "system_bookings",
+            data: cloudBookings,
+            updated_at: nowIso
+          })
         })
-      });
+      ]);
     }
 
     try {
