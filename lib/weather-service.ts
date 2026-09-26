@@ -85,8 +85,8 @@ export function getDayAdvisories(
     return {
       specialNote: `⚡ Có dông nhiệt vùng cao (${rainChance}% mưa): Sáng tạnh ráo, chiều tối có thể có dông ngắt quãng. Thích hợp ngâm khoáng nóng A Roàng & giao lưu nhà sàn.`,
       enSpecialNote: `⚡ Highland thunderstorms (${rainChance}% rain): Dry morning, showers in afternoon/evening. Great for A Roang hot springs & stilt houses.`,
-      passAlert: "Cung đèo QL49: Có dông sét và mưa rừng, nguy cơ trơn trượt cao. Nên vượt đèo sớm trước 15:30, tránh qua đèo ban đêm hoặc khi mưa dông lớn.",
-      enPassAlert: "QL49 Pass: Thunderstorms & slippery conditions. Descend pass before 15:30, avoid night travel during heavy downpours.",
+      passAlert: "Có dông sét và mưa rừng, nguy cơ trơn trượt cao. Nên vượt đèo sớm trước 15:30, tránh qua đèo ban đêm hoặc khi mưa dông lớn.",
+      enPassAlert: "Thunderstorms & slippery conditions. Descend pass before 15:30, avoid night travel during heavy downpours.",
       passStatus: "warning"
     };
   }
@@ -96,8 +96,8 @@ export function getDayAdvisories(
     return {
       specialNote: `🌧️ Có mưa rào vùng cao (${rainChance}% mưa): Suối khoáng nóng A Roàng 60°C & trải nghiệm dệt thổ cẩm Zèng là lựa chọn tuyệt vời nhất hôm nay.`,
       enSpecialNote: `🌧️ Highland rain showers (${rainChance}% rain): Perfect day for A Roang natural hot springs (60°C) and indoor Zeng craft weaving.`,
-      passAlert: "Cung đèo QL49: Mưa rừng làm mặt đèo ướt trơn, sương mù phủ kín đèo Mỏ Quạ & A Co. Cần giảm tốc độ, bật đèn cốt và nên xuống đèo trước 16:00.",
-      enPassAlert: "QL49 Pass: Wet & slippery mountain curves. Reduced visibility at passes; slow down, use low beams and descend before 16:00.",
+      passAlert: "Mưa rừng làm mặt đèo ướt trơn, sương mù phủ kín đèo Mỏ Quạ & A Co. Cần giảm tốc độ, bật đèn cốt và nên xuống đèo trước 16:00.",
+      enPassAlert: "Wet & slippery mountain curves. Reduced visibility at passes; slow down, use low beams and descend before 16:00.",
       passStatus: "slippery"
     };
   }
@@ -107,8 +107,8 @@ export function getDayAdvisories(
     return {
       specialNote: `🌦️ Tiết trời se lạnh có mưa bay lất phất (${rainChance}% mưa): Nên mang theo áo khoác gió mỏng và ô nhỏ khi dạo bản làng.`,
       enSpecialNote: `🌦️ Mountain drizzle & cool air (${rainChance}% rain): Pack a light windbreaker and compact umbrella for village walks.`,
-      passAlert: "Cung đèo QL49: Mặt đường ẩm ướt ở các khúc cua dốc. Lái xe cẩn trọng, giữ cự ly an toàn và hoàn thành chuyến đi trước 16:30.",
-      enPassAlert: "QL49 Pass: Moist road surface on mountain curves. Drive cautiously, keep safe following distance, descend before 16:30.",
+      passAlert: "Mặt đường ẩm ướt ở các khúc cua dốc. Lái xe cẩn trọng, giữ cự ly an toàn và hoàn thành chuyến đi trước 16:30.",
+      enPassAlert: "Moist road surface on mountain curves. Drive cautiously, keep safe following distance, descend before 16:30.",
       passStatus: "slippery"
     };
   }
@@ -118,8 +118,8 @@ export function getDayAdvisories(
     return {
       specialNote: "🌫️ Sương mù vùng cao bao phủ! Cơ hội săn biển mây thung lũng tuyệt đẹp tại Đồi Thông A Lưới lúc 06:00 - 06:45 sáng.",
       enSpecialNote: "🌫️ Misty highland atmosphere! Prime sea-of-clouds window at A Luoi Pine Hill around 06:00 - 06:45 AM.",
-      passAlert: "Cung đèo QL49: Sương mù dày đặc che khuất tầm nhìn qua đèo A Co & Mỏ Quạ. Bật đèn gầm, chạy chậm và giữ cự ly tối thiểu 30m.",
-      enPassAlert: "QL49 Pass: Heavy mountain fog at peaks. Use fog lamps, slow down and keep at least 30m distance.",
+      passAlert: "Sương mù dày đặc che khuất tầm nhìn qua đèo A Co & Mỏ Quạ. Bật đèn gầm, chạy chậm và giữ cự ly tối thiểu 30m.",
+      enPassAlert: "Heavy mountain fog at peaks. Use fog lamps, slow down and keep at least 30m distance.",
       passStatus: "foggy"
     };
   }
@@ -129,8 +129,8 @@ export function getDayAdvisories(
     return {
       specialNote: "☀️ Nắng ráo trong veo: Thời điểm lý tưởng nhất tắm suối Pâr Le, thác A Nôr & chụp ảnh bản làng đại ngàn.",
       enSpecialNote: "☀️ Crystal clear sunny skies: Prime conditions for Par Le stream, A Nor waterfalls, and tribal village photography.",
-      passAlert: "Cung đèo QL49: Buổi sáng nắng đẹp, mặt đường khô ráo, chạy tốt. Từ 16:30 sương mù hạ thấp, khuyên xuất phát xuống đèo trước 16:30.",
-      enPassAlert: "QL49 Pass: Sunny and dry pass conditions in daytime. Mountain mist lowers after 16:30; descend before dusk for safety.",
+      passAlert: "Buổi sáng nắng đẹp, mặt đường khô ráo, chạy tốt. Từ 16:30 sương mù hạ thấp, khuyên xuất phát xuống đèo trước 16:30.",
+      enPassAlert: "Sunny and dry pass conditions in daytime. Mountain mist lowers after 16:30; descend before dusk for safety.",
       passStatus: "normal"
     };
   }
@@ -140,8 +140,8 @@ export function getDayAdvisories(
     return {
       specialNote: "☁️ Sáng sớm có mây bồng bềnh mát dịu: Rất thích hợp check-in đồi thông, cà phê ngắm cảnh và dạo suối.",
       enSpecialNote: "☁️ Soft morning mountain clouds: Great for scenic pine-hill coffee stops and countryside strolls.",
-      passAlert: "Cung đèo QL49: Đường đèo thông thoáng, thời tiết mát mẻ. Khuyên kiểm tra hệ thống phanh xe và di chuyển xuống đèo trước 16:30.",
-      enPassAlert: "QL49 Pass: Clear mountain breeze and smooth pavement. Check vehicle brakes and descend before 16:30 before mist sets in.",
+      passAlert: "Đường đèo thông thoáng, thời tiết mát mẻ. Khuyên kiểm tra hệ thống phanh xe và di chuyển xuống đèo trước 16:30.",
+      enPassAlert: "Clear mountain breeze and smooth pavement. Check vehicle brakes and descend before 16:30 before mist sets in.",
       passStatus: "normal"
     };
   }
@@ -150,8 +150,8 @@ export function getDayAdvisories(
   return {
     specialNote: `🍃 Nhiệt độ vùng cao mát mẻ (${tempMin}°C - ${tempMax}°C), thấp hơn đồng bằng 4-6°C. Thích hợp dạo bản và thưởng thức ẩm thực Pa Cô.`,
     enSpecialNote: `🍃 Pleasant highland climate (${tempMin}°C - ${tempMax}°C). Great for cultural villages and indigenous Pa Co cuisine.`,
-    passAlert: "Cung đèo QL49: Đường đèo thông thoáng, mặt đường ổn định. Sương mù xuất hiện sau 16:30, nên điều chỉnh hành trình qua đèo sớm.",
-    enPassAlert: "QL49 Pass: Pass is clear and well-conditioned. Mountain mist arrives after 16:30, schedule daytime travel across pass.",
+    passAlert: "Đường đèo thông thoáng, mặt đường ổn định. Sương mù xuất hiện sau 16:30, nên điều chỉnh hành trình qua đèo sớm.",
+    enPassAlert: "Pass is clear and well-conditioned. Mountain mist arrives after 16:30, schedule daytime travel across pass.",
     passStatus: "normal"
   };
 }

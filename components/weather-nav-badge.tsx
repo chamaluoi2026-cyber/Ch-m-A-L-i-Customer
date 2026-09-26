@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/components/i18n-provider";
 import { AnimatedWeatherIcon, getWeatherTheme } from "@/components/ui/animated-weather-icon";
-import { Compass, X, Sparkles, ChevronDown } from "lucide-react";
-import { getUnifiedWeatherData, type DayForecast } from "@/lib/weather-service";
+import { Compass, X, Sparkles, ChevronDown, Droplets, Wind } from "lucide-react";
+import { getUnifiedWeatherData, type DayForecast, type CurrentWeather } from "@/lib/weather-service";
 
 interface WeatherNavBadgeProps {
   variant?: "navbar" | "compact" | "drawer";
@@ -14,6 +14,7 @@ interface WeatherNavBadgeProps {
 export function WeatherNavBadge({ variant = "navbar", className = "" }: WeatherNavBadgeProps) {
   const { language } = useLanguage();
   const isEn = language === "en";
+  const [currentWeather, setCurrentWeather] = useState<CurrentWeather | null>(null);
   const [forecasts, setForecasts] = useState<DayForecast[]>([]);
   const [, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
@@ -24,10 +25,14 @@ export function WeatherNavBadge({ variant = "navbar", className = "" }: WeatherN
     let isMounted = true;
     getUnifiedWeatherData()
       .then((data) => {
-        if (isMounted && data?.forecasts?.length) {
-          setForecasts(data.forecasts);
-          setLoading(false);
+        if (!isMounted) return;
+        if (data?.current) {
+          setCurrentWeather(data.current);
         }
+        if (data?.forecasts?.length) {
+          setForecasts(data.forecasts);
+        }
+        setLoading(false);
       })
       .catch(() => {
         if (isMounted) setLoading(false);
@@ -72,8 +77,13 @@ export function WeatherNavBadge({ variant = "navbar", className = "" }: WeatherN
 
   const today = forecasts[0] || defaultToday;
   const activeDay = forecasts[selectedDayIndex] || today;
+  const currentCode = currentWeather?.weatherCode ?? today.weatherCode;
+  const currentTemp = currentWeather?.temp ?? today.tempMax;
+  const currentLabel = currentWeather
+    ? (isEn ? currentWeather.enLabel : currentWeather.label)
+    : (isEn ? today.enLabel : today.label);
 
-  const theme = getWeatherTheme(today.weatherCode);
+  const theme = getWeatherTheme(currentCode);
 
   return (
     <div className={`relative inline-block ${className}`} ref={dropdownRef}>
@@ -85,8 +95,8 @@ export function WeatherNavBadge({ variant = "navbar", className = "" }: WeatherN
           aria-label="Xem dự báo thời tiết A Lưới"
           className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/95 hover:bg-sky-50 border border-sky-200 text-sky-900 text-xs font-bold transition shadow-2xs"
         >
-          <AnimatedWeatherIcon weatherCode={today.weatherCode} size={20} showGlow={false} />
-          <span>{today.tempMax}°C</span>
+          <AnimatedWeatherIcon weatherCode={currentCode} size={20} showGlow={false} />
+          <span>{currentTemp}°C</span>
         </button>
       ) : variant === "drawer" ? (
         <button
@@ -96,14 +106,14 @@ export function WeatherNavBadge({ variant = "navbar", className = "" }: WeatherN
         >
           <div className="flex items-center gap-2.5">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50">
-              <AnimatedWeatherIcon weatherCode={today.weatherCode} size={28} showGlow={false} />
+              <AnimatedWeatherIcon weatherCode={currentCode} size={28} showGlow={false} />
             </div>
             <div className="text-left">
               <p className="font-extrabold text-sky-950">
-                Thời tiết A Lưới: {today.tempMax}° / {today.tempMin}°C
+                Thời tiết A Lưới: {currentTemp}°C ({today.tempMin}° - {today.tempMax}°C)
               </p>
               <p className="text-[11px] text-sky-700 font-normal">
-                {isEn ? today.enLabel : today.label} • Khí hậu 700m
+                {currentLabel} • Khí hậu 700m
               </p>
             </div>
           </div>
@@ -117,9 +127,9 @@ export function WeatherNavBadge({ variant = "navbar", className = "" }: WeatherN
           aria-label="Xem dự báo thời tiết A Lưới"
           className="group flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/90 hover:bg-white border border-sky-200 text-sky-950 text-xs font-bold transition-all shadow-2xs hover:shadow-sm"
         >
-          <AnimatedWeatherIcon weatherCode={today.weatherCode} size={22} showGlow={false} />
+          <AnimatedWeatherIcon weatherCode={currentCode} size={22} showGlow={false} />
           <div className="flex items-baseline gap-1">
-            <span className="text-sky-950 font-extrabold">{today.tempMax}°C</span>
+            <span className="text-sky-950 font-extrabold">{currentTemp}°C</span>
             <span className="text-[11px] text-sky-700 font-medium hidden lg:inline">A Lưới</span>
           </div>
           <ChevronDown
@@ -137,30 +147,71 @@ export function WeatherNavBadge({ variant = "navbar", className = "" }: WeatherN
           </div>
 
           {/* Header */}
-          <div className={`p-4 bg-gradient-to-r ${theme.cardHeaderGradient} text-white flex items-center justify-between`}>
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-[16px] bg-white/20 backdrop-blur-sm shadow-inner">
-                <AnimatedWeatherIcon weatherCode={activeDay.weatherCode} size={28} showGlow={false} />
-              </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <h4 className="font-extrabold text-sm">
-                    {isEn ? "A Luoi Weather Forecast" : "Dự Báo Thời Tiết A Lưới"}
-                  </h4>
+          <div className={`p-4 bg-gradient-to-br ${theme.cardHeaderGradient} text-white`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-10 w-10 items-center justify-center rounded-[16px] bg-white/20 backdrop-blur-sm shadow-inner">
+                  <AnimatedWeatherIcon weatherCode={selectedDayIndex === 0 ? currentCode : activeDay.weatherCode} size={28} showGlow={false} />
                 </div>
-                <p className="text-[11px] text-sky-100">
-                  {activeDay.dayName} {activeDay.date ? `(${activeDay.date})` : ""} · {isEn ? activeDay.enLabel : activeDay.label}
-                </p>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <h4 className="font-extrabold text-sm">
+                      {isEn ? "A Luoi Weather Forecast" : "Dự Báo Thời Tiết A Lưới"}
+                    </h4>
+                    <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[9px] font-bold">700m</span>
+                  </div>
+                  <p className="text-[11px] text-sky-100">
+                    {selectedDayIndex === 0
+                      ? (isEn ? "Live Highland Station (Open-Meteo)" : "Trạm khí tượng trực tiếp A Lưới")
+                      : `${activeDay.dayName} (${activeDay.date}) · ${isEn ? activeDay.enLabel : activeDay.label}`}
+                  </p>
+                </div>
               </div>
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="p-1 rounded-full hover:bg-white/20 text-white transition"
+                aria-label="Đóng"
+              >
+                <X className="size-4" />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              className="p-1 rounded-full hover:bg-white/20 text-white transition"
-              aria-label="Đóng"
-            >
-              <X className="size-4" />
-            </button>
+
+            {/* Realtime Status Banner - Đồng bộ 100% với Bé Mây Bot */}
+            <div className="mt-3 rounded-2xl bg-black/20 p-2.5 backdrop-blur-md ring-1 ring-white/10 text-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-2xl font-black">{currentTemp}°C</span>
+                  <span className="text-[11px] text-white/80">
+                    ({today.tempMin}° - {today.tempMax}°C)
+                  </span>
+                  <span className="ml-1 text-xs font-bold text-amber-200">
+                    {currentLabel}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 text-xs text-sky-200 font-bold">
+                  <div className="flex items-center gap-0.5">
+                    <Droplets className="size-3.5" />
+                    <span>{currentWeather?.humidity ?? today.rainChance}%</span>
+                  </div>
+                  {currentWeather && (
+                    <div className="flex items-center gap-0.5 text-[10px] text-white/80 font-normal">
+                      <Wind className="size-3" />
+                      <span>{currentWeather.windSpeed}km/h</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {currentWeather && (
+                <p className="text-[10px] text-white/75 mt-1 font-medium">
+                  {isEn
+                    ? `Feels like ${currentWeather.apparentTemp}°C · ${currentWeather.isDay ? "Daytime in highland" : "Cool highland night"}`
+                    : `Cảm giác nhiệt như ${currentWeather.apparentTemp}°C · ${currentWeather.isDay ? "Ban ngày vùng cao" : "Đêm vùng cao se lạnh"}`}
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Nội dung */}
